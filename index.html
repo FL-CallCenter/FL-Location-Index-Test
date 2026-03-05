@@ -92,12 +92,12 @@
     button:disabled { background-color: #ccc; cursor: not-allowed; }
 
 #result { 
-  margin-top: 15px; /* Reduced to bring the whole group up slightly */
+  margin-top: 10px; /* Reduced to bring everything closer to the search button */
   min-height: 110px;
   display: flex;
   flex-direction: column;
   align-items: center; 
-  justify-content: space-evenly; /* This forces equal gaps above and below the city name */
+  justify-content: flex-start; /* Aligns everything to the top of the result area */
   text-align: center;
 }
 
@@ -105,7 +105,7 @@
   color: #333; 
   font-weight: 700; 
   font-size: 18px;
-  margin: 0; /* Removed margin to let 'space-evenly' handle the centering */
+  margin: 5px 0 10px 0; /* Tiny gap under the search button, larger gap above the phone */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -125,7 +125,7 @@
   border-radius: 50px;
   box-shadow: 0 4px 12px rgba(37, 118, 208, 0.3);
   width: fit-content;
-  margin-top: 5px; /* Tiny nudge to ensure it doesn't hug the bottom */
+  transition: all 0.2s;
 }
   </style>
 </head>
@@ -256,5 +256,6 @@
 </script>
 </body>
 </html>
+
 
 
