@@ -91,13 +91,13 @@
 
     button:disabled { background-color: #ccc; cursor: not-allowed; }
 
-    #result { 
-  margin-top: 25px; 
-  min-height: 100px;
+#result { 
+  margin-top: 15px; /* Reduced to bring the whole group up slightly */
+  min-height: 110px;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Centers horizontally */
-  justify-content: center; /* Centers vertically */
+  align-items: center; 
+  justify-content: space-evenly; /* This forces equal gaps above and below the city name */
   text-align: center;
 }
 
@@ -105,15 +105,15 @@
   color: #333; 
   font-weight: 700; 
   font-size: 18px;
-  margin: 0 0 15px 0; /* Strict margin control */
+  margin: 0; /* Removed margin to let 'space-evenly' handle the centering */
   display: flex;
   align-items: center;
-  justify-content: center; /* Centers the icon + text together */
+  justify-content: center;
   width: 100%;
 }
 
 .phone-link { 
-  display: flex; /* Changed to flex for better icon alignment */
+  display: flex; 
   align-items: center;
   justify-content: center;
   color: white; 
@@ -124,8 +124,8 @@
   padding: 12px 25px;
   border-radius: 50px;
   box-shadow: 0 4px 12px rgba(37, 118, 208, 0.3);
-  width: fit-content; /* Keeps the button from stretching too wide */
-  transition: all 0.2s;
+  width: fit-content;
+  margin-top: 5px; /* Tiny nudge to ensure it doesn't hug the bottom */
 }
   </style>
 </head>
@@ -256,4 +256,5 @@
 </script>
 </body>
 </html>
+
 
