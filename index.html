@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Furry Land ZIP Lookup</title>
+  <title>FURRYLAND Zip Code Locator</title>
   <style>
-    /* FURRY LAND BRANDED COLOR PALETTE */
     :root {
       --fl-orange: #f07b23;
       --fl-blue: #2576d0;
@@ -31,21 +30,35 @@
       width: 100%;
       max-width: 380px;
       text-align: center;
-      border-top: 5px solid var(--fl-orange); /* Branded top border */
+      border-top: 6px solid var(--fl-orange);
     }
 
     h2 { 
       color: var(--fl-orange); 
-      margin-bottom: 5px; 
+      margin-top: 0;
+      margin-bottom: 0; 
       font-weight: 800;
       text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 28px;
     }
 
     p.subtitle {
-      color: #666;
-      font-size: 14px;
+      color: #444; 
+      font-size: 16px;
+      margin: 2px 0 0 0;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    p.locator-text {
+      color: var(--fl-blue); 
+      font-size: 13px;
+      margin-top: 4px;
       margin-bottom: 25px;
-      font-weight: 500;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
     input { 
@@ -60,9 +73,7 @@
       transition: border-color 0.3s;
     }
 
-    input:focus {
-      border-color: var(--fl-blue);
-    }
+    input:focus { border-color: var(--fl-blue); }
 
     button { 
       padding: 15px; 
@@ -76,37 +87,27 @@
       cursor: pointer; 
       font-weight: bold;
       text-transform: uppercase;
-      transition: background 0.2s, transform 0.1s;
     }
 
-    button:hover { background-color: #d66a1a; }
-    button:active { transform: scale(0.98); }
     button:disabled { background-color: #ccc; cursor: not-allowed; }
-
-    .loading-text {
-      margin-top: 20px;
-      font-size: 14px;
-      color: var(--fl-blue);
-      animation: pulse 1.5s infinite ease-in-out;
-    }
-
-    @keyframes pulse {
-      0% { opacity: 0.5; }
-      50% { opacity: 1; }
-      100% { opacity: 0.5; }
-    }
 
     #result { 
       margin-top: 30px; 
       min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
 
     .location-label { 
       color: #333; 
       font-weight: 700; 
-      display: block; 
       font-size: 18px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
     
     .phone-link { 
@@ -119,35 +120,29 @@
       padding: 10px 25px;
       border-radius: 50px;
       box-shadow: 0 4px 10px rgba(37, 118, 208, 0.3);
-      transition: background 0.2s;
-    }
-
-    .phone-link:hover {
-      background-color: #1a5cad;
     }
   </style>
 </head>
 <body>
 
 <div class="card">
-  <h2>Furry Land</h2>
-  <p class="subtitle">Mobile Grooming Lookup</p>
+  <h2>FURRYLAND</h2>
+  <p class="subtitle">Mobile Grooming</p>
+  <p class="locator-text">Zip Code Locator</p>
   
   <input type="text" id="zipInput" placeholder="Enter ZIP Code" maxlength="5" />
   <button id="searchBtn" onclick="lookup()" disabled>Loading...</button>
 
   <div id="result">
-    <div id="statusMessage" class="loading-text">Connecting to database...</div>
+    <div id="statusMessage" style="color:var(--fl-blue);">Connecting to database...</div>
   </div>
 </div>
 
 <script>
   let data = [];
   const resultDiv = document.getElementById('result');
-  const statusMsg = document.getElementById('statusMessage');
   const searchBtn = document.getElementById('searchBtn');
 
-  // YOUR GOOGLE SHEET LINKS
   const csvUrls = [
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1188497872&single=true&output=csv',
@@ -227,47 +222,31 @@
         rows.slice(1).forEach(row => { 
           const match = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
           if (!match) return;
-
-          const location = match[0].replace(/"/g,'').trim();
-          const zip = match[1].replace(/"/g,'').trim();
-          const phone = match[2] ? match[2].replace(/"/g,'').trim() : "No phone listed";
-
-          data.push({ zip, location, phone });
+          data.push({ 
+            location: match[0].replace(/"/g,'').trim(), 
+            zip: match[1].replace(/"/g,'').trim(), 
+            phone: match[2] ? match[2].replace(/"/g,'').trim() : "No phone listed" 
+          });
         });
       });
-      
-      statusMsg.textContent = ""; 
+      document.getElementById('statusMessage').textContent = ""; 
       searchBtn.disabled = false;
       searchBtn.textContent = "Search ZIP";
-    })
-    .catch(err => {
-      statusMsg.textContent = "Error loading data.";
-      console.error(err);
     });
 
   function lookup() {
     const zipInput = document.getElementById('zipInput').value.trim();
-    if (!zipInput) {
-      resultDiv.innerHTML = "<span style='color:var(--fl-orange);'>Enter a ZIP code</span>";
-      return;
-    }
-
+    if (!zipInput) return;
     const match = data.find(entry => entry.zip.replace(/\s+/g,'') === zipInput.replace(/\s+/g,''));
-
     if (match) {
       resultDiv.innerHTML = `
-        <span class="location-label">📍 ${match.location}</span>
+        <div class="location-label">📍 ${match.location}</div>
         <a href="tel:${match.phone}" class="phone-link">📞 ${match.phone}</a>
       `;
     } else {
       resultDiv.innerHTML = "<span style='color:#666;'>No service in this ZIP yet!</span>";
     }
   }
-
-  document.getElementById('zipInput').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') lookup();
-  });
 </script>
-
 </body>
 </html>
