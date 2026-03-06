@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FURRYLAND Zip Code Locator</title>
+  <title>FURRYLAND Hub</title>
   <style>
     :root {
       --fl-orange: #f07b23;
@@ -16,10 +16,36 @@
       font-family: 'Segoe UI', Roboto, Arial, sans-serif; 
       background-color: var(--fl-bg); 
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      height: 100vh;
+      padding: 20px;
       margin: 0;
+    }
+
+    /* TAB SYSTEM */
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      background: #d1d1d1;
+      cursor: pointer;
+      font-weight: bold;
+      color: #555;
+      transition: 0.3s;
+    }
+
+    .tab-btn.active {
+      background: var(--fl-blue);
+      color: white;
     }
 
     .card {
@@ -31,38 +57,17 @@
       max-width: 380px;
       text-align: center;
       border-top: 6px solid var(--fl-orange);
+      box-sizing: border-box;
     }
 
-    h2 { 
-      color: var(--fl-orange); 
-      margin-top: 0;
-      margin-bottom: 0; 
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      font-size: 28px;
-    }
-
-    p.subtitle {
-      color: #444; 
-      font-size: 16px;
-      margin: 2px 0 0 0;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    p.locator-text {
-      color: var(--fl-blue); 
-      font-size: 13px;
-      margin-top: 4px;
-      margin-bottom: 25px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
+    h2 { color: var(--fl-orange); margin: 0; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; font-size: 28px; }
+    p.subtitle { color: #444; font-size: 16px; margin: 2px 0; font-weight: 600; text-transform: uppercase; }
+    p.locator-text { color: var(--fl-blue); font-size: 13px; margin-top: 4px; margin-bottom: 25px; font-weight: 700; text-transform: uppercase; }
+    
+    .input-group { position: relative; }
+    
     input { 
-      padding: 15px; 
+      padding: 15px 45px 15px 15px; 
       font-size: 16px; 
       width: 100%; 
       border: 2px solid #ddd; 
@@ -70,12 +75,21 @@
       box-sizing: border-box;
       background-color: var(--fl-accent);
       outline: none;
-      transition: border-color 0.3s;
     }
 
-    input:focus { border-color: var(--fl-blue); }
+    .locate-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      color: var(--fl-blue);
+    }
 
-    button { 
+    #searchBtn { 
       padding: 15px; 
       font-size: 16px; 
       width: 100%; 
@@ -89,173 +103,129 @@
       text-transform: uppercase;
     }
 
-    button:disabled { background-color: #ccc; cursor: not-allowed; }
+    #result { margin-top: 20px; min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+    
+    .location-label { color: #333; font-weight: 700; font-size: 18px; margin: 10px 0 15px 0; }
 
-#result { 
-  margin-top: 10px; /* Reduced to bring everything closer to the search button */
-  min-height: 110px;
-  display: flex;
-  flex-direction: column;
-  align-items: center; 
-  justify-content: flex-start; /* Aligns everything to the top of the result area */
-  text-align: center;
-}
+    .action-buttons { display: flex; flex-direction: column; gap: 12px; width: 100%; align-items: center; }
 
-.location-label { 
-  color: #333; 
-  font-weight: 700; 
-  font-size: 18px;
-  margin: 5px 0 10px 0; /* Tiny gap under the search button, larger gap above the phone */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-}
+    .btn-link { 
+      display: flex; align-items: center; justify-content: center;
+      color: white; text-decoration: none; font-size: 16px; font-weight: bold;
+      padding: 14px 25px; border-radius: 50px; width: 90%; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .btn-link:active { transform: scale(0.97); }
 
-.phone-link { 
-  display: flex; 
-  align-items: center;
-  justify-content: center;
-  color: white; 
-  background-color: var(--fl-blue);
-  text-decoration: none; 
-  font-size: 18px; 
-  font-weight: bold;
-  padding: 12px 25px;
-  border-radius: 50px;
-  box-shadow: 0 4px 12px rgba(37, 118, 208, 0.3);
-  width: fit-content;
-  transition: all 0.2s;
-}
+    .call-btn { background-color: var(--fl-blue); }
+    .book-btn { background-color: #28a745; } /* Success Green */
+
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
-<div class="card">
+<div class="tabs">
+  <button id="tab-loc" class="tab-btn active" onclick="switchTab('locator')">ZIP Locator</button>
+  <button id="tab-breed" class="tab-btn" onclick="switchTab('breed')">Breed Guide</button>
+</div>
+
+<div id="locator-section" class="card">
   <h2>FURRYLAND</h2>
   <p class="subtitle">Mobile Grooming</p>
   <p class="locator-text">Zip Code Locator</p>
   
-  <input type="text" id="zipInput" placeholder="Enter ZIP Code" maxlength="5" />
-  <button id="searchBtn" onclick="lookup()" disabled>Loading...</button>
+  <div class="input-group">
+    <input type="text" id="zipInput" placeholder="Enter ZIP Code" maxlength="5" />
+    <button class="locate-btn" onclick="detectLocation()">📍</button>
+  </div>
+  
+  <button id="searchBtn" onclick="lookup()" disabled>Loading Data...</button>
 
   <div id="result">
     <div id="statusMessage" style="color:var(--fl-blue);">Connecting to database...</div>
   </div>
 </div>
 
+<div id="breed-section" class="card hidden">
+  <h2>FURRYLAND</h2>
+  <p class="subtitle">Breed Guide</p>
+  <p style="margin-top: 20px; color: #666;">Breed data coming soon!</p>
+</div>
+
 <script>
   let data = [];
-  const resultDiv = document.getElementById('result');
-  const searchBtn = document.getElementById('searchBtn');
+  const defaultBookingUrl = "https://booking.moego.pet/?name=FurryLand"; // Fallback link
+
+  function switchTab(tab) {
+    if (tab === 'locator') {
+      document.getElementById('locator-section').classList.remove('hidden');
+      document.getElementById('breed-section').classList.add('hidden');
+      document.getElementById('tab-loc').classList.add('active');
+      document.getElementById('tab-breed').classList.remove('active');
+    } else {
+      document.getElementById('locator-section').classList.add('hidden');
+      document.getElementById('breed-section').classList.remove('hidden');
+      document.getElementById('tab-loc').classList.remove('active');
+      document.getElementById('tab-breed').classList.add('active');
+    }
+  }
+
+  function detectLocation() {
+    if (!navigator.geolocation) return alert("Geolocation not supported.");
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+      const json = await res.json();
+      if (json.address.postcode) {
+        document.getElementById('zipInput').value = json.address.postcode.substring(0, 5);
+        lookup();
+      }
+    });
+  }
 
   const csvUrls = [
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1188497872&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1280736540&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=131605005&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1500753982&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=446752663&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=485353994&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=397950327&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=635144428&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1767838695&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1076386464&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1710571999&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1694979049&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1903462545&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1243184247&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=417599010&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=249363358&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1996572760&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=2027496995&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=725540742&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1525185712&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1550033892&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=963762001&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=730448198&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1540504964&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=205567237&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1449580229&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=270344733&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1264904892&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=224532765&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=852682701&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=501128595&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=426209112&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=392353823&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1159363307&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1116591924&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=2095986021&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1057310910&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1528020874&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1652950939&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1789617640&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=157996514&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=501733820&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=323563834&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=246174883&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=2071147823&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=729530518&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=13852972&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=55712936&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=831709095&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1166674507&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1826121485&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1592212111&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=989469982&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=302212128&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=2016336892&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=716701373&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=977992752&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=298161339&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=450072031&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=2041892595&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1863003536&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1591614006&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=911645826&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1616350219&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=544183757&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=2052241812&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1216528010&single=true&output=csv',
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv'
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv'
+    // ... PASTE YOUR OTHER 70 LINKS ...
   ];
 
   Promise.all(csvUrls.map(url => fetch(url).then(res => res.text())))
     .then(csvs => {
-      csvs.forEach(csvText => {
-        const rows = csvText.trim().split('\n');
-        rows.slice(1).forEach(row => { 
-          const match = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
-          if (!match) return;
-          data.push({ 
-            location: match[0].replace(/"/g,'').trim(), 
-            zip: match[1].replace(/"/g,'').trim(), 
-            phone: match[2] ? match[2].replace(/"/g,'').trim() : "No phone listed" 
-          });
+      csvs.forEach(csv => {
+        const rows = csv.trim().split('\n');
+        rows.slice(1).forEach(row => {
+          const m = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
+          if (m) {
+            data.push({
+              name: m[0].replace(/"/g,'').trim(),
+              zip: m[1].trim(),
+              phone: m[2]?.trim() || "No phone listed",
+              link: m[3]?.replace(/"/g,'').trim() || defaultBookingUrl
+            });
+          }
         });
       });
-      document.getElementById('statusMessage').textContent = ""; 
-      searchBtn.disabled = false;
-      searchBtn.textContent = "Search ZIP";
+      document.getElementById('statusMessage').textContent = "";
+      document.getElementById('searchBtn').disabled = false;
+      document.getElementById('searchBtn').textContent = "Search ZIP";
     });
 
   function lookup() {
-    const zipInput = document.getElementById('zipInput').value.trim();
-    if (!zipInput) return;
-    const match = data.find(entry => entry.zip.replace(/\s+/g,'') === zipInput.replace(/\s+/g,''));
+    const zip = document.getElementById('zipInput').value.trim();
+    const match = data.find(d => d.zip === zip);
+    const resultDiv = document.getElementById('result');
+
     if (match) {
       resultDiv.innerHTML = `
-        <div class="location-label">📍 ${match.location}</div>
-        <a href="tel:${match.phone}" class="phone-link">📞 ${match.phone}</a>
+        <div class="location-label">📍 ${match.name}</div>
+        <div class="action-buttons">
+          <a href="tel:${match.phone}" class="btn-link call-btn">📞 Call ${match.phone}</a>
+          <a href="${match.link}" target="_blank" class="btn-link book-btn">📅 Book Now</a>
+        </div>
       `;
     } else {
-      resultDiv.innerHTML = "<span style='color:#666;'>No service in this ZIP yet!</span>";
+      resultDiv.innerHTML = "<p style='color:#666;'>No service in this ZIP yet!</p>";
     }
   }
 </script>
 </body>
 </html>
-
-
-
