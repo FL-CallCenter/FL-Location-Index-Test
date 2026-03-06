@@ -22,7 +22,6 @@
       margin: 0;
     }
 
-    /* TAB SYSTEM */
     .tabs {
       display: flex;
       gap: 10px;
@@ -103,9 +102,9 @@
       text-transform: uppercase;
     }
 
-    #result { margin-top: 20px; min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+    #result { margin-top: 10px; min-height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; }
     
-    .location-label { color: #333; font-weight: 700; font-size: 18px; margin: 10px 0 15px 0; }
+    .location-label { color: #333; font-weight: 700; font-size: 18px; margin: 8px 0 12px 0; display: flex; align-items: center; justify-content: center; width: 100%; }
 
     .action-buttons { display: flex; flex-direction: column; gap: 12px; width: 100%; align-items: center; }
 
@@ -118,7 +117,7 @@
     .btn-link:active { transform: scale(0.97); }
 
     .call-btn { background-color: var(--fl-blue); }
-    .book-btn { background-color: #28a745; } /* Success Green */
+    .book-btn { background-color: #28a745; }
 
     .hidden { display: none !important; }
   </style>
@@ -155,7 +154,7 @@
 
 <script>
   let data = [];
-  const defaultBookingUrl = "https://booking.moego.pet/?name=FurryLand"; // Fallback link
+  const defaultBookingUrl = "https://booking.moego.pet/?name=FurryLand";
 
   function switchTab(tab) {
     if (tab === 'locator') {
@@ -274,6 +273,10 @@
       document.getElementById('statusMessage').textContent = "";
       document.getElementById('searchBtn').disabled = false;
       document.getElementById('searchBtn').textContent = "Search ZIP";
+    })
+    .catch(err => {
+      document.getElementById('statusMessage').textContent = "Error loading data.";
+      console.error(err);
     });
 
   function lookup() {
@@ -293,6 +296,36 @@
       resultDiv.innerHTML = "<p style='color:#666;'>No service in this ZIP yet!</p>";
     }
   }
+
+  function switchTab(tab) {
+    if (tab === 'locator') {
+      document.getElementById('locator-section').classList.remove('hidden');
+      document.getElementById('breed-section').classList.add('hidden');
+      document.getElementById('tab-loc').classList.add('active');
+      document.getElementById('tab-breed').classList.remove('active');
+    } else {
+      document.getElementById('locator-section').classList.add('hidden');
+      document.getElementById('breed-section').classList.remove('hidden');
+      document.getElementById('tab-loc').classList.remove('active');
+      document.getElementById('tab-breed').classList.add('active');
+    }
+  }
+
+  function detectLocation() {
+    if (!navigator.geolocation) return alert("Geolocation not supported.");
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+      const json = await res.json();
+      if (json.address.postcode) {
+        document.getElementById('zipInput').value = json.address.postcode.substring(0, 5);
+        lookup();
+      }
+    });
+  }
+
+  document.getElementById('zipInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') lookup();
+  });
 </script>
 </body>
 </html>
