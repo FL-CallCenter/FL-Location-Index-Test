@@ -34,6 +34,7 @@
       box-shadow: 0 8px 25px rgba(0,0,0,0.08); width: 100%; max-width: 380px;
       text-align: center; border-top: 5px solid var(--fl-orange); margin-bottom: 10px;
       box-sizing: border-box; display: flex; flex-direction: column; align-items: center;
+      position: relative; /* Needed for dropdown positioning */
     }
 
     h2 { color: var(--fl-orange); margin: 0; font-weight: 800; text-transform: uppercase; font-size: 24px; }
@@ -45,17 +46,42 @@
       margin-bottom: 8px; text-align: center;
     }
 
+    /* CUSTOM SEARCHABLE DROPDOWN */
+    .search-container { position: relative; width: 100%; }
+    
+    #customDropdown {
+      position: absolute;
+      top: 100%; left: 0; right: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+      display: none; /* Hidden by default */
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      margin-top: -5px;
+    }
+
+    .dropdown-item {
+      padding: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      border-bottom: 1px solid #f9f9f9;
+      transition: background 0.2s;
+    }
+    .dropdown-item:hover { background: var(--fl-accent); color: var(--fl-blue); }
+
     #searchBtn { 
       padding: 12px; width: 100%; background-color: var(--fl-orange); 
       color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
-      text-transform: uppercase; font-size: 14px; margin-bottom: 10px;
+      text-transform: uppercase; font-size: 14px; margin-top: 5px;
     }
 
-    /* SPACED RESULTS IN MAIN CARD */
+    /* SPACED RESULTS */
     #result strong { display: block; margin-bottom: 8px; font-size: 16px; }
     #result .phone-line { margin-bottom: 12px; display: block; }
 
-    /* SPACED DIRECTORY CARDS */
     #location-list {
       width: 100%; max-width: 900px; 
       display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 5px;
@@ -70,31 +96,18 @@
 
     #list-header { color: var(--fl-blue); margin: 25px 0 10px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
 
-    /* LOWERED MAP */
     #map {
       height: 480px; width: 100%; max-width: 1000px; border-radius: 15px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 4px solid white;
-      margin-top: 40px; /* Increased spacing above map */
+      margin-top: 40px;
     }
 
     .book-btn { 
       background-color: #28a745; color: white !important; text-decoration: none; 
       padding: 8px 22px; border-radius: 50px; display: inline-block; 
-      font-weight: bold; font-size: 12px; transition: 0.2s;
+      font-weight: bold; font-size: 12px;
     }
-    .book-btn:active { transform: scale(0.95); }
 
-    /* Map Popup Spacing */
-    .leaflet-popup-content strong { display: block; margin-bottom: 6px; }
-    .leaflet-popup-content div { margin-bottom: 10px; }
-
-    .pulsing-marker { width: 8px; height: 8px; background-color: var(--fl-blue); border-radius: 50%; position: relative; }
-    .pulsing-marker::after {
-      content: ""; width: 100%; height: 100%; border: 2px solid var(--fl-blue);
-      border-radius: 50%; position: absolute; top: -2px; left: -2px;
-      animation: pulse 2.5s infinite ease-out;
-    }
-    @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2.5); opacity: 0; } }
     .hidden { display: none !important; }
   </style>
 </head>
@@ -111,10 +124,13 @@
       <p class="subtitle">Search Hubs</p>
       
       <input type="text" id="zipInput" placeholder="Enter ZIP Code" maxlength="5" />
-      <input type="text" id="hubSearch" list="hubList" placeholder="Type City Name..." oninput="checkJump(this.value)">
-      <datalist id="hubList"></datalist>
+      
+      <div class="search-container">
+        <input type="text" id="hubSearchInput" placeholder="Type or Browse City..." onfocus="showDropdown()" oninput="filterDropdown()">
+        <div id="customDropdown"></div>
+      </div>
 
-      <button id="searchBtn" onclick="lookup()" disabled>Loading...</button>
+      <button id="searchBtn" onclick="lookup()" disabled>Loading Data...</button>
       
       <div id="result"></div>
     </div>
@@ -240,7 +256,7 @@
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1216528010&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv'
   ];
-  
+
   async function loadData() {
     try {
       const responses = await Promise.all(csvUrls.map(url => fetch(url).then(r => r.text())));
@@ -256,8 +272,49 @@
       document.getElementById('searchBtn').disabled = false;
       document.getElementById('searchBtn').textContent = "Search ZIP";
       plotHubs();
-      populateAutocomplete();
+      buildCustomDropdown();
     } catch (err) { console.error(err); }
+  }
+
+  // --- CUSTOM DROPDOWN LOGIC ---
+  function buildCustomDropdown() {
+    const dropdown = document.getElementById('customDropdown');
+    const cities = [...new Set(data.map(d => d.city))].sort();
+    
+    dropdown.innerHTML = cities.map(city => `
+      <div class="dropdown-item" onclick="selectCity('${city}')">${city}</div>
+    `).join('');
+  }
+
+  function showDropdown() {
+    document.getElementById('customDropdown').style.display = 'block';
+  }
+
+  function filterDropdown() {
+    const input = document.getElementById('hubSearchInput').value.toLowerCase();
+    const items = document.querySelectorAll('.dropdown-item');
+    items.forEach(item => {
+      const text = item.innerText.toLowerCase();
+      item.style.display = text.includes(input) ? 'block' : 'none';
+    });
+  }
+
+  function selectCity(city) {
+    document.getElementById('hubSearchInput').value = city;
+    document.getElementById('customDropdown').style.display = 'none';
+    
+    const match = data.find(d => d.city === city);
+    if (match && cityCoords[city]) {
+      map.flyTo(cityCoords[city], 8);
+      displayStateLocations(match.state);
+    }
+  }
+
+  // Close dropdown when clicking outside
+  window.onclick = function(event) {
+    if (!event.target.matches('#hubSearchInput')) {
+      document.getElementById('customDropdown').style.display = 'none';
+    }
   }
 
   function plotHubs() {
@@ -275,20 +332,6 @@
         `);
       }
     });
-  }
-
-  function populateAutocomplete() {
-    const list = document.getElementById('hubList');
-    const cities = [...new Set(data.map(d => d.city))].sort();
-    cities.forEach(c => { if(c && cityCoords[c]) list.appendChild(new Option(c, c)); });
-  }
-
-  function checkJump(val) {
-    if (cityCoords[val]) {
-      const match = data.find(d => d.city === val);
-      map.flyTo(cityCoords[val], 8);
-      displayStateLocations(match.state);
-    }
   }
 
   function lookup() {
