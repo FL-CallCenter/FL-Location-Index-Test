@@ -34,7 +34,7 @@
       box-shadow: 0 8px 25px rgba(0,0,0,0.08); width: 100%; max-width: 380px;
       text-align: center; border-top: 5px solid var(--fl-orange); margin-bottom: 10px;
       box-sizing: border-box; display: flex; flex-direction: column; align-items: center;
-      position: relative; /* Needed for dropdown positioning */
+      position: relative;
     }
 
     h2 { color: var(--fl-orange); margin: 0; font-weight: 800; text-transform: uppercase; font-size: 24px; }
@@ -58,17 +58,17 @@
       max-height: 200px;
       overflow-y: auto;
       z-index: 1000;
-      display: none; /* Hidden by default */
+      display: none;
       box-shadow: 0 10px 20px rgba(0,0,0,0.1);
       margin-top: -5px;
     }
 
     .dropdown-item {
-      padding: 10px;
+      padding: 12px;
       cursor: pointer;
       font-size: 14px;
+      text-align: center;
       border-bottom: 1px solid #f9f9f9;
-      transition: background 0.2s;
     }
     .dropdown-item:hover { background: var(--fl-accent); color: var(--fl-blue); }
 
@@ -78,7 +78,6 @@
       text-transform: uppercase; font-size: 14px; margin-top: 5px;
     }
 
-    /* SPACED RESULTS */
     #result strong { display: block; margin-bottom: 8px; font-size: 16px; }
     #result .phone-line { margin-bottom: 12px; display: block; }
 
@@ -108,6 +107,17 @@
       font-weight: bold; font-size: 12px;
     }
 
+    /* Map Popup Centering */
+    .leaflet-popup-content-wrapper { text-align: center !important; }
+    .leaflet-popup-content { display: flex !important; flex-direction: column; align-items: center; }
+
+    .pulsing-marker { width: 8px; height: 8px; background-color: var(--fl-blue); border-radius: 50%; position: relative; }
+    .pulsing-marker::after {
+      content: ""; width: 100%; height: 100%; border: 2px solid var(--fl-blue);
+      border-radius: 50%; position: absolute; top: -2px; left: -2px;
+      animation: pulse 2.5s infinite ease-out;
+    }
+    @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2.5); opacity: 0; } }
     .hidden { display: none !important; }
   </style>
 </head>
@@ -149,6 +159,7 @@
 
 <script>
   let data = [];
+  let markers = {}; // Store markers by city name for easy access
   let geojsonLayer;
   
   const cityCoords = {
@@ -185,7 +196,7 @@
       }).addTo(map);
     });
 
- const csvUrls = [
+  const csvUrls = [
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1188497872&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1280736540&single=true&output=csv',
@@ -271,24 +282,44 @@
       });
       document.getElementById('searchBtn').disabled = false;
       document.getElementById('searchBtn').textContent = "Search ZIP";
+      
+      // ORDER MATTERS: Plot pins before building the search tools
       plotHubs();
       buildCustomDropdown();
     } catch (err) { console.error(err); }
   }
 
-  // --- CUSTOM DROPDOWN LOGIC ---
+  function plotHubs() {
+    const plotted = new Set();
+    data.forEach(d => {
+      if (d.city && cityCoords[d.city] && !plotted.has(d.city)) {
+        plotted.add(d.city);
+        const icon = L.divIcon({ className: '', html: '<div class="pulsing-marker"></div>', iconSize: [8, 8], iconAnchor: [4, 4] });
+        
+        const marker = L.marker(cityCoords[d.city], { icon: icon }).addTo(map).bindPopup(`
+            <div style="text-align: center;">
+              <strong>FurryLand ${d.city}</strong><br>
+              <div style="margin: 5px 0; font-size:13px;">📞 ${d.phone}</div>
+              <a href="${d.link}" target="_blank" class="book-btn">Book Now</a>
+            </div>
+        `);
+        
+        // Save marker reference for jumpToHub functionality
+        markers[d.city] = marker;
+      }
+    });
+  }
+
   function buildCustomDropdown() {
     const dropdown = document.getElementById('customDropdown');
-    const cities = [...new Set(data.map(d => d.city))].sort();
+    const cities = [...new Set(data.map(d => d.city))].filter(c => cityCoords[c]).sort();
     
     dropdown.innerHTML = cities.map(city => `
       <div class="dropdown-item" onclick="selectCity('${city}')">${city}</div>
     `).join('');
   }
 
-  function showDropdown() {
-    document.getElementById('customDropdown').style.display = 'block';
-  }
+  function showDropdown() { document.getElementById('customDropdown').style.display = 'block'; }
 
   function filterDropdown() {
     const input = document.getElementById('hubSearchInput').value.toLowerCase();
@@ -306,32 +337,16 @@
     const match = data.find(d => d.city === city);
     if (match && cityCoords[city]) {
       map.flyTo(cityCoords[city], 8);
+      // Automatically open the pin's bubble
+      if (markers[city]) markers[city].openPopup();
       displayStateLocations(match.state);
     }
   }
 
-  // Close dropdown when clicking outside
   window.onclick = function(event) {
     if (!event.target.matches('#hubSearchInput')) {
       document.getElementById('customDropdown').style.display = 'none';
     }
-  }
-
-  function plotHubs() {
-    const plotted = new Set();
-    data.forEach(d => {
-      if (d.city && cityCoords[d.city] && !plotted.has(d.city)) {
-        plotted.add(d.city);
-        const icon = L.divIcon({ className: '', html: '<div class="pulsing-marker"></div>', iconSize: [8, 8], iconAnchor: [4, 4] });
-        L.marker(cityCoords[d.city], { icon: icon }).addTo(map).bindPopup(`
-            <div style="text-align: center;">
-              <strong>FurryLand ${d.city}</strong><br>
-              <div style="margin: 5px 0; font-size:13px;">📞 ${d.phone}</div>
-              <a href="${d.link}" target="_blank" class="book-btn">Book Now</a>
-            </div>
-        `);
-      }
-    });
   }
 
   function lookup() {
@@ -347,6 +362,7 @@
         </div>`;
       if (match.city && cityCoords[match.city]) {
           map.flyTo(cityCoords[match.city], 8);
+          if (markers[match.city]) markers[match.city].openPopup();
           displayStateLocations(match.state);
       }
     } else { res.innerHTML = "<p style='font-size:12px; color:#999;'>No service yet!</p>"; }
