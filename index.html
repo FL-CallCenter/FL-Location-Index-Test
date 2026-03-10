@@ -11,30 +11,41 @@
   <style>
     :root { --fl-orange: #f07b23; --fl-blue: #2576d0; --fl-bg: #efeee9; --fl-accent: #f2ffff; }
     body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; background-color: var(--fl-bg); display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+    
     .tabs { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; }
     .tab-btn { flex: 1; padding: 10px; border: none; border-radius: 10px; background: #d1d1d1; cursor: pointer; font-weight: bold; color: #555; transition: 0.3s; font-size: 14px; }
     .tab-btn.active { background: var(--fl-blue); color: white; }
+
     .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); width: 100%; max-width: 380px; text-align: center; border-top: 5px solid var(--fl-orange); margin-bottom: 10px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; position: relative; }
     h2 { color: var(--fl-orange); margin: 0; font-weight: 800; text-transform: uppercase; font-size: 24px; }
     .subtitle { color: #444; font-size: 14px; margin: 2px 0 15px 0; font-weight: 600; text-transform: uppercase; }
+    
     input { padding: 12px; font-size: 15px; width: 100%; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; background-color: var(--fl-accent); outline: none; margin-bottom: 8px; text-align: center; }
+    
     .search-container { position: relative; width: 100%; }
     #customDropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-top: -5px; }
     .dropdown-item { padding: 12px; cursor: pointer; font-size: 14px; text-align: center; border-bottom: 1px solid #f9f9f9; }
     .dropdown-item:hover { background: var(--fl-accent); color: var(--fl-blue); }
+    
     #searchBtn { padding: 12px; width: 100%; background-color: var(--fl-orange); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 14px; margin-top: 5px; }
-    #result { margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--fl-blue); }
+    #result { margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--fl-blue); min-height: 18px; }
+    
     #location-list { width: 100%; max-width: 900px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 5px; }
     .state-card { background: white; padding: 20px; border-radius: 10px; width: 260px; box-shadow: 0 4px 10px rgba(0,0,0,0.04); border-left: 4px solid var(--fl-blue); text-align: center; display: flex; flex-direction: column; align-items: center; }
     .state-card strong { font-size: 16px; color: var(--fl-orange); margin-bottom: 8px; display: block; }
     .state-card .phone-line { font-size: 14px; color: #444; margin-bottom: 12px; display: block; }
+    
     #list-header { color: var(--fl-blue); margin: 25px 0 10px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+    
     #map-wrapper { position: relative; width: 100%; max-width: 1000px; margin-top: 40px; }
     #map { height: 480px; width: 100%; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 4px solid white; }
     #resetMapBtn { position: absolute; top: 15px; right: 15px; z-index: 1000; background: white; border: 1px solid #ccc; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; }
+    
     .book-btn { background-color: #28a745; color: white !important; text-decoration: none; padding: 8px 22px; border-radius: 50px; display: inline-block; font-weight: bold; font-size: 12px; }
+    
     .leaflet-popup-content-wrapper { text-align: center !important; }
     .leaflet-popup-content { display: flex !important; flex-direction: column; align-items: center; }
+    
     .pulsing-marker { width: 8px; height: 8px; background-color: var(--fl-blue); border-radius: 50%; position: relative; }
     .pulsing-marker::after { content: ""; width: 100%; height: 100%; border: 2px solid var(--fl-blue); border-radius: 50%; position: absolute; top: -2px; left: -2px; animation: pulse 2.5s infinite ease-out; }
     @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2.5); opacity: 0; } }
@@ -79,7 +90,6 @@
   let markers = {};
   let geojsonLayer;
   
-  // ALL 70+ HUB COORDINATES MAPPED
   const cityCoords = {
     "Albuquerque": [35.0844, -106.6504], "Atlanta": [33.7490, -84.3880], "Austin": [30.2672, -97.7431],
     "Baton Rouge": [30.4515, -91.1871], "Beaumont": [30.0802, -94.1266], "Boise": [43.6150, -116.2023],
@@ -118,7 +128,10 @@
           layer.on({
             mouseover: (e) => e.target.setStyle({ fillOpacity: 0.6, fillColor: '#2576d0' }),
             mouseout: (e) => geojsonLayer.resetStyle(e.target),
-            click: (e) => { map.fitBounds(e.target.getBounds()); displayStateLocations(stateCodes[feature.properties.name] || feature.properties.name); }
+            click: (e) => { 
+                map.fitBounds(e.target.getBounds()); 
+                displayStateLocations(stateCodes[feature.properties.name] || feature.properties.name); 
+            }
           });
         }
       }).addTo(map);
@@ -195,7 +208,6 @@
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1216528010&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv'
   ];
-  
   async function loadData() {
     try {
       const responses = await Promise.all(csvUrls.map(url => fetch(url).then(r => r.text())));
@@ -245,20 +257,34 @@
       if (markers[city]) markers[city].openPopup();
       displayStateLocations(match.state);
       document.getElementById('result').innerText = "📍 Found: " + city + ", " + match.state;
+      document.getElementById('result').style.color = "var(--fl-blue)";
     }
   }
 
   function lookup() {
     const zip = document.getElementById('zipInput').value.trim();
     const match = data.find(d => d.zip === zip);
+    const res = document.getElementById('result');
+    const list = document.getElementById('location-list');
+    const head = document.getElementById('list-header');
+
     if (match) {
-      document.getElementById('result').innerText = "📍 Found: " + match.city + ", " + match.state;
+      res.innerText = "📍 Found: " + match.city + ", " + match.state;
+      res.style.color = "var(--fl-blue)";
       if (match.city && cityCoords[match.city]) {
           map.flyTo(cityCoords[match.city], 8);
           if (markers[match.city]) markers[match.city].openPopup();
           displayStateLocations(match.state);
       }
-    } else { document.getElementById('result').innerText = "No service here yet!"; }
+    } else { 
+      res.innerText = "No service here yet!";
+      res.style.color = "red";
+      list.innerHTML = "";
+      head.classList.add('hidden');
+      map.setView([39.82, -98.57], 4);
+      map.closePopup();
+      setTimeout(() => { res.innerText = ""; res.style.color = "var(--fl-blue)"; }, 2500);
+    }
   }
 
   function displayStateLocations(code) {
@@ -269,10 +295,18 @@
     if(unique.length > 0) { head.classList.remove('hidden'); list.innerHTML = unique.map(m => `<div class="state-card"><strong>${m.city}, ${m.state}</strong><span class="phone-line">📞 ${m.phone}</span><a href="${m.link}" target="_blank" class="book-btn">Book Now</a></div>`).join(''); }
   }
 
-  function resetMap() { map.setView([39.82, -98.57], 4); }
+  function resetMap() { 
+      map.setView([39.82, -98.57], 4); 
+      document.getElementById('location-list').innerHTML = "";
+      document.getElementById('list-header').classList.add('hidden');
+      document.getElementById('result').innerText = "";
+  }
+
   function switchTab(t) { document.getElementById('locator-section').classList.toggle('hidden', t !== 'locator'); document.getElementById('breed-section').classList.toggle('hidden', t === 'locator'); document.getElementById('tab-loc').classList.toggle('active', t === 'locator'); document.getElementById('tab-breed').classList.toggle('active', t !== 'locator'); if(t === 'locator') setTimeout(() => map.invalidateSize(), 200); }
+  
   window.onclick = (e) => { if (!e.target.matches('#hubSearchInput')) document.getElementById('customDropdown').style.display = 'none'; }
   document.getElementById('zipInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') lookup(); });
+  
   loadData();
 </script>
 </body>
