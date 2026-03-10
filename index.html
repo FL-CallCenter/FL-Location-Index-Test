@@ -19,190 +19,83 @@
     body { 
       font-family: 'Segoe UI', Roboto, Arial, sans-serif; 
       background-color: var(--fl-bg); 
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-      margin: 0;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
-      width: 100%;
-      max-width: 380px;
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 12px;
-      border: none;
-      border-radius: 12px;
-      background: #d1d1d1;
-      cursor: pointer;
-      font-weight: bold;
-      color: #555;
-      transition: 0.3s;
-    }
-
-    .tab-btn.active {
-      background: var(--fl-blue);
-      color: white;
+      display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0;
     }
 
     .card {
-      background: white;
-      padding: 35px;
-      border-radius: 20px; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 380px;
-      text-align: center;
-      border-top: 6px solid var(--fl-orange);
-      box-sizing: border-box;
-      margin-bottom: 20px;
-      z-index: 10;
+      background: white; padding: 35px; border-radius: 20px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 380px;
+      text-align: center; border-top: 6px solid var(--fl-orange); margin-bottom: 20px;
     }
 
-    h2 { color: var(--fl-orange); margin: 0; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; font-size: 28px; }
+    h2 { color: var(--fl-orange); margin: 0; font-weight: 800; text-transform: uppercase; font-size: 28px; }
     p.subtitle { color: #444; font-size: 16px; margin: 2px 0; font-weight: 600; text-transform: uppercase; }
-    p.locator-text { color: var(--fl-blue); font-size: 13px; margin-top: 4px; margin-bottom: 25px; font-weight: 700; text-transform: uppercase; }
     
     input { 
-      padding: 15px 45px 15px 15px; 
-      font-size: 16px; 
-      width: 100%; 
-      border: 2px solid #ddd; 
-      border-radius: 10px; 
-      box-sizing: border-box;
-      background-color: var(--fl-accent);
-      outline: none;
+      padding: 15px; font-size: 16px; width: 100%; border: 2px solid #ddd; 
+      border-radius: 10px; box-sizing: border-box; background-color: var(--fl-accent); outline: none;
     }
-
-    .input-group { position: relative; width: 100%; }
 
     #searchBtn { 
-      padding: 15px; 
-      font-size: 16px; 
-      width: 100%; 
-      margin-top: 15px; 
-      background-color: var(--fl-orange); 
-      color: white; 
-      border: none; 
-      border-radius: 10px; 
-      cursor: pointer; 
-      font-weight: bold;
-      text-transform: uppercase;
+      padding: 15px; width: 100%; margin-top: 15px; background-color: var(--fl-orange); 
+      color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;
     }
 
-    #result { margin-top: 10px; min-height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; }
-    .location-label { color: #333; font-weight: 700; font-size: 18px; margin: 8px 0 12px 0; }
-
-    .action-buttons { display: flex; flex-direction: column; gap: 12px; width: 100%; align-items: center; }
-    .btn-link { 
-      display: flex; align-items: center; justify-content: center;
-      color: white; text-decoration: none; font-size: 16px; font-weight: bold;
-      padding: 12px 20px; border-radius: 50px; width: 90%; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    .call-btn { background-color: var(--fl-blue); }
-    .book-btn { background-color: #28a745; }
-
-    /* --- MAP STYLES --- */
     #map {
-      height: 550px;
-      width: 100%;
-      max-width: 900px;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      border: 5px solid white;
+      height: 550px; width: 100%; max-width: 1000px; border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 5px solid white;
     }
 
-    /* SMALLER SUBTLE PULSING PIN */
-    .pulsing-marker {
-      width: 8px;
-      height: 8px;
-      background-color: var(--fl-blue);
-      border-radius: 50%;
-      position: relative;
-    }
+    /* CENTER POPUP CONTENT */
+    .leaflet-popup-content-wrapper { text-align: center !important; border-radius: 12px; }
+    .leaflet-popup-content { display: flex !important; flex-direction: column; align-items: center; justify-content: center; padding: 10px; }
 
+    /* SMALL SUBTLE PULSING PIN */
+    .pulsing-marker { width: 8px; height: 8px; background-color: var(--fl-blue); border-radius: 50%; position: relative; }
     .pulsing-marker::after {
-      content: "";
-      width: 100%;
-      height: 100%;
-      border: 2px solid var(--fl-blue);
-      border-radius: 50%;
-      position: absolute;
-      top: -2px;
-      left: -2px;
+      content: ""; width: 100%; height: 100%; border: 2px solid var(--fl-blue);
+      border-radius: 50%; position: absolute; top: -2px; left: -2px;
       animation: pulse 2.5s infinite ease-out;
     }
+    @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2.5); opacity: 0; } }
 
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 0.8; }
-      100% { transform: scale(2.5); opacity: 0; }
-    }
-
-    .hidden { display: none !important; }
+    .book-btn { background-color: #28a745; color: white !important; text-decoration: none; padding: 8px 15px; border-radius: 50px; display: inline-block; margin-top: 8px; font-weight: bold; }
+    #result { margin-top: 15px; min-height: 50px; }
   </style>
 </head>
 <body>
 
-<div class="tabs">
-  <button id="tab-loc" class="tab-btn active" onclick="switchTab('locator')">ZIP Locator</button>
-  <button id="tab-breed" class="tab-btn" onclick="switchTab('breed')">Breed Guide</button>
-</div>
-
-<div id="locator-section" style="width:100%; display:flex; flex-direction:column; align-items:center;">
     <div class="card">
       <h2>FURRYLAND</h2>
       <p class="subtitle">Mobile Grooming</p>
-      <p class="locator-text">Zip Code Locator</p>
-      
-      <div class="input-group">
-        <input type="text" id="zipInput" placeholder="Enter ZIP Code" maxlength="5" />
-      </div>
-      
+      <input type="text" id="zipInput" placeholder="Enter ZIP Code" maxlength="5" />
       <button id="searchBtn" onclick="lookup()" disabled>Loading Data...</button>
-
       <div id="result">
-        <div id="statusMessage" style="color:var(--fl-blue);">Connecting to database...</div>
+        <div id="statusMessage" style="color:var(--fl-blue);">Connecting to Sheets...</div>
       </div>
     </div>
 
     <div id="map"></div>
-</div>
-
-<div id="breed-section" class="card hidden">
-  <h2>FURRYLAND</h2>
-  <p class="subtitle">Breed Guide</p>
-  <p style="margin-top: 20px; color: #666;">Breed data coming soon!</p>
-</div>
 
 <script>
   let data = [];
-  const defaultBookingUrl = "https://booking.moego.pet/?name=FurryLand";
-
-  // Hub Coordinates for mapping Column E names to map pins
+  
+  // Naming keys must match Column E in your sheet exactly
   const cityCoords = {
-    "Atlanta": [33.7490, -84.3880], "Boise": [43.6150, -116.2023], "Boston": [42.3601, -71.0589],
-    "Charlotte": [35.2271, -80.8431], "Cincinnati": [39.1031, -84.5120], "Cleveland": [41.4993, -81.6944],
-    "Columbus": [39.9612, -82.9988], "Dallas": [32.7767, -96.7970], "Denver": [39.7392, -104.9903],
-    "Detroit": [42.3314, -83.0458], "Houston": [29.7604, -95.3698], "Indianapolis": [39.7684, -86.1581],
-    "Las Vegas": [36.1699, -115.1398], "Little Rock": [34.7465, -92.2896], "Louisville": [38.2527, -85.7585],
-    "Nashville": [36.1627, -86.7816], "Orlando": [28.5383, -81.3792], "Phoenix": [33.4484, -112.0740],
-    "Portland": [45.5152, -122.6784], "Raleigh": [35.7796, -78.6382], "Salt Lake City": [40.7608, -111.8910],
-    "San Antonio": [29.4241, -98.4936], "Savannah": [32.0809, -81.0912], "Wilmington": [34.2104, -77.8868],
-    "Pittsburgh": [40.4406, -79.9959], "Augusta": [33.4735, -82.0105], "Sherman": [33.6357, -96.6089],
-    "Tri-Cities": [36.5200, -82.3500], "NOVA": [38.8462, -77.3064]
+    "Atlanta": [33.749, -84.388], "Boise": [43.615, -116.202], "Boston": [42.360, -71.058],
+    "Charlotte": [35.227, -80.843], "Cincinnati": [39.103, -84.512], "Cleveland": [41.499, -81.694],
+    "Columbus": [39.961, -82.998], "Dallas": [32.776, -96.797], "Denver": [39.739, -104.990],
+    "Detroit": [42.331, -83.045], "Houston": [29.760, -95.369], "Las Vegas": [36.169, -115.139],
+    "Nashville": [36.162, -86.781], "Orlando": [28.538, -81.379], "Phoenix": [33.448, -112.074],
+    "Portland": [45.515, -122.678], "Raleigh": [35.779, -78.638], "Salt Lake City": [40.760, -111.891],
+    "San Antonio": [29.424, -98.493], "Savannah": [32.080, -81.091], "Pittsburgh": [40.440, -79.995],
+    "Augusta": [33.473, -82.010], "Sherman": [33.635, -96.608], "Tri-Cities": [36.520, -82.350], "NOVA": [38.846, -77.306]
   };
 
-  // Initialize Map
-  const map = L.map('map').setView([39.8283, -98.5795], 4);
+  const map = L.map('map').setView([39.82, -98.57], 4);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-  // PASTE YOUR FULL LIST OF CSV URLS HERE
+  // PASTE ALL YOUR CSV URLs INSIDE THIS ARRAY
   const csvUrls = [
 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1188497872&single=true&output=csv',
@@ -274,18 +167,19 @@
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1216528010&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv'
   ];
-  Promise.all(csvUrls.map(url => fetch(url).then(res => res.text())))
-    .then(csvs => {
-      csvs.forEach(csv => {
-        const rows = csv.trim().split('\n');
-        rows.slice(1).forEach(row => {
+  async function loadAllData() {
+    try {
+      const responses = await Promise.all(csvUrls.map(url => fetch(url).then(r => r.text())));
+      responses.forEach(csv => {
+        const rows = csv.trim().split('\n').slice(1);
+        rows.forEach(row => {
           const m = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
           if (m) {
             data.push({
               name: m[0].replace(/"/g,'').trim(),
               zip: m[1].trim(),
-              phone: m[2]?.trim() || "No phone listed",
-              link: m[3]?.replace(/"/g,'').trim() || defaultBookingUrl,
+              phone: m[2]?.trim() || "No phone",
+              link: m[3]?.replace(/"/g,'').trim() || "#",
               city: m[4]?.trim() || "" // Column E
             });
           }
@@ -293,62 +187,62 @@
       });
       document.getElementById('statusMessage').textContent = "";
       document.getElementById('searchBtn').disabled = false;
-      document.getElementById('searchBtn').textContent = "Search ZIP";
-      plotAllHubs();
-    })
-    .catch(err => { console.error(err); });
+      plotHubs();
+    } catch (err) {
+      document.getElementById('statusMessage').textContent = "Error loading data.";
+      console.error(err);
+    }
+  }
 
-  function plotAllHubs() {
-    const plottedCities = new Set();
-    data.forEach(item => {
-        const city = item.city;
-        if (city && cityCoords[city] && !plottedCities.has(city)) {
-            plottedCities.add(city);
-            const pulsingIcon = L.divIcon({
-                className: '',
-                html: '<div class="pulsing-marker"></div>',
-                iconSize: [8, 8],
-                iconAnchor: [4, 4]
-            });
-            L.marker(cityCoords[city], { icon: pulsingIcon })
-                .addTo(map)
-                .bindPopup(`<strong>FurryLand ${city}</strong><br>📞 ${item.phone}<br><a href="${item.link}" target="_blank" style="color:var(--fl-blue); font-weight:bold;">Book Now</a>`);
-        }
+  function plotHubs() {
+    const plotted = new Set();
+    data.forEach(d => {
+      if (d.city && cityCoords[d.city] && !plotted.has(d.city)) {
+        plotted.add(d.city);
+        const icon = L.divIcon({
+          className: '',
+          html: '<div class="pulsing-marker"></div>',
+          iconSize: [8, 8],
+          iconAnchor: [4, 4]
+        });
+        
+        L.marker(cityCoords[d.city], { icon: icon })
+          .addTo(map)
+          .bindPopup(`
+            <div style="text-align: center;">
+              <strong style="font-size: 16px; display: block; margin-bottom: 5px;">FurryLand ${d.city}</strong>
+              <div style="margin-bottom: 8px;">📞 ${d.phone}</div>
+              <a href="${d.link}" target="_blank" class="book-btn">Book Now</a>
+            </div>
+          `);
+      }
     });
   }
 
   function lookup() {
     const zip = document.getElementById('zipInput').value.trim();
     const match = data.find(d => d.zip === zip);
-    const resultDiv = document.getElementById('result');
-
+    const res = document.getElementById('result');
     if (match) {
-      resultDiv.innerHTML = `
-        <div class="location-label">📍 ${match.name}</div>
-        <div class="action-buttons">
-          <a href="tel:${match.phone}" class="btn-link call-btn">📞 Call ${match.phone}</a>
-          <a href="${match.link}" target="_blank" class="btn-link book-btn">📅 Book Now</a>
-        </div>
-      `;
+      res.innerHTML = `
+        <div style="margin-top:10px;">
+          <strong>📍 ${match.name}</strong><br>
+          📞 ${match.phone}<br>
+          <a href="${match.link}" target="_blank" class="book-btn">Book Now</a>
+        </div>`;
       if (match.city && cityCoords[match.city]) {
-          map.flyTo(cityCoords[match.city], 7, { animate: true, duration: 1.5 });
+        map.flyTo(cityCoords[match.city], 7, { animate: true, duration: 1.5 });
       }
     } else {
-      resultDiv.innerHTML = "<p style='color:#666;'>No service in this ZIP yet!</p>";
+      res.innerHTML = "<p style='color:#666;'>No service in this ZIP yet!</p>";
     }
-  }
-
-  function switchTab(tab) {
-    document.getElementById('locator-section').classList.toggle('hidden', tab !== 'locator');
-    document.getElementById('breed-section').classList.toggle('hidden', tab === 'locator');
-    document.getElementById('tab-loc').classList.toggle('active', tab === 'locator');
-    document.getElementById('tab-breed').classList.toggle('active', tab !== 'locator');
-    if(tab === 'locator') setTimeout(() => map.invalidateSize(), 200);
   }
 
   document.getElementById('zipInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') lookup();
   });
+
+  loadAllData();
 </script>
 </body>
 </html>
