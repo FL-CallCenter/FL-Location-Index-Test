@@ -48,39 +48,45 @@
     #searchBtn { 
       padding: 12px; width: 100%; background-color: var(--fl-orange); 
       color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
-      text-transform: uppercase; font-size: 14px;
+      text-transform: uppercase; font-size: 14px; margin-bottom: 10px;
     }
 
-    /* SLIMMER STATE CARDS */
+    /* SPACED RESULTS IN MAIN CARD */
+    #result strong { display: block; margin-bottom: 8px; font-size: 16px; }
+    #result .phone-line { margin-bottom: 12px; display: block; }
+
+    /* SPACED DIRECTORY CARDS */
     #location-list {
       width: 100%; max-width: 900px; 
       display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 5px;
     }
     .state-card {
-      background: white; padding: 12px 20px; border-radius: 10px; width: 260px;
+      background: white; padding: 20px; border-radius: 10px; width: 260px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.04); border-left: 4px solid var(--fl-blue); 
       text-align: center; display: flex; flex-direction: column; align-items: center;
     }
-    .state-card strong { font-size: 15px; color: var(--fl-orange); }
-    .state-card div { font-size: 13px; color: #444; }
+    .state-card strong { font-size: 16px; color: var(--fl-orange); margin-bottom: 8px; display: block; }
+    .state-card .phone-line { font-size: 14px; color: #444; margin-bottom: 12px; display: block; }
 
-    #list-header { color: var(--fl-blue); margin: 15px 0 5px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+    #list-header { color: var(--fl-blue); margin: 25px 0 10px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
 
+    /* LOWERED MAP */
     #map {
-      height: 450px; width: 100%; max-width: 1000px; border-radius: 15px;
+      height: 480px; width: 100%; max-width: 1000px; border-radius: 15px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 4px solid white;
-      margin-top: 15px;
+      margin-top: 40px; /* Increased spacing above map */
     }
 
     .book-btn { 
       background-color: #28a745; color: white !important; text-decoration: none; 
-      padding: 6px 18px; border-radius: 50px; display: inline-block; 
-      margin-top: 8px; font-weight: bold; font-size: 12px;
+      padding: 8px 22px; border-radius: 50px; display: inline-block; 
+      font-weight: bold; font-size: 12px; transition: 0.2s;
     }
+    .book-btn:active { transform: scale(0.95); }
 
-    /* Map Popup Centering */
-    .leaflet-popup-content-wrapper { text-align: center !important; }
-    .leaflet-popup-content { display: flex !important; flex-direction: column; align-items: center; }
+    /* Map Popup Spacing */
+    .leaflet-popup-content strong { display: block; margin-bottom: 6px; }
+    .leaflet-popup-content div { margin-bottom: 10px; }
 
     .pulsing-marker { width: 8px; height: 8px; background-color: var(--fl-blue); border-radius: 50%; position: relative; }
     .pulsing-marker::after {
@@ -105,7 +111,6 @@
       <p class="subtitle">Search Hubs</p>
       
       <input type="text" id="zipInput" placeholder="Enter ZIP Code" maxlength="5" />
-      
       <input type="text" id="hubSearch" list="hubList" placeholder="Type City Name..." oninput="checkJump(this.value)">
       <datalist id="hubList"></datalist>
 
@@ -235,7 +240,7 @@
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1216528010&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv'
   ];
-
+  
   async function loadData() {
     try {
       const responses = await Promise.all(csvUrls.map(url => fetch(url).then(r => r.text())));
@@ -291,7 +296,12 @@
     const match = data.find(d => d.zip === zip);
     const res = document.getElementById('result');
     if (match) {
-      res.innerHTML = `<div style="text-align:center; margin-top:10px; font-size:14px;"><strong>📍 ${match.name}</strong><br>📞 ${match.phone}<br><a href="${match.link}" target="_blank" class="book-btn">Book Now</a></div>`;
+      res.innerHTML = `
+        <div style="text-align:center; margin-top:10px;">
+          <strong>📍 ${match.name}</strong>
+          <span class="phone-line">📞 ${match.phone}</span>
+          <a href="${match.link}" target="_blank" class="book-btn">Book Now</a>
+        </div>`;
       if (match.city && cityCoords[match.city]) {
           map.flyTo(cityCoords[match.city], 8);
           displayStateLocations(match.state);
@@ -306,7 +316,12 @@
     const unique = Array.from(new Set(matches.map(m => m.city))).map(c => matches.find(m => m.city === c));
     if(unique.length > 0) {
       head.classList.remove('hidden');
-      list.innerHTML = unique.map(m => `<div class="state-card"><strong>${m.city}, ${m.state}</strong><div>📞 ${m.phone}</div><a href="${m.link}" target="_blank" class="book-btn">Book Now</a></div>`).join('');
+      list.innerHTML = unique.map(m => `
+        <div class="state-card">
+          <strong>${m.city}, ${m.state}</strong>
+          <span class="phone-line">📞 ${m.phone}</span>
+          <a href="${m.link}" target="_blank" class="book-btn">Book Now</a>
+        </div>`).join('');
     }
   }
 
