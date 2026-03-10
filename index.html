@@ -9,45 +9,103 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
-    :root { --fl-orange: #f07b23; --fl-blue: #2576d0; --fl-bg: #efeee9; --fl-accent: #f2ffff; }
-    body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; background-color: var(--fl-bg); display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
-    
+    :root {
+      --fl-orange: #f07b23;
+      --fl-blue: #2576d0;
+      --fl-bg: #efeee9;
+      --fl-accent: #f2ffff;
+    }
+
+    body { 
+      font-family: 'Segoe UI', Roboto, Arial, sans-serif; 
+      background-color: var(--fl-bg); 
+      display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0;
+    }
+
     .tabs { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; }
-    .tab-btn { flex: 1; padding: 10px; border: none; border-radius: 10px; background: #d1d1d1; cursor: pointer; font-weight: bold; color: #555; transition: 0.3s; font-size: 14px; }
+    .tab-btn {
+      flex: 1; padding: 10px; border: none; border-radius: 10px; background: #d1d1d1;
+      cursor: pointer; font-weight: bold; color: #555; transition: 0.3s; font-size: 14px;
+    }
     .tab-btn.active { background: var(--fl-blue); color: white; }
 
-    .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); width: 100%; max-width: 380px; text-align: center; border-top: 5px solid var(--fl-orange); margin-bottom: 10px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; position: relative; }
+    .card {
+      background: white; padding: 25px; border-radius: 15px; 
+      box-shadow: 0 8px 25px rgba(0,0,0,0.08); width: 100%; max-width: 380px;
+      text-align: center; border-top: 5px solid var(--fl-orange); margin-bottom: 10px;
+      box-sizing: border-box; display: flex; flex-direction: column; align-items: center;
+      position: relative;
+    }
+
     h2 { color: var(--fl-orange); margin: 0; font-weight: 800; text-transform: uppercase; font-size: 24px; }
     .subtitle { color: #444; font-size: 14px; margin: 2px 0 15px 0; font-weight: 600; text-transform: uppercase; }
     
-    input { padding: 12px; font-size: 15px; width: 100%; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; background-color: var(--fl-accent); outline: none; margin-bottom: 8px; text-align: center; }
-    
+    input { 
+      padding: 12px; font-size: 15px; width: 100%; border: 2px solid #ddd; 
+      border-radius: 8px; box-sizing: border-box; background-color: var(--fl-accent); outline: none;
+      margin-bottom: 8px; text-align: center;
+    }
+
     .search-container { position: relative; width: 100%; }
-    #customDropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-top: -5px; }
+    
+    #customDropdown {
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: white; border: 1px solid #ddd; border-radius: 8px;
+      max-height: 200px; overflow-y: auto; z-index: 1000;
+      display: none; box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-top: -5px;
+    }
+
     .dropdown-item { padding: 12px; cursor: pointer; font-size: 14px; text-align: center; border-bottom: 1px solid #f9f9f9; }
     .dropdown-item:hover { background: var(--fl-accent); color: var(--fl-blue); }
-    
-    #searchBtn { padding: 12px; width: 100%; background-color: var(--fl-orange); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 14px; margin-top: 5px; }
+
+    #searchBtn { 
+      padding: 12px; width: 100%; background-color: var(--fl-orange); 
+      color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
+      text-transform: uppercase; font-size: 14px; margin-top: 5px;
+    }
+
     #result { margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--fl-blue); min-height: 18px; }
-    
-    #location-list { width: 100%; max-width: 900px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 5px; }
-    .state-card { background: white; padding: 20px; border-radius: 10px; width: 260px; box-shadow: 0 4px 10px rgba(0,0,0,0.04); border-left: 4px solid var(--fl-blue); text-align: center; display: flex; flex-direction: column; align-items: center; }
+
+    #location-list {
+      width: 100%; max-width: 900px; 
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 5px;
+    }
+    .state-card {
+      background: white; padding: 20px; border-radius: 10px; width: 260px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.04); border-left: 4px solid var(--fl-blue); 
+      text-align: center; display: flex; flex-direction: column; align-items: center;
+    }
     .state-card strong { font-size: 16px; color: var(--fl-orange); margin-bottom: 8px; display: block; }
     .state-card .phone-line { font-size: 14px; color: #444; margin-bottom: 12px; display: block; }
-    
+
     #list-header { color: var(--fl-blue); margin: 25px 0 10px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
-    
+
     #map-wrapper { position: relative; width: 100%; max-width: 1000px; margin-top: 40px; }
-    #map { height: 480px; width: 100%; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 4px solid white; }
-    #resetMapBtn { position: absolute; top: 15px; right: 15px; z-index: 1000; background: white; border: 1px solid #ccc; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; }
-    
-    .book-btn { background-color: #28a745; color: white !important; text-decoration: none; padding: 8px 22px; border-radius: 50px; display: inline-block; font-weight: bold; font-size: 12px; }
-    
+    #map {
+      height: 480px; width: 100%; border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 4px solid white;
+    }
+    #resetMapBtn {
+      position: absolute; top: 15px; right: 15px; z-index: 1000;
+      background: white; border: 1px solid #ccc; padding: 5px 10px;
+      border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold;
+    }
+
+    .book-btn { 
+      background-color: #28a745; color: white !important; text-decoration: none; 
+      padding: 8px 22px; border-radius: 50px; display: inline-block; 
+      font-weight: bold; font-size: 12px;
+    }
+
     .leaflet-popup-content-wrapper { text-align: center !important; }
     .leaflet-popup-content { display: flex !important; flex-direction: column; align-items: center; }
-    
+
     .pulsing-marker { width: 8px; height: 8px; background-color: var(--fl-blue); border-radius: 50%; position: relative; }
-    .pulsing-marker::after { content: ""; width: 100%; height: 100%; border: 2px solid var(--fl-blue); border-radius: 50%; position: absolute; top: -2px; left: -2px; animation: pulse 2.5s infinite ease-out; }
+    .pulsing-marker::after {
+      content: ""; width: 100%; height: 100%; border: 2px solid var(--fl-blue);
+      border-radius: 50%; position: absolute; top: -2px; left: -2px;
+      animation: pulse 2.5s infinite ease-out;
+    }
     @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2.5); opacity: 0; } }
     .hidden { display: none !important; }
   </style>
@@ -63,16 +121,22 @@
     <div class="card">
       <h2>FURRYLAND</h2>
       <p class="subtitle">Search Hubs</p>
+      
       <input type="text" id="zipInput" placeholder="Enter ZIP Code" maxlength="5" />
+      
       <div class="search-container">
         <input type="text" id="hubSearchInput" placeholder="Type or Browse City..." onfocus="showDropdown()" oninput="filterDropdown()">
         <div id="customDropdown"></div>
       </div>
+
       <button id="searchBtn" onclick="lookup()" disabled>Loading Data...</button>
+      
       <div id="result"></div>
     </div>
+
     <p id="list-header" class="hidden">State Directory</p>
     <div id="location-list"></div>
+
     <div id="map-wrapper">
       <button id="resetMapBtn" onclick="resetMap()">Full USA View</button>
       <div id="map"></div>
@@ -90,28 +154,31 @@
   let markers = {};
   let geojsonLayer;
   
+  // FULL COORDINATE LIST
   const cityCoords = {
+    "Central Indiana": [39.7684, -86.1581], "Columbus-Auburn": [32.4676, -84.9877],
+    "Columbus OH": [39.9612, -82.9988], "Greenville-Spartanburg": [34.8526, -82.3940],
+    "Harrisburg": [40.2732, -76.8867], "Fayetteville": [36.0822, -94.1719],
+    "Raleigh-Durham": [35.8900, -78.8500], "Tyler-Longview": [32.3513, -95.3011],
+    "West Palm Beach": [26.7153, -80.0534], "Green Bay": [44.5191, -88.0198],
+    "Hartford": [41.7658, -72.6734], "Tri-Cities": [36.5243, -82.3193],
+    "Sherman": [33.6357, -96.6089], "NoVa": [38.8462, -77.3064],
     "Albuquerque": [35.0844, -106.6504], "Atlanta": [33.7490, -84.3880], "Austin": [30.2672, -97.7431],
     "Baton Rouge": [30.4515, -91.1871], "Beaumont": [30.0802, -94.1266], "Boise": [43.6150, -116.2023],
     "Boston": [42.3601, -71.0589], "Central New Jersey": [40.5330, -74.4442], "Orlando": [28.5383, -81.3792],
-    "Indianapolis": [39.7684, -86.1581], "Waco": [31.5493, -97.1467], "Charleston": [32.7765, -79.9311],
-    "Charlotte": [35.2271, -80.8431], "Chattanooga": [35.0456, -85.3097], "Cincinnati": [39.1031, -84.5120],
-    "Colorado Springs": [38.8339, -104.8214], "Columbus OH": [39.9612, -82.9988], "Corpus Christi": [27.8006, -97.3964],
+    "Charleston": [32.7765, -79.9311], "Charlotte": [35.2271, -80.8431], "Chattanooga": [35.0456, -85.3097],
+    "Cincinnati": [39.1031, -84.5120], "Colorado Springs": [38.8339, -104.8214], "Corpus Christi": [27.8006, -97.3964],
     "Denver": [39.7392, -104.9903], "Detroit": [42.3314, -83.0458], "Dallas": [32.7767, -96.7970],
     "Fairfield": [41.1412, -73.2637], "Fort Myers": [26.6406, -81.8723], "Greensboro": [36.0726, -79.7920],
-    "Greenville": [34.8526, -82.3940], "Harrisburg": [40.2732, -76.8867], "Houston": [29.7604, -95.3698],
-    "Huntsville": [34.7304, -86.5861], "Knoxville": [35.9606, -83.9207], "Las Vegas": [36.1699, -115.1398],
-    "Lexington": [38.0406, -84.5037], "Little Rock": [34.7465, -92.2896], "Louisville": [38.2527, -85.7585],
-    "Lubbock": [33.5779, -101.8552], "Madison": [43.0731, -89.4012], "Milwaukee": [43.0389, -87.9065],
-    "Nashville": [36.1627, -86.7816], "Fayetteville": [36.0822, -94.1719], "Oklahoma City": [35.4676, -97.5164],
+    "Houston": [29.7604, -95.3698], "Huntsville": [34.7304, -86.5861], "Knoxville": [35.9606, -83.9207], 
+    "Las Vegas": [36.1699, -115.1398], "Lexington": [38.0406, -84.5037], "Little Rock": [34.7465, -92.2896], 
+    "Louisville": [38.2527, -85.7585], "Lubbock": [33.5779, -101.8552], "Madison": [43.0731, -89.4012], 
+    "Milwaukee": [43.0389, -87.9065], "Nashville": [36.1627, -86.7816], "Oklahoma City": [35.4676, -97.5164],
     "Phoenix": [33.4484, -112.0740], "Pittsburgh": [40.4406, -79.9959], "Portland": [45.5152, -122.6784],
-    "Raleigh": [35.7796, -78.6382], "Reno": [39.5296, -119.8138], "Salt Lake City": [40.7608, -111.8910],
-    "San Antonio": [29.4241, -98.4936], "Savannah": [32.0809, -81.0912], "Tyler": [32.3513, -95.3011],
-    "West Michigan": [42.9634, -85.6681], "West Palm Beach": [26.7153, -80.0534], "Wilmington": [34.2104, -77.8868],
-    "Cleveland": [41.4993, -81.6944], "Green Bay": [44.5191, -88.0198], "Hartford": [41.7658, -72.6734],
-    "Omaha": [41.2565, -95.9345], "Vermont": [44.5588, -72.5778], "Augusta": [33.4735, -82.0105],
-    "Kansas City": [39.0997, -94.5786], "Tri-Cities": [36.5243, -82.3193], "Sherman": [33.6357, -96.6089],
-    "NoVa": [38.8462, -77.3064]
+    "Reno": [39.5296, -119.8138], "Salt Lake City": [40.7608, -111.8910], "San Antonio": [29.4241, -98.4936], 
+    "Savannah": [32.0809, -81.0912], "West Michigan": [42.9634, -85.6681], "Wilmington": [34.2104, -77.8868],
+    "Cleveland": [41.4993, -81.6944], "Omaha": [41.2565, -95.9345], "Vermont": [44.5588, -72.5778], 
+    "Augusta": [33.4735, -82.0105], "Kansas City": [39.0997, -94.5786]
   };
 
   const stateCodes = { 'New Mexico': 'NM', 'Georgia': 'GA', 'Texas': 'TX', 'Louisiana': 'LA', 'Idaho': 'ID', 'Massachusetts': 'MA', 'New Jersey': 'NJ', 'Florida': 'FL', 'Indiana': 'IN', 'South Carolina': 'SC', 'North Carolina': 'NC', 'Tennessee': 'TN', 'Ohio': 'OH', 'Colorado': 'CO', 'Michigan': 'MI', 'Connecticut': 'CT', 'Pennsylvania': 'PA', 'Alabama': 'AL', 'Nevada': 'NV', 'Kentucky': 'KY', 'Arkansas': 'AR', 'Wisconsin': 'WI', 'Oklahoma': 'OK', 'Arizona': 'AZ', 'Oregon': 'OR', 'Nebraska': 'NE', 'Vermont': 'VT', 'Virginia': 'VA', 'Missouri': 'MO', 'Kansas': 'KS' };
@@ -128,16 +195,13 @@
           layer.on({
             mouseover: (e) => e.target.setStyle({ fillOpacity: 0.6, fillColor: '#2576d0' }),
             mouseout: (e) => geojsonLayer.resetStyle(e.target),
-            click: (e) => { 
-                map.fitBounds(e.target.getBounds()); 
-                displayStateLocations(stateCodes[feature.properties.name] || feature.properties.name); 
-            }
+            click: (e) => { map.fitBounds(e.target.getBounds()); displayStateLocations(stateCodes[feature.properties.name] || feature.properties.name); }
           });
         }
       }).addTo(map);
     });
 
- const csvUrls = [
+  const csvUrls = [
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1188497872&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1280736540&single=true&output=csv',
@@ -242,11 +306,6 @@
   }
 
   function showDropdown() { document.getElementById('customDropdown').style.display = 'block'; }
-  function filterDropdown() {
-    const input = document.getElementById('hubSearchInput').value.toLowerCase();
-    const items = document.querySelectorAll('.dropdown-item');
-    items.forEach(item => item.style.display = item.innerText.toLowerCase().includes(input) ? 'block' : 'none');
-  }
 
   function selectCity(city) {
     document.getElementById('hubSearchInput').value = city;
@@ -259,6 +318,12 @@
       document.getElementById('result').innerText = "📍 Found: " + city + ", " + match.state;
       document.getElementById('result').style.color = "var(--fl-blue)";
     }
+  }
+
+  function filterDropdown() {
+    const input = document.getElementById('hubSearchInput').value.toLowerCase();
+    const items = document.querySelectorAll('.dropdown-item');
+    items.forEach(item => item.style.display = item.innerText.toLowerCase().includes(input) ? 'block' : 'none');
   }
 
   function lookup() {
