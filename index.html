@@ -19,69 +19,69 @@
     body { 
       font-family: 'Segoe UI', Roboto, Arial, sans-serif; 
       background-color: var(--fl-bg); 
-      display: flex; flex-direction: column; align-items: center; padding: 40px 20px; margin: 0;
+      display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0;
     }
 
-    /* Tabs Navigation */
-    .tabs { display: flex; gap: 10px; margin-bottom: 25px; width: 100%; max-width: 400px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; }
     .tab-btn {
-      flex: 1; padding: 12px; border: none; border-radius: 12px; background: #d1d1d1;
-      cursor: pointer; font-weight: bold; color: #555; transition: 0.3s;
+      flex: 1; padding: 10px; border: none; border-radius: 10px; background: #d1d1d1;
+      cursor: pointer; font-weight: bold; color: #555; transition: 0.3s; font-size: 14px;
     }
     .tab-btn.active { background: var(--fl-blue); color: white; }
 
-    /* Main Search Card */
     .card {
-      background: white; padding: 40px; border-radius: 20px; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 420px;
-      text-align: center; border-top: 6px solid var(--fl-orange); margin-bottom: 30px;
+      background: white; padding: 25px; border-radius: 15px; 
+      box-shadow: 0 8px 25px rgba(0,0,0,0.08); width: 100%; max-width: 380px;
+      text-align: center; border-top: 5px solid var(--fl-orange); margin-bottom: 10px;
       box-sizing: border-box; display: flex; flex-direction: column; align-items: center;
     }
 
-    h2 { color: var(--fl-orange); margin: 0; font-weight: 800; text-transform: uppercase; font-size: 28px; }
-    .subtitle { color: #444; font-size: 16px; margin: 5px 0 20px 0; font-weight: 600; text-transform: uppercase; }
+    h2 { color: var(--fl-orange); margin: 0; font-weight: 800; text-transform: uppercase; font-size: 24px; }
+    .subtitle { color: #444; font-size: 14px; margin: 2px 0 15px 0; font-weight: 600; text-transform: uppercase; }
     
-    input, select { 
-      padding: 15px; font-size: 16px; width: 100%; border: 2px solid #ddd; 
-      border-radius: 10px; box-sizing: border-box; background-color: var(--fl-accent); outline: none;
-      margin-bottom: 12px; text-align: center;
+    input { 
+      padding: 12px; font-size: 15px; width: 100%; border: 2px solid #ddd; 
+      border-radius: 8px; box-sizing: border-box; background-color: var(--fl-accent); outline: none;
+      margin-bottom: 8px; text-align: center;
     }
 
     #searchBtn { 
-      padding: 15px; width: 100%; background-color: var(--fl-orange); 
-      color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;
-      text-transform: uppercase; transition: transform 0.2s;
+      padding: 12px; width: 100%; background-color: var(--fl-orange); 
+      color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
+      text-transform: uppercase; font-size: 14px;
     }
-    #searchBtn:disabled { background-color: #ccc; cursor: not-allowed; }
 
-    /* Results styling inside Search Card */
-    #result { width: 100%; margin-top: 20px; display: flex; flex-direction: column; align-items: center; }
-
-    /* Location Directory (State List) */
-    #list-header { color: var(--fl-blue); margin: 40px 0 20px 0; text-transform: uppercase; letter-spacing: 1px; }
+    /* SLIMMER STATE CARDS */
     #location-list {
-      width: 100%; max-width: 1000px; 
-      display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;
+      width: 100%; max-width: 900px; 
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 5px;
     }
     .state-card {
-      background: white; padding: 25px; border-radius: 15px; width: 300px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 6px solid var(--fl-blue); 
+      background: white; padding: 12px 20px; border-radius: 10px; width: 260px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.04); border-left: 4px solid var(--fl-blue); 
       text-align: center; display: flex; flex-direction: column; align-items: center;
     }
-    .state-card strong { font-size: 18px; color: var(--fl-orange); margin-bottom: 8px; }
+    .state-card strong { font-size: 15px; color: var(--fl-orange); }
+    .state-card div { font-size: 13px; color: #444; }
 
-    /* Map - Positioned at the bottom */
+    #list-header { color: var(--fl-blue); margin: 15px 0 5px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+
     #map {
-      height: 500px; width: 100%; max-width: 1000px; border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 5px solid white;
-      margin-top: 50px;
+      height: 450px; width: 100%; max-width: 1000px; border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 4px solid white;
+      margin-top: 15px;
     }
 
-    /* Popup Centering */
-    .leaflet-popup-content-wrapper { text-align: center !important; border-radius: 12px; }
-    .leaflet-popup-content { display: flex !important; flex-direction: column; align-items: center; justify-content: center; padding: 10px; }
+    .book-btn { 
+      background-color: #28a745; color: white !important; text-decoration: none; 
+      padding: 6px 18px; border-radius: 50px; display: inline-block; 
+      margin-top: 8px; font-weight: bold; font-size: 12px;
+    }
 
-    /* Pulsing Marker */
+    /* Map Popup Centering */
+    .leaflet-popup-content-wrapper { text-align: center !important; }
+    .leaflet-popup-content { display: flex !important; flex-direction: column; align-items: center; }
+
     .pulsing-marker { width: 8px; height: 8px; background-color: var(--fl-blue); border-radius: 50%; position: relative; }
     .pulsing-marker::after {
       content: ""; width: 100%; height: 100%; border: 2px solid var(--fl-blue);
@@ -89,13 +89,6 @@
       animation: pulse 2.5s infinite ease-out;
     }
     @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2.5); opacity: 0; } }
-
-    .book-btn { 
-      background-color: #28a745; color: white !important; text-decoration: none; 
-      padding: 10px 25px; border-radius: 50px; display: inline-block; 
-      margin-top: 15px; font-weight: bold; font-size: 14px;
-    }
-
     .hidden { display: none !important; }
   </style>
 </head>
@@ -110,17 +103,18 @@
     <div class="card">
       <h2>FURRYLAND</h2>
       <p class="subtitle">Search Hubs</p>
-      <input type="text" id="zipInput" placeholder="Enter ZIP Code" maxlength="5" />
-      <select id="hubDropdown" onchange="jumpToHub(this.value)">
-        <option value="">-- Browse by City --</option>
-      </select>
-      <button id="searchBtn" onclick="lookup()" disabled>Loading Data...</button>
       
-      <div id="result">
-        </div>
+      <input type="text" id="zipInput" placeholder="Enter ZIP Code" maxlength="5" />
+      
+      <input type="text" id="hubSearch" list="hubList" placeholder="Type City Name..." oninput="checkJump(this.value)">
+      <datalist id="hubList"></datalist>
+
+      <button id="searchBtn" onclick="lookup()" disabled>Loading...</button>
+      
+      <div id="result"></div>
     </div>
 
-    <h3 id="list-header" class="hidden">LOCATIONS IN THIS STATE</h3>
+    <p id="list-header" class="hidden">State Directory</p>
     <div id="location-list"></div>
 
     <div id="map"></div>
@@ -129,14 +123,13 @@
 <div id="breed-section" class="card hidden">
   <h2>FURRYLAND</h2>
   <p class="subtitle">Breed Guide</p>
-  <p style="margin-top: 10px; color: #666;">Breed data coming soon!</p>
+  <p style="padding-top:10px; color:#666;">Data loading...</p>
 </div>
 
 <script>
   let data = [];
   let geojsonLayer;
   
-  // Coordinate list for flying the map and placing pins
   const cityCoords = {
     "Atlanta": [33.749, -84.388], "Boise": [43.615, -116.202], "Boston": [42.360, -71.058],
     "Charlotte": [35.227, -80.843], "Cincinnati": [39.103, -84.512], "Cleveland": [41.499, -81.694],
@@ -148,19 +141,11 @@
     "Augusta": [33.473, -82.010], "Sherman": [33.635, -96.608], "Tri-Cities": [36.520, -82.350], "NOVA": [38.846, -77.306]
   };
 
-  // State Name to Code Helper
-  const stateCodes = { 
-    'Michigan': 'MI', 'Texas': 'TX', 'Florida': 'FL', 'Nevada': 'NV', 
-    'Georgia': 'GA', 'Arizona': 'AZ', 'North Carolina': 'NC', 'Ohio': 'OH', 
-    'Colorado': 'CO', 'Idaho': 'ID', 'Massachusetts': 'MA', 'Kentucky': 'KY', 
-    'Tennessee': 'TN', 'Oregon': 'OR', 'Utah': 'UT', 'Pennsylvania': 'PA', 'Virginia': 'VA'
-  };
+  const stateCodes = { 'Michigan': 'MI', 'Texas': 'TX', 'Florida': 'FL', 'Nevada': 'NV', 'Georgia': 'GA', 'Arizona': 'AZ', 'North Carolina': 'NC', 'Ohio': 'OH', 'Colorado': 'CO', 'Idaho': 'ID', 'Massachusetts': 'MA', 'Kentucky': 'KY', 'Tennessee': 'TN', 'Oregon': 'OR', 'Utah': 'UT', 'Pennsylvania': 'PA', 'Virginia': 'VA' };
 
-  // Initialize Map
   const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-  // Load State Highlight Layer
   fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json')
     .then(res => res.json())
     .then(statesData => {
@@ -172,16 +157,14 @@
             mouseout: (e) => geojsonLayer.resetStyle(e.target),
             click: (e) => {
                 map.fitBounds(e.target.getBounds());
-                const stateName = feature.properties.name;
-                displayStateLocations(stateCodes[stateName] || stateName);
+                displayStateLocations(stateCodes[feature.properties.name] || feature.properties.name);
             }
           });
         }
       }).addTo(map);
     });
 
-  // PASTE ALL YOUR CSV URLs INSIDE THIS ARRAY
-  const csvUrls = [
+ const csvUrls = [
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1188497872&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1280736540&single=true&output=csv',
@@ -260,20 +243,16 @@
         csv.split('\n').slice(1).forEach(row => {
           const m = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
           if (m) data.push({
-            name: m[0].replace(/"/g,'').trim(),
-            zip: m[1].trim(),
-            phone: m[2]?.trim() || "No phone",
-            link: m[3]?.replace(/"/g,'').trim() || "#",
-            city: m[4]?.trim() || "", // Column E
-            state: m[5]?.trim() || "" // Column F
+            name: m[0].replace(/"/g,'').trim(), zip: m[1].trim(), phone: m[2]?.trim() || "No phone",
+            link: m[3]?.replace(/"/g,'').trim() || "#", city: m[4]?.trim() || "", state: m[5]?.trim() || ""
           });
         });
       });
       document.getElementById('searchBtn').disabled = false;
       document.getElementById('searchBtn').textContent = "Search ZIP";
       plotHubs();
-      populateDropdown();
-    } catch (err) { console.error("Error loading CSVs:", err); }
+      populateAutocomplete();
+    } catch (err) { console.error(err); }
   }
 
   function plotHubs() {
@@ -284,8 +263,8 @@
         const icon = L.divIcon({ className: '', html: '<div class="pulsing-marker"></div>', iconSize: [8, 8], iconAnchor: [4, 4] });
         L.marker(cityCoords[d.city], { icon: icon }).addTo(map).bindPopup(`
             <div style="text-align: center;">
-              <strong style="font-size: 16px;">FurryLand ${d.city}</strong><br>
-              <div style="margin: 5px 0;">📞 ${d.phone}</div>
+              <strong>FurryLand ${d.city}</strong><br>
+              <div style="margin: 5px 0; font-size:13px;">📞 ${d.phone}</div>
               <a href="${d.link}" target="_blank" class="book-btn">Book Now</a>
             </div>
         `);
@@ -293,17 +272,18 @@
     });
   }
 
-  function populateDropdown() {
-    const drop = document.getElementById('hubDropdown');
+  function populateAutocomplete() {
+    const list = document.getElementById('hubList');
     const cities = [...new Set(data.map(d => d.city))].sort();
-    cities.forEach(c => { if(c && cityCoords[c]) drop.add(new Option(c, c)); });
+    cities.forEach(c => { if(c && cityCoords[c]) list.appendChild(new Option(c, c)); });
   }
 
-  function jumpToHub(city) {
-    if(!city) return;
-    const match = data.find(d => d.city === city);
-    map.flyTo(cityCoords[city], 8);
-    if(match.state) displayStateLocations(match.state);
+  function checkJump(val) {
+    if (cityCoords[val]) {
+      const match = data.find(d => d.city === val);
+      map.flyTo(cityCoords[val], 8);
+      displayStateLocations(match.state);
+    }
   }
 
   function lookup() {
@@ -311,17 +291,12 @@
     const match = data.find(d => d.zip === zip);
     const res = document.getElementById('result');
     if (match) {
-      res.innerHTML = `
-        <div style="text-align:center;">
-            <strong>📍 ${match.name}</strong><br>
-            📞 ${match.phone}<br>
-            <a href="${match.link}" target="_blank" class="book-btn">Book Now</a>
-        </div>`;
+      res.innerHTML = `<div style="text-align:center; margin-top:10px; font-size:14px;"><strong>📍 ${match.name}</strong><br>📞 ${match.phone}<br><a href="${match.link}" target="_blank" class="book-btn">Book Now</a></div>`;
       if (match.city && cityCoords[match.city]) {
           map.flyTo(cityCoords[match.city], 8);
           displayStateLocations(match.state);
       }
-    } else { res.innerHTML = "<p style='color:#666;'>No service here yet!</p>"; }
+    } else { res.innerHTML = "<p style='font-size:12px; color:#999;'>No service yet!</p>"; }
   }
 
   function displayStateLocations(code) {
@@ -329,15 +304,9 @@
     const head = document.getElementById('list-header');
     const matches = data.filter(d => d.state === code);
     const unique = Array.from(new Set(matches.map(m => m.city))).map(c => matches.find(m => m.city === c));
-    
     if(unique.length > 0) {
       head.classList.remove('hidden');
-      list.innerHTML = unique.map(m => `
-        <div class="state-card">
-            <strong>${m.name}</strong>
-            <div>📞 ${m.phone}</div>
-            <a href="${m.link}" target="_blank" class="book-btn">Book Now</a>
-        </div>`).join('');
+      list.innerHTML = unique.map(m => `<div class="state-card"><strong>${m.city}, ${m.state}</strong><div>📞 ${m.phone}</div><a href="${m.link}" target="_blank" class="book-btn">Book Now</a></div>`).join('');
     }
   }
 
@@ -350,7 +319,6 @@
   }
 
   document.getElementById('zipInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') lookup(); });
-  
   loadData();
 </script>
 </body>
