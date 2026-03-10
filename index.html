@@ -22,18 +22,29 @@
       display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0;
     }
 
+    /* Tabs */
+    .tabs { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; max-width: 380px; }
+    .tab-btn {
+      flex: 1; padding: 12px; border: none; border-radius: 12px; background: #d1d1d1;
+      cursor: pointer; font-weight: bold; color: #555; transition: 0.3s;
+    }
+    .tab-btn.active { background: var(--fl-blue); color: white; }
+
+    /* UI Cards */
     .card {
-      background: white; padding: 35px; border-radius: 20px; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 380px;
+      background: white; padding: 30px; border-radius: 20px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 400px;
       text-align: center; border-top: 6px solid var(--fl-orange); margin-bottom: 20px;
+      box-sizing: border-box;
     }
 
     h2 { color: var(--fl-orange); margin: 0; font-weight: 800; text-transform: uppercase; font-size: 28px; }
-    p.subtitle { color: #444; font-size: 16px; margin: 2px 0; font-weight: 600; text-transform: uppercase; }
+    .subtitle { color: #444; font-size: 16px; margin: 2px 0; font-weight: 600; text-transform: uppercase; }
     
-    input { 
+    input, select { 
       padding: 15px; font-size: 16px; width: 100%; border: 2px solid #ddd; 
       border-radius: 10px; box-sizing: border-box; background-color: var(--fl-accent); outline: none;
+      margin-top: 10px;
     }
 
     #searchBtn { 
@@ -41,16 +52,15 @@
       color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;
     }
 
+    /* Map & Popup Styles */
     #map {
       height: 550px; width: 100%; max-width: 1000px; border-radius: 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 5px solid white;
     }
-
-    /* CENTER POPUP CONTENT */
     .leaflet-popup-content-wrapper { text-align: center !important; border-radius: 12px; }
     .leaflet-popup-content { display: flex !important; flex-direction: column; align-items: center; justify-content: center; padding: 10px; }
 
-    /* SMALL SUBTLE PULSING PIN */
+    /* Subtle Pulsing Pin */
     .pulsing-marker { width: 8px; height: 8px; background-color: var(--fl-blue); border-radius: 50%; position: relative; }
     .pulsing-marker::after {
       content: ""; width: 100%; height: 100%; border: 2px solid var(--fl-blue);
@@ -59,28 +69,56 @@
     }
     @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2.5); opacity: 0; } }
 
-    .book-btn { background-color: #28a745; color: white !important; text-decoration: none; padding: 8px 15px; border-radius: 50px; display: inline-block; margin-top: 8px; font-weight: bold; }
-    #result { margin-top: 15px; min-height: 50px; }
+    /* Directory List Styles */
+    #location-list {
+      width: 100%; max-width: 1000px; margin-top: 20px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;
+    }
+    .state-card {
+      background: white; padding: 15px; border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 5px solid var(--fl-blue); text-align: left;
+    }
+    .state-card strong { display: block; color: var(--fl-orange); margin-bottom: 5px; }
+
+    .book-btn { background-color: #28a745; color: white !important; text-decoration: none; padding: 8px 15px; border-radius: 50px; display: inline-block; margin-top: 8px; font-weight: bold; font-size: 13px; }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
+<div class="tabs">
+  <button id="tab-loc" class="tab-btn active" onclick="switchTab('locator')">ZIP Locator</button>
+  <button id="tab-breed" class="tab-btn" onclick="switchTab('breed')">Breed Guide</button>
+</div>
+
+<div id="locator-section" style="width:100%; display:flex; flex-direction:column; align-items:center;">
     <div class="card">
       <h2>FURRYLAND</h2>
-      <p class="subtitle">Mobile Grooming</p>
+      <p class="subtitle">Search Hubs</p>
       <input type="text" id="zipInput" placeholder="Enter ZIP Code" maxlength="5" />
-      <button id="searchBtn" onclick="lookup()" disabled>Loading Data...</button>
-      <div id="result">
-        <div id="statusMessage" style="color:var(--fl-blue);">Connecting to Sheets...</div>
-      </div>
+      <select id="hubDropdown" onchange="jumpToHub(this.value)">
+        <option value="">-- Or Browse by City --</option>
+      </select>
+      <button id="searchBtn" onclick="lookup()" disabled>Connecting...</button>
+      <div id="result"></div>
     </div>
 
     <div id="map"></div>
 
+    <h3 id="list-header" class="hidden" style="color:var(--fl-blue); margin-top:30px; text-transform:uppercase;">Locations in this State</h3>
+    <div id="location-list"></div>
+</div>
+
+<div id="breed-section" class="card hidden">
+  <h2>FURRYLAND</h2>
+  <p class="subtitle">Breed Guide</p>
+  <p style="margin-top: 20px; color: #666;">Breed data coming soon!</p>
+</div>
+
 <script>
   let data = [];
+  let geojsonLayer;
   
-  // Naming keys must match Column E in your sheet exactly
   const cityCoords = {
     "Atlanta": [33.749, -84.388], "Boise": [43.615, -116.202], "Boston": [42.360, -71.058],
     "Charlotte": [35.227, -80.843], "Cincinnati": [39.103, -84.512], "Cleveland": [41.499, -81.694],
@@ -92,12 +130,33 @@
     "Augusta": [33.473, -82.010], "Sherman": [33.635, -96.608], "Tri-Cities": [36.520, -82.350], "NOVA": [38.846, -77.306]
   };
 
+  // 1. Initialize Map
   const map = L.map('map').setView([39.82, -98.57], 4);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-  // PASTE ALL YOUR CSV URLs INSIDE THIS ARRAY
-  const csvUrls = [
-'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv',
+  // 2. Load State Borders (GeoJSON)
+  fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json')
+    .then(res => res.json())
+    .then(statesData => {
+      geojsonLayer = L.geoJson(statesData, {
+        style: { fillColor: '#e0e0e0', weight: 1.5, color: 'white', fillOpacity: 0.4 },
+        onEachFeature: (feature, layer) => {
+          layer.on({
+            mouseover: (e) => e.target.setStyle({ fillOpacity: 0.6, fillColor: '#2576d0' }),
+            mouseout: (e) => geojsonLayer.resetStyle(e.target),
+            click: (e) => {
+                map.fitBounds(e.target.getBounds());
+                const stateName = feature.properties.name;
+                filterByStateName(stateName);
+            }
+          });
+        }
+      }).addTo(map);
+    });
+
+  // 3. Load Your Data
+   const csvUrls = [
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1188497872&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1280736540&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=131605005&single=true&output=csv',
@@ -167,56 +226,55 @@
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1216528010&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv'
   ];
-  async function loadAllData() {
-    try {
-      const responses = await Promise.all(csvUrls.map(url => fetch(url).then(r => r.text())));
-      responses.forEach(csv => {
-        const rows = csv.trim().split('\n').slice(1);
-        rows.forEach(row => {
-          const m = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
-          if (m) {
-            data.push({
-              name: m[0].replace(/"/g,'').trim(),
-              zip: m[1].trim(),
-              phone: m[2]?.trim() || "No phone",
-              link: m[3]?.replace(/"/g,'').trim() || "#",
-              city: m[4]?.trim() || "" // Column E
-            });
-          }
+  
+  Promise.all(csvUrls.map(url => fetch(url).then(r => r.text()))).then(csvs => {
+    csvs.forEach(csv => {
+      csv.split('\n').slice(1).forEach(row => {
+        const m = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
+        if (m) data.push({
+          name: m[0].replace(/"/g,'').trim(),
+          zip: m[1].trim(),
+          phone: m[2]?.trim() || "No phone",
+          link: m[3]?.replace(/"/g,'').trim() || "#",
+          city: m[4]?.trim() || "",
+          state: m[5]?.trim() || "" // Column F
         });
       });
-      document.getElementById('statusMessage').textContent = "";
-      document.getElementById('searchBtn').disabled = false;
-      plotHubs();
-    } catch (err) {
-      document.getElementById('statusMessage').textContent = "Error loading data.";
-      console.error(err);
-    }
-  }
+    });
+    document.getElementById('searchBtn').disabled = false;
+    document.getElementById('searchBtn').textContent = "Search ZIP";
+    plotHubs();
+    populateDropdown();
+  });
 
   function plotHubs() {
     const plotted = new Set();
     data.forEach(d => {
       if (d.city && cityCoords[d.city] && !plotted.has(d.city)) {
         plotted.add(d.city);
-        const icon = L.divIcon({
-          className: '',
-          html: '<div class="pulsing-marker"></div>',
-          iconSize: [8, 8],
-          iconAnchor: [4, 4]
-        });
-        
-        L.marker(cityCoords[d.city], { icon: icon })
-          .addTo(map)
-          .bindPopup(`
+        const icon = L.divIcon({ className: '', html: '<div class="pulsing-marker"></div>', iconSize: [8, 8] });
+        L.marker(cityCoords[d.city], { icon: icon }).addTo(map).bindPopup(`
             <div style="text-align: center;">
-              <strong style="font-size: 16px; display: block; margin-bottom: 5px;">FurryLand ${d.city}</strong>
-              <div style="margin-bottom: 8px;">📞 ${d.phone}</div>
+              <strong>FurryLand ${d.city}</strong><br>
+              📞 ${d.phone}<br>
               <a href="${d.link}" target="_blank" class="book-btn">Book Now</a>
             </div>
-          `);
+        `);
       }
     });
+  }
+
+  function populateDropdown() {
+    const drop = document.getElementById('hubDropdown');
+    const cities = [...new Set(data.map(d => d.city))].sort();
+    cities.forEach(c => { if(c && cityCoords[c]) drop.add(new Option(c, c)); });
+  }
+
+  function jumpToHub(city) {
+    if(!city) return;
+    const match = data.find(d => d.city === city);
+    map.flyTo(cityCoords[city], 8);
+    displayStateLocations(match.state);
   }
 
   function lookup() {
@@ -224,25 +282,38 @@
     const match = data.find(d => d.zip === zip);
     const res = document.getElementById('result');
     if (match) {
-      res.innerHTML = `
-        <div style="margin-top:10px;">
-          <strong>📍 ${match.name}</strong><br>
-          📞 ${match.phone}<br>
-          <a href="${match.link}" target="_blank" class="book-btn">Book Now</a>
-        </div>`;
+      res.innerHTML = `<strong>📍 ${match.name}</strong><br>📞 ${match.phone}<br><a href="${match.link}" target="_blank" class="book-btn">Book Now</a>`;
       if (match.city && cityCoords[match.city]) {
-        map.flyTo(cityCoords[match.city], 7, { animate: true, duration: 1.5 });
+          map.flyTo(cityCoords[match.city], 8);
+          displayStateLocations(match.state);
       }
-    } else {
-      res.innerHTML = "<p style='color:#666;'>No service in this ZIP yet!</p>";
+    } else { res.innerHTML = "No service here yet!"; }
+  }
+
+  function filterByStateName(name) {
+    const stateCodes = { 'Michigan': 'MI', 'Texas': 'TX', 'Florida': 'FL', 'Nevada': 'NV', 'Georgia': 'GA', 'Arizona': 'AZ', 'North Carolina': 'NC', 'Georgia': 'GA' }; // Add more as needed
+    displayStateLocations(stateCodes[name] || name);
+  }
+
+  function displayStateLocations(code) {
+    const list = document.getElementById('location-list');
+    const head = document.getElementById('list-header');
+    const matches = data.filter(d => d.state === code);
+    const unique = Array.from(new Set(matches.map(m => m.city))).map(c => matches.find(m => m.city === c));
+    
+    if(unique.length > 0) {
+      head.classList.remove('hidden');
+      list.innerHTML = unique.map(m => `<div class="state-card"><strong>${m.name}</strong>📞 ${m.phone}<br><a href="${m.link}" target="_blank" class="book-btn">Book Now</a></div>`).join('');
     }
   }
 
-  document.getElementById('zipInput').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') lookup();
-  });
-
-  loadAllData();
+  function switchTab(t) {
+    document.getElementById('locator-section').classList.toggle('hidden', t !== 'locator');
+    document.getElementById('breed-section').classList.toggle('hidden', t === 'locator');
+    document.getElementById('tab-loc').classList.toggle('active', t === 'locator');
+    document.getElementById('tab-breed').classList.toggle('active', t !== 'locator');
+    if(t === 'locator') setTimeout(() => map.invalidateSize(), 200);
+  }
 </script>
 </body>
 </html>
