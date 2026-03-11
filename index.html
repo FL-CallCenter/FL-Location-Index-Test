@@ -336,15 +336,56 @@
     list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span></td><td><span class="phone-text">${m.phone}</span><button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><a href="${m.link}" target="_top" class="action-link">📅 BOOK</a></td></tr></tbody></table>`;
   }
 
-  function displayStateLocations(code) {
+ function displayStateLocations(code) {
     const list = document.getElementById('location-list');
     const head = document.getElementById('list-header');
-    const matches = data.filter(d => d.state === code);
-    const unique = Array.from(new Set(matches.map(m => m.city.trim()))).map(c => matches.find(m => m.city.trim() === c));
+    
+    // Ensure we are comparing trimmed, upper-case versions (e.g., "MI" vs "MI")
+    const searchCode = code.trim().toUpperCase();
+    
+    // Filter the master data for matches
+    const matches = data.filter(d => {
+      const rowState = d.state.trim().toUpperCase();
+      return rowState === searchCode;
+    });
+
+    // Remove duplicates so we only see one row per city
+    const unique = Array.from(new Set(matches.map(m => m.city.trim())))
+                         .map(c => matches.find(m => m.city.trim() === c));
+
     if(unique.length > 0) {
       head.classList.remove('hidden');
-      head.innerText = `ACTIVE HUBS: ${code}`;
-      list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody>${unique.map(m => `<tr><td><span class="city-name">${m.city}</span></td><td><span class="phone-text">${m.phone}</span><button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><a href="${m.link}" target="_top" class="action-link">📅 BOOK</a></td></tr>`).join('')}</tbody></table>`;
+      head.innerText = `ACTIVE HUBS: ${searchCode}`;
+      list.innerHTML = `
+        <table class="directory-table">
+          <thead>
+            <tr>
+              <th>Hub Location</th>
+              <th>Phone Number</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${unique.map(m => `
+              <tr>
+                <td><span class="city-name">${m.city}</span></td>
+                <td>
+                  <span class="phone-text">${m.phone}</span>
+                  <button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button>
+                </td>
+                <td><a href="${m.link}" target="_top" class="action-link">📅 BOOK</a></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      // Scroll agents down to the table automatically
+      window.scrollTo({ top: head.offsetTop - 20, behavior: 'smooth' });
+    } else {
+      // If no matches are found, show a small alert or message
+      head.classList.remove('hidden');
+      head.innerText = `NO HUBS FOUND FOR ${searchCode}`;
+      list.innerHTML = "<p style='padding:20px; color:#999;'>No service data loaded for this state yet.</p>";
     }
   }
 
@@ -364,3 +405,4 @@
 </script>
 </body>
 </html>
+
