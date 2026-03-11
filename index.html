@@ -62,6 +62,7 @@
 
 <div class="tabs">
   <button id="tab-loc" class="tab-btn active" onclick="switchTab('locator')">ZIP Locator</button>
+  <button id="tab-breed" class="tab-btn" onclick="switchTab('breed')">Breed Guide</button>
 </div>
 
 <div id="locator-section" style="width:100%; display:flex; flex-direction:column; align-items:center;">
@@ -86,11 +87,18 @@
     </div>
 </div>
 
+<div id="breed-section" class="card hidden">
+  <h2>FURRYLAND</h2>
+  <p class="subtitle">Breed Guide</p>
+  <p style="padding-top:20px; color:#666; font-size: 15px;">MoeGo Breed Database loading...</p>
+</div>
+
 <script>
   let data = [];
   let markers = {};
   
-  const rawCoords = {
+  // PASTE COORDINATES HERE
+const rawCoords = {
     "Central Indiana": [39.7684, -86.1581],
     "Columbus-Auburn": [32.4676, -84.9877],
     "Columbus OH": [39.9612, -82.9988],
@@ -250,6 +258,7 @@
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1216528010&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv'
   ];
+  
   async function loadData() {
     try {
       const responses = await Promise.all(csvUrls.map(url => fetch(url).then(r => r.text())));
@@ -265,6 +274,16 @@
     } catch (err) { console.error(err); }
   }
 
+  // --- IPHONE APP HANDSHAKE ---
+  function openAppOrWeb(url) {
+    // Attempt to force the MoeGo app via URL scheme
+    const appUrl = url.replace('https://', 'moego://');
+    window.location.href = appUrl;
+    
+    // Fallback: If app doesn't open in 500ms, open the web link
+    setTimeout(() => { window.open(url, '_top'); }, 500);
+  }
+
   function plotHubs() {
     for(let k in markers) map.removeLayer(markers[k]);
     markers = {};
@@ -274,7 +293,7 @@
       if (city && rawCoords[city] && !plotted.has(city)) {
         plotted.add(city);
         const icon = L.divIcon({ className: '', html: '<div class="pulsing-marker"></div>', iconSize: [10, 10], iconAnchor: [5, 5] });
-        const marker = L.marker(rawCoords[city], { icon: icon }).addTo(map).bindPopup(`<div style="text-align: center;"><strong>FurryLand ${city}</strong><br><div style="margin: 5px 0; font-size:13px;">📞 ${d.phone}</div><a href="${d.link}" target="_top" class="book-btn">Open MoeGo</a></div>`);
+        const marker = L.marker(rawCoords[city], { icon: icon }).addTo(map).bindPopup(`<div style="text-align: center;"><strong>FurryLand ${city}</strong><br><div style="margin: 5px 0; font-size:13px;">📞 ${d.phone}</div><button onclick="openAppOrWeb('${d.link}')" class="book-btn" style="border:none; cursor:pointer;">Open MoeGo</button></div>`);
         markers[city] = marker;
       }
     });
@@ -293,122 +312,62 @@
     items.forEach(item => item.style.display = item.innerText.toLowerCase().includes(input) ? 'block' : 'none');
   }
 
-  function lookup() {
-    const zip = document.getElementById('zipInput').value.trim();
-    const match = data.find(d => d.zip === zip);
-    const res = document.getElementById('result');
-    const head = document.getElementById('list-header');
-
-    if (match) {
-      const city = match.city.trim();
-      res.innerText = "📍 Match Found: " + city;
-      if (city && rawCoords[city]) {
-          map.flyTo(rawCoords[city], 8);
-          if (markers[city]) markers[city].openPopup();
-      }
-      head.classList.remove('hidden');
-      head.innerText = "SEARCH RESULT";
-      renderSingleRow(match);
-    } else { 
-      res.innerText = "No service here yet!";
-      resetSearchState();
-    }
-  }
-
   function selectCity(city) {
     document.getElementById('hubSearchInput').value = city;
     document.getElementById('customDropdown').style.display = 'none';
     const match = data.find(d => d.city.trim() === city);
     const head = document.getElementById('list-header');
-
     if (match && rawCoords[city]) {
       map.flyTo(rawCoords[city], 8);
       if (markers[city]) markers[city].openPopup();
       document.getElementById('result').innerText = "📍 Match Found: " + city;
-      head.classList.remove('hidden');
-      head.innerText = "SEARCH RESULT";
+      head.classList.remove('hidden'); head.innerText = "SEARCH RESULT";
       renderSingleRow(match);
     }
   }
 
+  function lookup() {
+    const zip = document.getElementById('zipInput').value.trim();
+    const match = data.find(d => d.zip === zip);
+    if (match) {
+      const city = match.city.trim();
+      document.getElementById('result').innerText = "📍 Match Found: " + city;
+      if (city && rawCoords[city]) {
+          map.flyTo(rawCoords[city], 8);
+          if (markers[city]) markers[city].openPopup();
+      }
+      document.getElementById('list-header').classList.remove('hidden');
+      document.getElementById('list-header').innerText = "SEARCH RESULT";
+      renderSingleRow(match);
+    } else { document.getElementById('result').innerText = "No service here yet!"; resetSearchState(); }
+  }
+
   function renderSingleRow(m) {
     const list = document.getElementById('location-list');
-    list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span></td><td><span class="phone-text">${m.phone}</span><button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><a href="${m.link}" target="_top" class="action-link">📅 BOOK</a></td></tr></tbody></table>`;
+    list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span></td><td><span class="phone-text">${m.phone}</span><button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><button onclick="openAppOrWeb('${m.link}')" class="action-link" style="border:none; cursor:pointer;">📅 OPEN APP</button></td></tr></tbody></table>`;
   }
 
-function displayStateLocations(code) {
+  function displayStateLocations(code) {
     const list = document.getElementById('location-list');
     const head = document.getElementById('list-header');
-    
-    // 1. Get the 2-letter code (e.g., "TX")
-    const shortCode = code.trim().toUpperCase();
-    
-    // 2. Get the full name for a double-check (find the name by the code)
-    const fullName = Object.keys(stateCodes).find(key => stateCodes[key] === shortCode)?.toUpperCase() || "";
-
-    // 3. Search the data for either "TX" OR "TEXAS"
-    const matches = data.filter(d => {
-      const rowState = d.state.trim().toUpperCase();
-      return rowState === shortCode || rowState === fullName;
-    });
-
-    // 4. Group by city to remove duplicates
-    const unique = Array.from(new Set(matches.map(m => m.city.trim().toLowerCase())))
-                         .map(ckey => matches.find(m => m.city.trim().toLowerCase() === ckey));
-
+    const searchCode = code.trim().toUpperCase();
+    const fullName = Object.keys(stateCodes).find(k => stateCodes[k] === searchCode)?.toUpperCase() || "";
+    const matches = data.filter(d => { const s = d.state.trim().toUpperCase(); return s === searchCode || s === fullName; });
+    const unique = Array.from(new Set(matches.map(m => m.city.trim()))).map(c => matches.find(m => m.city.trim() === c));
     if(unique.length > 0) {
-      head.classList.remove('hidden');
-      head.innerText = `ACTIVE HUBS: ${shortCode}`;
-      list.innerHTML = `
-        <table class="directory-table">
-          <thead>
-            <tr>
-              <th>Hub Location</th>
-              <th>Phone Number</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${unique.map(m => `
-              <tr>
-                <td><span class="city-name">${m.city}</span></td>
-                <td>
-                  <span class="phone-text">${m.phone}</span>
-                  <button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button>
-                </td>
-                <td><a href="${m.link}" target="_top" class="action-link">📅 BOOK</a></td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
+      head.classList.remove('hidden'); head.innerText = `ACTIVE HUBS: ${searchCode}`;
+      list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody>${unique.map(m => `<tr><td><span class="city-name">${m.city}</span></td><td><span class="phone-text">${m.phone}</span><button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><button onclick="openAppOrWeb('${m.link}')" class="action-link" style="border:none; cursor:pointer;">📅 BOOK</button></td></tr>`).join('')}</tbody></table>`;
       window.scrollTo({ top: head.offsetTop - 20, behavior: 'smooth' });
-    } else {
-      head.classList.remove('hidden');
-      head.innerText = `NO DATA FOR ${shortCode}`;
-      list.innerHTML = `<div style="padding:30px; color:#666; font-size:14px;">
-          <p>We couldn't find any rows matching <strong>"${shortCode}"</strong> in your spreadsheet.</p>
-          <p style="font-size:12px; color:#999;">Check Column F in your Google Sheet and make sure it contains "${shortCode}".</p>
-      </div>`;
-    }
+    } else { head.classList.remove('hidden'); head.innerText = `NO DATA FOR ${searchCode}`; list.innerHTML = "<p style='padding:20px; color:#999;'>No hubs found for this state.</p>"; }
   }
 
-  function resetSearchState() {
-    document.getElementById('location-list').innerHTML = "";
-    document.getElementById('list-header').classList.add('hidden');
-    map.setView([39.82, -98.57], 4);
-    setTimeout(() => { document.getElementById('result').innerText = ""; }, 2500);
-  }
-
+  function resetSearchState() { document.getElementById('location-list').innerHTML = ""; document.getElementById('list-header').classList.add('hidden'); map.setView([39.82, -98.57], 4); setTimeout(() => { document.getElementById('result').innerText = ""; }, 2500); }
   function copyToClipboard(text) { navigator.clipboard.writeText(text); alert('Number copied!'); }
   function resetMap() { map.setView([39.82, -98.57], 4); document.getElementById('location-list').innerHTML = ""; document.getElementById('list-header').classList.add('hidden'); document.getElementById('result').innerText = ""; }
-  function switchTab(t) { document.getElementById('locator-section').classList.toggle('hidden', t !== 'locator'); if(t === 'locator') setTimeout(() => map.invalidateSize(), 200); }
+  function switchTab(t) { document.getElementById('locator-section').classList.toggle('hidden', t !== 'locator'); document.getElementById('breed-section').classList.toggle('hidden', t === 'locator'); document.getElementById('tab-loc').classList.toggle('active', t === 'locator'); document.getElementById('tab-breed').classList.toggle('active', t !== 'locator'); if(t === 'locator') setTimeout(() => map.invalidateSize(), 200); }
   window.onclick = (e) => { if (!e.target.matches('#hubSearchInput')) document.getElementById('customDropdown').style.display = 'none'; }
   document.getElementById('zipInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') lookup(); });
   loadData();
 </script>
 </body>
 </html>
-
-
-
