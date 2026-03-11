@@ -336,26 +336,29 @@
     list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span></td><td><span class="phone-text">${m.phone}</span><button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><a href="${m.link}" target="_top" class="action-link">📅 BOOK</a></td></tr></tbody></table>`;
   }
 
- function displayStateLocations(code) {
+function displayStateLocations(code) {
     const list = document.getElementById('location-list');
     const head = document.getElementById('list-header');
     
-    // Ensure we are comparing trimmed, upper-case versions (e.g., "MI" vs "MI")
-    const searchCode = code.trim().toUpperCase();
+    // 1. Get the 2-letter code (e.g., "TX")
+    const shortCode = code.trim().toUpperCase();
     
-    // Filter the master data for matches
+    // 2. Get the full name for a double-check (find the name by the code)
+    const fullName = Object.keys(stateCodes).find(key => stateCodes[key] === shortCode)?.toUpperCase() || "";
+
+    // 3. Search the data for either "TX" OR "TEXAS"
     const matches = data.filter(d => {
       const rowState = d.state.trim().toUpperCase();
-      return rowState === searchCode;
+      return rowState === shortCode || rowState === fullName;
     });
 
-    // Remove duplicates so we only see one row per city
-    const unique = Array.from(new Set(matches.map(m => m.city.trim())))
-                         .map(c => matches.find(m => m.city.trim() === c));
+    // 4. Group by city to remove duplicates
+    const unique = Array.from(new Set(matches.map(m => m.city.trim().toLowerCase())))
+                         .map(ckey => matches.find(m => m.city.trim().toLowerCase() === ckey));
 
     if(unique.length > 0) {
       head.classList.remove('hidden');
-      head.innerText = `ACTIVE HUBS: ${searchCode}`;
+      head.innerText = `ACTIVE HUBS: ${shortCode}`;
       list.innerHTML = `
         <table class="directory-table">
           <thead>
@@ -379,13 +382,14 @@
           </tbody>
         </table>
       `;
-      // Scroll agents down to the table automatically
       window.scrollTo({ top: head.offsetTop - 20, behavior: 'smooth' });
     } else {
-      // If no matches are found, show a small alert or message
       head.classList.remove('hidden');
-      head.innerText = `NO HUBS FOUND FOR ${searchCode}`;
-      list.innerHTML = "<p style='padding:20px; color:#999;'>No service data loaded for this state yet.</p>";
+      head.innerText = `NO DATA FOR ${shortCode}`;
+      list.innerHTML = `<div style="padding:30px; color:#666; font-size:14px;">
+          <p>We couldn't find any rows matching <strong>"${shortCode}"</strong> in your spreadsheet.</p>
+          <p style="font-size:12px; color:#999;">Check Column F in your Google Sheet and make sure it contains "${shortCode}".</p>
+      </div>`;
     }
   }
 
@@ -405,4 +409,5 @@
 </script>
 </body>
 </html>
+
 
