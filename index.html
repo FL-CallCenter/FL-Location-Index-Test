@@ -97,7 +97,6 @@
   let data = [];
   let markers = {};
   
-  // 1. CAREFULLY PASTE COORDINATES HERE
 const rawCoords = {
     "Central Indiana": [39.7684, -86.1581],
     "Columbus-Auburn": [32.4676, -84.9877],
@@ -166,11 +165,9 @@ const rawCoords = {
 
   const stateCodes = { 'New Mexico': 'NM', 'Georgia': 'GA', 'Texas': 'TX', 'Louisiana': 'LA', 'Idaho': 'ID', 'Massachusetts': 'MA', 'New Jersey': 'NJ', 'Florida': 'FL', 'Indiana': 'IN', 'South Carolina': 'SC', 'North Carolina': 'NC', 'Tennessee': 'TN', 'Ohio': 'OH', 'Colorado': 'CO', 'Michigan': 'MI', 'Connecticut': 'CT', 'Pennsylvania': 'PA', 'Alabama': 'AL', 'Nevada': 'NV', 'Kentucky': 'KY', 'Arkansas': 'AR', 'Wisconsin': 'WI', 'Oklahoma': 'OK', 'Arizona': 'AZ', 'Oregon': 'OR', 'Nebraska': 'NE', 'Vermont': 'VT', 'Virginia': 'VA', 'Missouri': 'MO', 'Kansas': 'KS' };
 
-  // Initialize Map
   const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-  // Load States
   fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json')
     .then(res => res.json())
     .then(statesData => {
@@ -187,10 +184,9 @@ const rawCoords = {
           });
         }
       }).addTo(map);
-    }).catch(e => console.log("Map layer error:", e));
+    });
 
-  // 2. CAREFULLY PASTE YOUR LINKS HERE
- const csvUrls = [
+  const csvUrls = [
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1188497872&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1280736540&single=true&output=csv',
@@ -261,38 +257,19 @@ const rawCoords = {
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1216528010&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv'
   ];
-
   async function loadData() {
-    if (csvUrls.length === 0) {
-        document.getElementById('searchBtn').textContent = "Add CSV Links!";
-        return;
-    }
     try {
       const responses = await Promise.all(csvUrls.map(url => fetch(url).then(r => r.text())));
       responses.forEach(csv => {
-        const lines = csv.split('\n');
-        lines.slice(1).forEach(row => {
+        csv.split('\n').slice(1).forEach(row => {
           const m = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
-          if (m && m.length >= 5) {
-            data.push({ 
-              name: m[0].replace(/"/g,'').trim(), 
-              zip: m[1].trim(), 
-              phone: m[2]?.trim() || "No phone", 
-              link: m[3]?.replace(/"/g,'').trim() || "#", 
-              city: m[4]?.trim() || "", 
-              state: m[5]?.trim() || "" 
-            });
-          }
+          if (m) data.push({ name: m[0].replace(/"/g,'').trim(), zip: m[1].trim(), phone: m[2]?.trim() || "No phone", link: m[3]?.replace(/"/g,'').trim() || "#", city: m[4]?.trim() || "", state: m[5]?.trim() || "" });
         });
       });
       document.getElementById('searchBtn').disabled = false;
       document.getElementById('searchBtn').textContent = "Search ZIP";
-      plotHubs(); 
-      buildCustomDropdown();
-    } catch (err) { 
-      console.error("Data loading error:", err);
-      document.getElementById('searchBtn').textContent = "Sync Error - Check Links";
-    }
+      plotHubs(); buildCustomDropdown();
+    } catch (err) { console.error(err); }
   }
 
   function plotHubs() {
@@ -304,7 +281,7 @@ const rawCoords = {
       if (city && rawCoords[city] && !plotted.has(city)) {
         plotted.add(city);
         const icon = L.divIcon({ className: '', html: '<div class="pulsing-marker"></div>', iconSize: [10, 10], iconAnchor: [5, 5] });
-        const marker = L.marker(rawCoords[city], { icon: icon }).addTo(map).bindPopup(`<div style="text-align: center;"><strong>FurryLand ${city}</strong><br><div style="margin: 5px 0; font-size:13px;">📞 ${d.phone}</div><a href="${d.link}" target="_blank" class="action-link">OPEN MOEGO</a></div>`);
+        const marker = L.marker(rawCoords[city], { icon: icon }).addTo(map).bindPopup(`<div style="text-align: center;"><strong>FurryLand ${city}</strong><br><div style="margin: 5px 0; font-size:13px;">📞 ${d.phone}</div><a href="${d.link}" target="_blank" rel="noopener noreferrer" class="action-link">OPEN MOEGO</a></div>`);
         markers[city] = marker;
       }
     });
@@ -327,12 +304,12 @@ const rawCoords = {
     document.getElementById('hubSearchInput').value = city;
     document.getElementById('customDropdown').style.display = 'none';
     const match = data.find(d => d.city.trim() === city);
+    const head = document.getElementById('list-header');
     if (match && rawCoords[city]) {
       map.flyTo(rawCoords[city], 8);
       if (markers[city]) markers[city].openPopup();
       document.getElementById('result').innerText = "📍 Match Found: " + city;
-      document.getElementById('list-header').classList.remove('hidden'); 
-      document.getElementById('list-header').innerText = "SEARCH RESULT";
+      head.classList.remove('hidden'); head.innerText = "SEARCH RESULT";
       renderSingleRow(match);
     }
   }
@@ -350,15 +327,12 @@ const rawCoords = {
       document.getElementById('list-header').classList.remove('hidden');
       document.getElementById('list-header').innerText = "SEARCH RESULT";
       renderSingleRow(match);
-    } else { 
-      document.getElementById('result').innerText = "No service here yet!"; 
-      resetSearchState(); 
-    }
+    } else { document.getElementById('result').innerText = "No service here yet!"; resetSearchState(); }
   }
 
   function renderSingleRow(m) {
     const list = document.getElementById('location-list');
-    list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span></td><td><span class="phone-text">${m.phone}</span><button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td></tr></tbody></table>`;
+    list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span></td><td><span class="phone-text">${m.phone}</span><button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><a href="${m.link}" target="_blank" rel="noopener noreferrer" class="action-link">📅 OPEN MOEGO</a></td></tr></tbody></table>`;
   }
 
   function displayStateLocations(code) {
@@ -366,22 +340,13 @@ const rawCoords = {
     const head = document.getElementById('list-header');
     const searchCode = code.trim().toUpperCase();
     const fullName = Object.keys(stateCodes).find(k => stateCodes[k] === searchCode)?.toUpperCase() || "";
-    const matches = data.filter(d => { 
-        const s = d.state.trim().toUpperCase(); 
-        return s === searchCode || s === fullName; 
-    });
+    const matches = data.filter(d => { const s = d.state.trim().toUpperCase(); return s === searchCode || s === fullName; });
     const unique = Array.from(new Set(matches.map(m => m.city.trim()))).map(c => matches.find(m => m.city.trim() === c));
-    
     if(unique.length > 0) {
-      head.classList.remove('hidden'); 
-      head.innerText = `ACTIVE HUBS: ${searchCode}`;
-      list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody>${unique.map(m => `<tr><td><span class="city-name">${m.city}</span></td><td><span class="phone-text">${m.phone}</span><button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td></tr>`).join('')}</tbody></table>`;
+      head.classList.remove('hidden'); head.innerText = `ACTIVE HUBS: ${searchCode}`;
+      list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody>${unique.map(m => `<tr><td><span class="city-name">${m.city}</span></td><td><span class="phone-text">${m.phone}</span><button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><a href="${m.link}" target="_blank" rel="noopener noreferrer" class="action-link">📅 OPEN MOEGO</a></td></tr>`).join('')}</tbody></table>`;
       window.scrollTo({ top: head.offsetTop - 20, behavior: 'smooth' });
-    } else { 
-      head.classList.remove('hidden'); 
-      head.innerText = `NO DATA FOR ${searchCode}`; 
-      list.innerHTML = "<p style='padding:20px; color:#999;'>No hubs found for this state.</p>"; 
-    }
+    } else { head.classList.remove('hidden'); head.innerText = `NO DATA FOR ${searchCode}`; list.innerHTML = "<p style='padding:20px; color:#999;'>No hubs found for this state.</p>"; }
   }
 
   function resetSearchState() { document.getElementById('location-list').innerHTML = ""; document.getElementById('list-header').classList.add('hidden'); map.setView([39.82, -98.57], 4); setTimeout(() => { document.getElementById('result').innerText = ""; }, 2500); }
@@ -390,7 +355,6 @@ const rawCoords = {
   function switchTab(t) { document.getElementById('locator-section').classList.toggle('hidden', t !== 'locator'); document.getElementById('breed-section').classList.toggle('hidden', t === 'locator'); document.getElementById('tab-loc').classList.toggle('active', t === 'locator'); document.getElementById('tab-breed').classList.toggle('active', t !== 'locator'); if(t === 'locator') setTimeout(() => map.invalidateSize(), 200); }
   window.onclick = (e) => { if (!e.target.matches('#hubSearchInput')) document.getElementById('customDropdown').style.display = 'none'; }
   document.getElementById('zipInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') lookup(); });
-  
   loadData();
 </script>
 </body>
