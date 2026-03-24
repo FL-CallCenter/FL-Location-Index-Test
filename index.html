@@ -302,27 +302,25 @@ async function lookup() {
   const res = document.getElementById('result');
   const head = document.getElementById('list-header');
   const list = document.getElementById('location-list');
- list.innerHTML = `
-    <div style="background: #fff5f5; padding: 20px; border-radius: 12px; text-align: center; color: #c53030; margin-bottom: 15px; border: 2px solid #feb2b2; line-height: 1.6;">
-        <strong style="font-size: 18px; color: #9b2c2c; display: block; margin-bottom: 5px;">🛑 NEIGHBOR ZIP: APPROVAL REQUIRED</strong>
-        ZIP ${zip} is <strong style="font-size: 16px;">${closestDist.toFixed(1)} miles</strong> from our ${closestRow.zip} route. 
-        <br><span style="font-weight: 700; font-size: 15px; display: block; margin-top: 10px; color: #c53030;">Ask the SLACK CHANNEL if this is serviceable.</span>
-    </div>`;
+  
+  // Clear previous results immediately
+  list.innerHTML = ""; 
+  res.innerHTML = "";
 
-  // A. EXACT MATCH
+  // 1. EXACT MATCH logic
   const match = data.find(d => d.zip === zip);
   if (match) {
     res.innerText = "📍 Exact Match Found: " + match.city;
     head.classList.remove('hidden');
     head.innerText = "SEARCH RESULT";
-    renderSingleRow(match, false); // 'false' because it is NOT a neighbor
+    renderSingleRow(match, false); 
     const flyLat = match.lat ? parseFloat(match.lat) : (rawCoords[match.city] ? rawCoords[match.city][0] : null);
     const flyLng = match.lng ? parseFloat(match.lng) : (rawCoords[match.city] ? rawCoords[match.city][1] : null);
     if (flyLat && flyLng) map.flyTo([flyLat, flyLng], 12);
     return;
   }
 
-  // B. NEIGHBOR SEARCH
+  // 2. NEIGHBOR SEARCH logic
   if (zip.length === 5) {
     res.innerText = "🔍 Checking nearby...";
     try {
@@ -345,16 +343,24 @@ async function lookup() {
       });
 
       if (closestRow && closestDist <= 8) { 
-        res.innerHTML = `<span style="color: #856404;">⚠️ Not in list, but <strong>${closestDist.toFixed(1)} miles</strong> from ZIP ${closestRow.zip}.</span>`;
+        res.innerHTML = `<span style="color: #c53030;">🛑 Not in list, but <strong>${closestDist.toFixed(1)} miles</strong> from ZIP ${closestRow.zip}.</span>`;
         head.classList.remove('hidden');
         head.innerText = "NEIGHBOR ALERT";
+        
+        // --- UPDATED RED BOX WITH SPACING ---
         list.innerHTML = `
-            <div style="background: #fff3cd; padding: 15px; border-radius: 12px; text-align: center; color: #856404; margin-bottom: 10px; border: 1px solid #ffeeba;">
-                <strong style="font-size: 16px; color: #856404;">⚠️ NEIGHBOR ZIP: PRE-APPROVAL REQUIRED</strong><br>
-                ZIP ${zip} is <strong>${closestDist.toFixed(1)} miles</strong> from our ${closestRow.zip} route. 
-                <br><span style="font-weight: bold;">Ask a lead if this is serviceable.</span>
+            <div style="background: #fff5f5; padding: 25px; border-radius: 15px; text-align: center; color: #c53030; margin-bottom: 20px; border: 2px solid #feb2b2; line-height: 1.8;">
+                <strong style="font-size: 19px; color: #9b2c2c; display: block; margin-bottom: 10px;">🛑 NEIGHBOR ZIP: APPROVAL REQUIRED</strong>
+                <span style="font-size: 15px;">
+                  ZIP ${zip} is <strong>${closestDist.toFixed(1)} miles</strong> from our <strong>ZIP ${closestRow.zip}</strong> route.
+                </span>
+                <br>
+                <strong style="font-size: 16px; display: block; margin-top: 15px; color: #9b2c2c; background: #fed7d7; padding: 10px; border-radius: 8px;">
+                  Ask the SLACK CHANNEL if this is serviceable.
+                </strong>
             </div>`;
-        renderSingleRow(closestRow, true); // 'true' because it IS a neighbor
+            
+        renderSingleRow(closestRow, true); 
         let flyLat = closestRow.lat ? parseFloat(closestRow.lat) : rawCoords[closestRow.city][0];
         let flyLng = closestRow.lng ? parseFloat(closestRow.lng) : rawCoords[closestRow.city][1];
         map.flyTo([flyLat, flyLng], 10);
@@ -362,7 +368,10 @@ async function lookup() {
         res.innerText = "❌ No service within range.";
         resetSearchState();
       }
-    } catch (e) { res.innerText = "❌ Invalid ZIP."; resetSearchState(); }
+    } catch (e) { 
+      res.innerText = "❌ Invalid ZIP or Connection Error."; 
+      resetSearchState(); 
+    }
   }
 }
 
@@ -425,9 +434,9 @@ function renderSingleRow(m, isNeighbor = false) {
     const list = document.getElementById('location-list');
     const name = m.name && m.name !== m.city ? m.name : m.city;
     
-    // The "Inquiry Only" badge logic
+    // Changed from Blue to a Muted Red/Grey for better "Warning" vibes
     const statusBadge = isNeighbor ? 
-        `<span style="background: #2576d0; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; margin-left: 10px; vertical-align: middle;">INQUIRY ONLY</span>` : "";
+        `<span style="background: #718096; color: white; padding: 3px 10px; border-radius: 6px; font-size: 11px; margin-left: 12px; vertical-align: middle; font-weight: 800;">INQUIRY ONLY</span>` : "";
 
     list.innerHTML += `
       <table class="directory-table">
