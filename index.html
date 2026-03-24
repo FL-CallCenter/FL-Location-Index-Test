@@ -96,6 +96,18 @@
 <script>
   let data = [];
   let markers = {};
+
+  // This is the "Engine" that calculates miles between two points
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 3958.8; // Radius of the Earth in miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; 
+}
   
 const rawCoords = {
     "Central Indiana": [39.7684, -86.1581],
@@ -314,33 +326,31 @@ const rawCoords = {
     }
   }
 
-  async function lookup() {
-    const zip = document.getElementById('zipInput').value.trim();
-    const res = document.getElementById('result');
-    const head = document.getElementById('list-header');
-    const list = document.getElementById('location-list');
+async function lookup() {
+  const zip = document.getElementById('zipInput').value.trim();
+  const res = document.getElementById('result');
+  const head = document.getElementById('list-header');
+  const list = document.getElementById('location-list');
 
-    // 1. Instant Exact Match (What your old code did)
-    const match = data.find(d => d.zip === zip);
-    if (match) {
-      const city = match.city.trim();
-      res.innerText = "📍 Match Found: " + city;
-      if (city && rawCoords[city]) {
-          map.flyTo(rawCoords[city], 8);
-          if (markers[city]) markers[city].openPopup();
-      }
-      head.classList.remove('hidden');
-      head.innerText = "SEARCH RESULT";
-      renderSingleRow(match);
-      return; // Stop here if we found an exact match
+  // 1. Instant Exact Match (Green Light)
+  const match = data.find(d => d.zip === zip);
+  if (match) {
+    const city = match.city.trim();
+    res.innerText = "📍 Match Found: " + city;
+    if (city && rawCoords[city]) {
+        map.flyTo(rawCoords[city], 10);
+        if (markers[city]) markers[city].openPopup();
     }
+    head.classList.remove('hidden');
+    head.innerText = "SEARCH RESULT";
+    renderSingleRow(match);
+    return;
+  }
 
-    // 2. Precision Proximity Search (The new upgrade)
-    if (zip.length < 5) return; // Don't search until 5 digits are in
+  // 2. Proximity Search (Yellow Light)
+  if (zip.length === 5) {
     res.innerText = "🔍 Checking nearby serviced ZIPs...";
-    
     try {
-      // Get the coordinates for the customer's unknown ZIP
       const response = await fetch(`https://api.zippopotam.us/us/${zip}`);
       if (!response.ok) throw new Error();
       const zipData = await response.json();
@@ -350,19 +360,18 @@ const rawCoords = {
       let closestDist = Infinity;
       let closestRow = null;
 
-      // 3. Math: Compare customer ZIP to every Hub Center in your list
-      for (let hubName in rawCoords) {
-          const dist = getDistance(targetLat, targetLon, rawCoords[hubName][0], rawCoords[hubName][1]);
+      // Check distance to every Hub you have coordinates for
+      for (let cityKey in rawCoords) {
+          const dist = getDistance(targetLat, targetLon, rawCoords[cityKey][0], rawCoords[cityKey][1]);
           if (dist < closestDist) {
-            closestDist = dist;
-            // Find the first row in your data that matches this Hub name
-            closestRow = data.find(d => d.city === hubName);
+              closestDist = dist;
+              closestRow = data.find(d => d.city === cityKey);
           }
       }
 
-      // 4. Threshold: Check if it's within 10 miles
+      // If within 10 miles, show the alert
       if (closestRow && closestDist <= 10) { 
-        res.innerHTML = `<span style="color: #856404;">⚠️ ZIP ${zip} is <strong>${closestDist.toFixed(1)} miles</strong> from ${closestRow.city}.</span>`;
+        res.innerHTML = `<span style="color: #856404;">⚠️ Not in list, but <strong>${closestDist.toFixed(1)} miles</strong> from ${closestRow.city}.</span>`;
         head.classList.remove('hidden');
         head.innerText = "PROXIMITY ALERT";
         
@@ -372,18 +381,20 @@ const rawCoords = {
             <br><em>Likely serviceable - check with a manager for travel fee.</em>
           </div>
         `;
-        // Use your existing render function to show the closest hub's info
-        list.innerHTML += generateTableRow(closestRow);
+        // This adds the row info below the yellow box
+        const tableHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${closestRow.city}</span></td><td><span class="phone-text">${closestRow.phone}</span><button class="copy-btn" onclick="copyToClipboard('${closestRow.phone}')">📋</button></td><td><a href="${closestRow.link}" target="_blank" rel="noopener noreferrer" class="action-link">📅 OPEN MOEGO</a></td></tr></tbody></table>`;
+        list.innerHTML += tableHTML;
         map.flyTo(rawCoords[closestRow.city], 9);
       } else {
         res.innerText = "❌ No service within 10 miles.";
         resetSearchState();
       }
     } catch (e) {
-      res.innerText = "❌ ZIP not recognized or Connection Error.";
+      res.innerText = "❌ Invalid ZIP or Connection Error.";
       resetSearchState();
     }
   }
+}
 
   // Helper needed for the mileage math (Paste this above the lookup function)
   function getDistance(lat1, lon1, lat2, lon2) {
