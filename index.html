@@ -270,19 +270,33 @@ const rawCoords = {
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv'
   ];
   async function loadData() {
-    try {
-      const responses = await Promise.all(csvUrls.map(url => fetch(url).then(r => r.text())));
-      responses.forEach(csv => {
-        csv.split('\n').slice(1).forEach(row => {
-          const m = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
-          if (m) data.push({ name: m[0].replace(/"/g,'').trim(), zip: m[1].trim(), phone: m[2]?.trim() || "No phone", link: m[3]?.replace(/"/g,'').trim() || "#", city: m[4]?.trim() || "", state: m[5]?.trim() || "" });
-        });
+  try {
+    const responses = await Promise.all(csvUrls.map(url => fetch(url).then(r => r.text())));
+    responses.forEach(csv => {
+      csv.split('\n').slice(1).forEach(row => {
+        const m = row.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
+        if (m) {
+          data.push({ 
+            name: m[0].replace(/"/g, '').trim(), 
+            zip: m[1].trim(), 
+            phone: m[2]?.trim() || "No phone", 
+            link: m[3]?.replace(/"/g, '').trim() || "#", 
+            city: m[4]?.trim(),
+            // NEW: Columns G and H (Index 6 and 7)
+            lat: m[6]?.trim() || null, 
+            lng: m[7]?.replace(/\r/g, '').trim() || null 
+          });
+        }
       });
-      document.getElementById('searchBtn').disabled = false;
-      document.getElementById('searchBtn').textContent = "Search ZIP";
-      plotHubs(); buildCustomDropdown();
-    } catch (err) { console.error(err); }
+    });
+    document.getElementById('searchBtn').disabled = false;
+    document.getElementById('searchBtn').textContent = "Search ZIP";
+    plotHubs(); 
+    buildCustomDropdown();
+  } catch (err) { 
+    console.error("Load Error: ", err); 
   }
+}
 
   function plotHubs() {
     for(let k in markers) map.removeLayer(markers[k]);
@@ -332,24 +346,23 @@ async function lookup() {
   const head = document.getElementById('list-header');
   const list = document.getElementById('location-list');
 
-  // 1. Instant Exact Match (Green Light)
+  // 1. Instant Exact Match
   const match = data.find(d => d.zip === zip);
   if (match) {
-    const city = match.city.trim();
-    res.innerText = "📍 Match Found: " + city;
-    if (city && rawCoords[city]) {
-        map.flyTo(rawCoords[city], 10);
-        if (markers[city]) markers[city].openPopup();
-    }
+    res.innerText = "📍 Exact Match Found: " + match.city;
     head.classList.remove('hidden');
     head.innerText = "SEARCH RESULT";
     renderSingleRow(match);
+    // If the city has coordinates, fly the map there
+    if (match.lat && match.lng) {
+        map.flyTo([match.lat, match.lng], 12);
+    }
     return;
   }
 
-  // 2. Proximity Search (Yellow Light)
+  // 2. Precision Neighbor Search
   if (zip.length === 5) {
-    res.innerText = "🔍 Checking nearby serviced ZIPs...";
+    res.innerText = "🔍 Checking closest neighbor...";
     try {
       const response = await fetch(`https://api.zippopotam.us/us/${zip}`);
       if (!response.ok) throw new Error();
@@ -360,33 +373,32 @@ async function lookup() {
       let closestDist = Infinity;
       let closestRow = null;
 
-      // Check distance to every Hub you have coordinates for
-      for (let cityKey in rawCoords) {
-          const dist = getDistance(targetLat, targetLon, rawCoords[cityKey][0], rawCoords[cityKey][1]);
+      // Scan every row for the nearest Lat/Long that was filled by your script
+      for (let row of data) {
+        if (row.lat && row.lng) {
+          const dist = getDistance(targetLat, targetLon, parseFloat(row.lat), parseFloat(row.lng));
           if (dist < closestDist) {
-              closestDist = dist;
-              closestRow = data.find(d => d.city === cityKey);
+            closestDist = dist;
+            closestRow = row;
           }
+        }
       }
 
-      // If within 10 miles, show the alert
-      if (closestRow && closestDist <= 10) { 
-        res.innerHTML = `<span style="color: #856404;">⚠️ Not in list, but <strong>${closestDist.toFixed(1)} miles</strong> from ${closestRow.city}.</span>`;
+      // 8-mile "Fluid" Neighbor Check (You can change this number)
+      if (closestRow && closestDist <= 8) { 
+        res.innerHTML = `<span style="color: #856404;">⚠️ Not in list, but <strong>${closestDist.toFixed(1)} miles</strong> from ZIP ${closestRow.zip}.</span>`;
         head.classList.remove('hidden');
-        head.innerText = "PROXIMITY ALERT";
+        head.innerText = "NEIGHBOR ALERT";
         
         list.innerHTML = `
-          <div style="background: #fff3cd; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #ffeeba; font-size: 14px; color: #856404; text-align: center;">
-            <strong>OUTSIDE PRIMARY ZONE:</strong> This customer is <strong>${closestDist.toFixed(1)} miles</strong> away from our ${closestRow.city} hub. 
-            <br><em>Likely serviceable - check with a manager for travel fee.</em>
+          <div style="background: #fff3cd; padding: 15px; border-radius: 12px; text-align: center; color: #856404; margin-bottom: 10px; border: 1px solid #ffeeba;">
+            <strong>CLOSE NEIGHBOR:</strong> This customer is only <strong>${closestDist.toFixed(1)} miles</strong> from our route in <strong>${closestRow.city}</strong>.
           </div>
         `;
-        // This adds the row info below the yellow box
-        const tableHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${closestRow.city}</span></td><td><span class="phone-text">${closestRow.phone}</span><button class="copy-btn" onclick="copyToClipboard('${closestRow.phone}')">📋</button></td><td><a href="${closestRow.link}" target="_blank" rel="noopener noreferrer" class="action-link">📅 OPEN MOEGO</a></td></tr></tbody></table>`;
-        list.innerHTML += tableHTML;
-        map.flyTo(rawCoords[closestRow.city], 9);
+        renderSingleRow(closestRow);
+        map.flyTo([closestRow.lat, closestRow.lng], 10);
       } else {
-        res.innerText = "❌ No service within 10 miles.";
+        res.innerText = "❌ No service within 8 miles of our routes.";
         resetSearchState();
       }
     } catch (e) {
@@ -396,48 +408,45 @@ async function lookup() {
   }
 }
 
-  // Helper needed for the mileage math (Paste this above the lookup function)
-  function getDistance(lat1, lon1, lat2, lon2) {
-    const R = 3958.8; 
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; 
-  }
+// Keep this helper function! It's the "Tape Measure"
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 3958.8; 
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; 
+}
 
- function renderSingleRow(m) {
-    const list = document.getElementById('location-list');
-    // Check if the hub name has extra info (like "Owner Approval")
-    const specialNote = m.name !== m.city ? `<span class="badge">${m.name}</span>` : "";
-    
-    list.innerHTML = `
-      <table class="directory-table">
-        <thead>
-          <tr>
-            <th>Hub Location</th>
-            <th>Phone Number</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>
-              <span class="city-name">${m.city}</span>
-              ${specialNote}
-            </td>
-            <td>
-              <span class="phone-text">${m.phone}</span>
-              <button class="copy-btn" onclick="copyToClipboard('${m.phone}')" title="Copy Number">📋</button>
-            </td>
-            <td><a href="${m.link}" target="_blank" rel="noopener noreferrer" class="action-link">📅 OPEN MOEGO</a></td>
-          </tr>
-        </tbody>
-      </table>
-    `;
-  }
+function renderSingleRow(m) {
+  const list = document.getElementById('location-list');
+  // Use 'name' if it's different than 'city', otherwise just show city
+  const cityDisplayName = m.name && m.name !== m.city ? m.name : m.city;
+  
+  list.innerHTML += `
+    <table class="directory-table">
+      <thead>
+        <tr>
+          <th>Hub Location</th>
+          <th>Phone Number</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="city-name">${cityDisplayName}</span></td>
+          <td>
+            <span class="phone-text">${m.phone}</span>
+            <button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button>
+          </td>
+          <td><a href="${m.link}" target="_blank" rel="noopener noreferrer" class="action-link">📅 OPEN MOEGO</a></td>
+        </tr>
+      </tbody>
+    </table>
+  `;
+}
 
   function displayStateLocations(code) {
     const list = document.getElementById('location-list');
