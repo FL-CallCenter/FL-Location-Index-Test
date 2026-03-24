@@ -304,7 +304,13 @@ const rawCoords = {
     const list = document.getElementById('location-list');
 
     // Reset UI state
-    list.innerHTML = "";
+   list.innerHTML = `
+    <div style="background: #fff3cd; padding: 15px; border-radius: 12px; text-align: center; color: #856404; margin-bottom: 10px; border: 2px solid #ffeeba;">
+        <strong style="font-size: 16px; color: #856404;">⚠️ NEIGHBOR ZIP: PRE-APPROVAL REQUIRED</strong><br>
+        ZIP ${zip} is <strong>${closestDist.toFixed(1)} miles</strong> from our ${closestRow.zip} route. 
+        <br><span style="font-weight: bold;">Ask a lead if this is serviceable and if a travel fee applies.</span>
+    </div>
+`;
     head.classList.add('hidden');
 
     // A. EXACT MATCH
@@ -434,32 +440,26 @@ const rawCoords = {
     return R * c; 
   }
 
-  function renderSingleRow(m) {
+function renderSingleRow(m, isNeighbor = false) {
     const list = document.getElementById('location-list');
-    const cityDisplayName = m.name && m.name !== m.city ? m.name : m.city;
+    const name = m.name && m.name !== m.city ? m.name : m.city;
     
+    // A softer, blue badge for neighboring ZIPs
+    const statusBadge = isNeighbor ? 
+        `<span style="background: #2576d0; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; margin-left: 10px; vertical-align: middle;">INQUIRY ONLY</span>` : "";
+
     list.innerHTML += `
       <table class="directory-table">
-        <thead>
-          <tr>
-            <th>Hub Location</th>
-            <th>Phone Number</th>
-            <th>Action</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Hub</th><th>Phone</th><th>Action</th></tr></thead>
         <tbody>
           <tr>
-            <td><span class="city-name">${cityDisplayName}</span></td>
-            <td>
-              <span class="phone-text">${m.phone}</span>
-              <button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button>
-            </td>
-            <td><a href="${m.link}" target="_blank" rel="noopener noreferrer" class="action-link">📅 OPEN MOEGO</a></td>
+            <td><span class="city-name">${name}</span>${statusBadge}</td>
+            <td>${m.phone} <button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td>
+            <td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td>
           </tr>
         </tbody>
-      </table>
-    `;
-  }
+      </table>`;
+}
 
   function displayStateLocations(code) {
     const list = document.getElementById('location-list');
