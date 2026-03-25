@@ -65,7 +65,21 @@
     input { padding: 14px; font-size: 16px; width: 100%; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; background-color: var(--fl-accent); outline: none; margin-bottom: 10px; text-align: center; }
     
     .search-container { position: relative; width: 100%; }
-    #customDropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 12px; max-height: 220px; overflow-y: auto; z-index: 2000; display: none; box-shadow: 0 15px 35px rgba(0,0,0,0.15); margin-top: 5px; border: 1px solid #eee; }
+    #customDropdown { 
+    position: absolute; 
+    top: 100%; 
+    left: 0; 
+    right: 0; 
+    background: white; 
+    border-radius: 12px; 
+    max-height: 220px; 
+    overflow-y: auto; 
+    z-index: 4000; /* Increased from 2000 to 4000 */
+    display: none; 
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15); 
+    margin-top: 5px; 
+    border: 1px solid #eee; 
+}
     .dropdown-item { padding: 14px; cursor: pointer; font-size: 15px; text-align: center; border-bottom: 1px solid #f5f5f5; }
     .dropdown-item:hover { background: var(--fl-accent); color: var(--fl-blue); }
     
@@ -345,23 +359,34 @@ async function lookup() {
 
   // 1. EXACT MATCH
   const match = data.find(d => d.zip === zip);
-  if (match) {
+if (match) {
     res.innerText = "📍 Match Found: " + match.city;
     
-    // Background Swap
-    const cityClean = match.city.split(',')[0].trim();
-    document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://source.unsplash.com/1920x1080/?${cityClean},skyline')`;
+    // Fix: Prioritize Hub-specific coordinates from your spreadsheet
+    let flyLat = null;
+    let flyLng = null;
 
+    if (match.lat && match.lng) {
+        flyLat = parseFloat(match.lat);
+        flyLng = parseFloat(match.lng);
+    } else if (rawCoords[match.city]) {
+        flyLat = rawCoords[match.city][0];
+        flyLng = rawCoords[match.city][1];
+    }
+
+    if (flyLat && flyLng) {
+        map.flyTo([flyLat, flyLng], 14); // Zoom level 14 is tight on the pin
+        // Open the popup automatically
+        if (markers[match.city]) markers[match.city].openPopup();
+    }
+
+    // Background Image Logic
+    const cityClean = match.city.split(',')[0].trim();
+    document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://source.unsplash.com/1920x1080/?${encodeURIComponent(cityClean)},skyline')`;
+    
     head.classList.remove('hidden');
     head.innerText = "SEARCH RESULT";
     renderSingleRow(match, false); 
-
-    const flyLat = match.lat ? parseFloat(match.lat) : (rawCoords[match.city] ? rawCoords[match.city][0] : null);
-    const flyLng = match.lng ? parseFloat(match.lng) : (rawCoords[match.city] ? rawCoords[match.city][1] : null);
-    
-    if (flyLat && flyLng) {
-        map.flyTo([flyLat, flyLng], 13);
-    }
     return;
   }
 
@@ -478,12 +503,15 @@ function renderSingleRow(m, isNeighbor = false) {
     list.innerHTML += `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${name}</span>${statusBadge}</td><td><span class="phone-text">${m.phone}</span> <button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td></tr></tbody></table>`;
 }
 
-  function resetMap() { 
+function resetMap() { 
       map.setView([39.82, -98.57], 4); 
       document.getElementById('location-list').innerHTML = ""; 
       document.getElementById('list-header').classList.add('hidden'); 
       document.getElementById('result').innerText = "";
+      
+      // Completely removes the image AND the dark shading
       document.body.style.backgroundImage = "none";
+      document.body.style.backgroundColor = "var(--fl-bg)";
   }
   
   function resetSearchState() { document.getElementById('location-list').innerHTML = ""; document.getElementById('list-header').classList.add('hidden'); map.setView([39.82, -98.57], 4); }
