@@ -9,48 +9,55 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
-    :root { --fl-orange: #f07b23; --fl-blue: #2576d0; --fl-bg: #efeee9; --fl-accent: #f2ffff; }
+    :root { 
+        --fl-orange: #f07b23; 
+        --fl-blue: #2576d0; 
+        --fl-bg: #efeee9; 
+        --fl-accent: #f2ffff; 
+    }
+    
     html { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
 
     body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--fl-bg);
-    /* This makes the city photo cover the whole background */
-    background-attachment: fixed;
-    background-size: cover;
-    background-position: center;
-    transition: background-image 0.8s ease-in-out; 
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-    margin: 0;
-}
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--fl-bg);
+        background-attachment: fixed;
+        background-size: cover;
+        background-position: center;
+        transition: background-image 0.8s ease-in-out; 
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        margin: 0;
+        min-height: 100vh;
+    }
     
-    .tabs { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; z-index: 10; }
     .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 12px; background: #d1d1d1; cursor: pointer; font-weight: bold; color: #555; transition: 0.2s; font-size: 14px; }
     .tab-btn.active { background: var(--fl-blue); color: white; box-shadow: 0 4px 10px rgba(37, 118, 208, 0.3); }
 
+    /* Glassmorphism Card Style */
     .card {
-    /* 0.75 makes it slightly see-through so you see the city photo behind it */
-    background: rgba(255, 255, 255, 0.75) !important;
-    backdrop-filter: blur(12px); /* This creates the frosty glass effect */
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: 25px;
-    border-radius: 18px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-    border-top: 6px solid var(--fl-orange);
-    margin-bottom: 12px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-}    
+        background: rgba(255, 255, 255, 0.75) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 25px;
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+        border-top: 6px solid var(--fl-orange);
+        margin-bottom: 12px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        z-index: 5;
+    }    
     
     h2 { color: var(--fl-orange); margin: 0; font-weight: 800; text-transform: uppercase; font-size: 26px; }
     .subtitle { color: #444; font-size: 14px; margin: 2px 0 18px 0; font-weight: 600; text-transform: uppercase; }
@@ -65,8 +72,8 @@
     #searchBtn { padding: 14px; width: 100%; background-color: var(--fl-orange); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 14px; }
     #result { margin-top: 12px; font-size: 14px; font-weight: 600; color: var(--fl-blue); min-height: 20px; }
 
-    #list-header { color: var(--fl-blue); margin: 30px 0 12px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 800; }
-    #location-list { width: 100%; max-width: 1000px; background: white; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; margin-top: 10px; }
+    #list-header { color: var(--fl-blue); margin: 30px 0 12px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 800; z-index: 5; }
+    #location-list { width: 100%; max-width: 1000px; background: rgba(255, 255, 255, 0.9); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; margin-top: 10px; z-index: 5; }
 
     .directory-table { width: 100%; border-collapse: collapse; text-align: left; }
     .directory-table th { background: #f8f9fa; color: #666; padding: 15px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #eee; }
@@ -82,7 +89,7 @@
     .action-link { text-decoration: none; font-weight: 700; color: #28a745; background: #e8f5e9; padding: 8px 16px; border-radius: 8px; font-size: 12px; transition: 0.2s; display: inline-block; }
     .action-link:hover { background: #28a745; color: white; }
 
-    #map-wrapper { position: relative; width: 100%; max-width: 1000px; margin-top: 40px; margin-bottom: 50px; }
+    #map-wrapper { position: relative; width: 100%; max-width: 1000px; margin-top: 40px; margin-bottom: 50px; z-index: 5; }
     #map { height: 500px; width: 100%; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); }
     #resetMapBtn { position: absolute; top: 15px; right: 15px; z-index: 1000; background: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     
@@ -131,11 +138,11 @@
   let data = [];
   let markers = {};
 
-  // --- YOUR DATA CONFIG ---
+  // --- PLACEHOLDER: INSERT YOUR COORDINATES HERE ---
 const rawCoords = {
     "Central Indiana": [39.7684, -86.1581],
     "Columbus-Auburn": [32.4676, -84.9877],
-    "Columbus OH": [39.9612, -82.9988],
+    "Columbus-Central Ohio": [39.9612, -82.9988],
     "Greenville-Spartanburg // WNC & Upstate SC// The Carolinas": [34.8526, -82.3940],
     "Central PA/Harrisburg/Lancaster": [40.2732, -76.8867],
     "NWA (Fayetteville)": [36.0822, -94.1719],
@@ -198,6 +205,7 @@ const rawCoords = {
     "Central Texas (Waco)": [31.5493, -97.1467]
   };
 
+  // --- PLACEHOLDER: INSERT YOUR CSV URLS HERE ---
   const csvUrls = [
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1188497872&single=true&output=csv',
@@ -294,10 +302,9 @@ const rawCoords = {
       }).addTo(map);
     });
 
-  // --- 1. DATA LOADING ENGINE ---
   async function loadData() {
     try {
-      data = []; // Reset array
+      data = []; 
       const responses = await Promise.all(csvUrls.map(url => fetch(url).then(r => r.text())));
       
       responses.forEach(csv => {
@@ -311,7 +318,7 @@ const rawCoords = {
               phone: m[2]?.trim() || "No phone", 
               link: m[3]?.replace(/"/g, '').trim() || "#", 
               city: m[4]?.trim() || "",
-              state: m[5]?.trim() || "", // This was index 5
+              state: m[5]?.trim() || "", 
               lat: m[6]?.trim() || null, 
               lng: m[7]?.replace(/\r/g, '').trim() || null 
             });
@@ -324,38 +331,41 @@ const rawCoords = {
       
       plotHubs(); 
       buildCustomDropdown();
-      console.log("Precision Data Loaded. Total Rows:", data.length);
-    } catch (err) { 
-      console.error("Load Error: ", err); 
-    }
+    } catch (err) { console.error("Load Error: ", err); }
   }
 
-  // --- 2. THE SEARCH BRAIN ---
 async function lookup() {
   const zip = document.getElementById('zipInput').value.trim();
   const res = document.getElementById('result');
   const head = document.getElementById('list-header');
   const list = document.getElementById('location-list');
   
-  // Clear previous results immediately
   list.innerHTML = ""; 
   res.innerHTML = "";
 
-  // 1. EXACT MATCH logic
+  // 1. EXACT MATCH
   const match = data.find(d => d.zip === zip);
   if (match) {
     res.innerText = "📍 Match Found: " + match.city;
-    document.body.style.backgroundImage = `url('https://source.unsplash.com/1920x1080/?${match.city},skyline')`;
+    
+    // Background Swap
+    const cityClean = match.city.split(',')[0].trim();
+    document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://source.unsplash.com/1920x1080/?${cityClean},skyline')`;
+
     head.classList.remove('hidden');
     head.innerText = "SEARCH RESULT";
     renderSingleRow(match, false); 
+
     const flyLat = match.lat ? parseFloat(match.lat) : (rawCoords[match.city] ? rawCoords[match.city][0] : null);
     const flyLng = match.lng ? parseFloat(match.lng) : (rawCoords[match.city] ? rawCoords[match.city][1] : null);
-    if (flyLat && flyLng) map.flyTo([flyLat, flyLng], 12);
+    
+    if (flyLat && flyLng) {
+        map.flyTo([flyLat, flyLng], 13);
+    }
     return;
   }
 
-  // 2. NEIGHBOR SEARCH logic
+  // 2. NEIGHBOR SEARCH
   if (zip.length === 5) {
     res.innerText = "🔍 Checking nearby...";
     try {
@@ -379,10 +389,13 @@ async function lookup() {
 
       if (closestRow && closestDist <= 8) { 
         res.innerHTML = `<span style="color: #c53030;">🛑 Not in list, but <strong>${closestDist.toFixed(1)} miles</strong> from ZIP ${closestRow.zip}.</span>`;
+        
+        const neighborCity = closestRow.city.split(',')[0].trim();
+        document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://source.unsplash.com/1920x1080/?${neighborCity},skyline')`;
+
         head.classList.remove('hidden');
         head.innerText = "NEIGHBOR ALERT";
         
-        // --- UPDATED RED BOX WITH SPACING ---
         list.innerHTML = `
             <div style="background: #fff5f5; padding: 25px; border-radius: 15px; text-align: center; color: #c53030; margin-bottom: 20px; border: 2px solid #feb2b2; line-height: 1.8;">
                 <strong style="font-size: 19px; color: #9b2c2c; display: block; margin-bottom: 10px;">🛑 NEIGHBOR ZIP: APPROVAL REQUIRED</strong>
@@ -398,19 +411,15 @@ async function lookup() {
         renderSingleRow(closestRow, true); 
         let flyLat = closestRow.lat ? parseFloat(closestRow.lat) : rawCoords[closestRow.city][0];
         let flyLng = closestRow.lng ? parseFloat(closestRow.lng) : rawCoords[closestRow.city][1];
-        map.flyTo([flyLat, flyLng], 10);
+        map.flyTo([flyLat, flyLng], 11);
       } else {
         res.innerText = "❌ No service within range.";
         resetSearchState();
       }
-    } catch (e) { 
-      res.innerText = "❌ Invalid ZIP or Connection Error."; 
-      resetSearchState(); 
-    }
+    } catch (e) { res.innerText = "❌ Invalid ZIP."; resetSearchState(); }
   }
 }
 
-  // --- 3. VISUAL HELPERS ---
   function plotHubs() {
     for(let k in markers) map.removeLayer(markers[k]);
     markers = {};
@@ -421,7 +430,7 @@ async function lookup() {
       if (city && rawCoords[city] && !plotted.has(city)) {
         plotted.add(city);
         const icon = L.divIcon({ className: '', html: '<div class="pulsing-marker"></div>', iconSize: [10, 10], iconAnchor: [5, 5] });
-        const marker = L.marker(rawCoords[city], { icon: icon }).addTo(map).bindPopup(`<div style="text-align: center;"><strong>FurryLand ${city}</strong><br><div style="margin: 5px 0; font-size:13px;">📞 ${d.phone}</div><a href="${d.link}" target="_blank" rel="noopener noreferrer" class="action-link">OPEN MOEGO</a></div>`);
+        const marker = L.marker(rawCoords[city], { icon: icon }).addTo(map).bindPopup(`<div style="text-align: center;"><strong>FurryLand ${city}</strong><br>📞 ${d.phone}<br><a href="${d.link}" target="_blank" class="action-link">OPEN MOEGO</a></div>`);
         markers[city] = marker;
       }
     });
@@ -444,13 +453,13 @@ async function lookup() {
     document.getElementById('hubSearchInput').value = city;
     document.getElementById('customDropdown').style.display = 'none';
     const match = data.find(d => d.city.trim() === city);
-    const head = document.getElementById('list-header');
     if (match && rawCoords[city]) {
       map.flyTo(rawCoords[city], 8);
       if (markers[city]) markers[city].openPopup();
       document.getElementById('result').innerText = "📍 Match Found: " + city;
-      head.classList.remove('hidden'); head.innerText = "SEARCH RESULT";
+      document.getElementById('list-header').classList.remove('hidden');
       renderSingleRow(match);
+      document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://source.unsplash.com/1920x1080/?${city},skyline')`;
     }
   }
 
@@ -458,102 +467,32 @@ async function lookup() {
     const R = 3958.8; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; 
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
   }
 
 function renderSingleRow(m, isNeighbor = false) {
     const list = document.getElementById('location-list');
     const name = m.name && m.name !== m.city ? m.name : m.city;
-    
-    // Changed from Blue to a Muted Red/Grey for better "Warning" vibes
-    const statusBadge = isNeighbor ? 
-        `<span style="background: #718096; color: white; padding: 3px 10px; border-radius: 6px; font-size: 11px; margin-left: 12px; vertical-align: middle; font-weight: 800;">INQUIRY ONLY</span>` : "";
-
-    list.innerHTML += `
-      <table class="directory-table">
-        <thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead>
-        <tbody>
-          <tr>
-            <td><span class="city-name">${name}</span>${statusBadge}</td>
-            <td>
-              <span class="phone-text">${m.phone}</span>
-              <button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button>
-            </td>
-            <td><a href="${m.link}" target="_blank" rel="noopener noreferrer" class="action-link">📅 OPEN MOEGO</a></td>
-          </tr>
-        </tbody>
-      </table>`;
+    const statusBadge = isNeighbor ? `<span style="background: #718096; color: white; padding: 3px 10px; border-radius: 6px; font-size: 11px; margin-left: 12px; vertical-align: middle; font-weight: 800;">INQUIRY ONLY</span>` : "";
+    list.innerHTML += `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${name}</span>${statusBadge}</td><td><span class="phone-text">${m.phone}</span> <button class="copy-btn" onclick="copyToClipboard('${m.phone}')">📋</button></td><td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td></tr></tbody></table>`;
 }
-  
-  function displayStateLocations(code) {
-    const list = document.getElementById('location-list');
-    const head = document.getElementById('list-header');
-    const searchCode = code.trim().toUpperCase();
-    const fullName = Object.keys(stateCodes).find(k => stateCodes[k] === searchCode)?.toUpperCase() || "";
-    
-    const matches = data.filter(d => { 
-        const s = (d.state || "").trim().toUpperCase(); 
-        return s === searchCode || s === fullName; 
-    });
 
-    const unique = [];
-    const seen = new Set();
-
-    matches.forEach(m => {
-      const identifier = `${m.city}-${m.name}`.toLowerCase().trim();
-      if (!seen.has(identifier)) {
-        seen.add(identifier);
-        unique.push(m);
-      }
-    });
-
-    if(unique.length > 0) {
-      head.classList.remove('hidden'); 
-      head.innerText = `ACTIVE HUBS: ${searchCode}`;
-      list.innerHTML = `
-        <table class="directory-table">
-          <thead>
-            <tr>
-              <th>Hub Location</th>
-              <th>Phone Number</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${unique.map(m => {
-              const specialNote = m.name !== m.city ? `<span class="badge" style="font-size:10px; background:#fff3e0; color:#e65100; padding:2px 6px; border-radius:4px; border:1px solid #ffe0b2; margin-left:8px;">${m.name}</span>` : "";
-              return `
-              <tr>
-                <td><span class="city-name">${m.city}</span>${specialNote}</td>
-                <td>
-                  <span class="phone-text">${m.phone}</span>
-                  <button class="copy-btn" onclick="copyToClipboard('${m.phone}')" title="Copy Number">📋</button>
-                </td>
-                <td><a href="${m.link}" target="_blank" rel="noopener noreferrer" class="action-link">📅 OPEN MOEGO</a></td>
-              </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
-      `;
-      window.scrollTo({ top: head.offsetTop - 20, behavior: 'smooth' });
-    } else { 
-      head.classList.remove('hidden'); 
-      head.innerText = `NO DATA FOR ${searchCode}`; 
-      list.innerHTML = "<p style='padding:20px; color:#999;'>No hubs found for this state.</p>"; 
-    }
+  function resetMap() { 
+      map.setView([39.82, -98.57], 4); 
+      document.getElementById('location-list').innerHTML = ""; 
+      document.getElementById('list-header').classList.add('hidden'); 
+      document.getElementById('result').innerText = "";
+      document.body.style.backgroundImage = "none";
   }
-
-  function resetSearchState() { document.getElementById('location-list').innerHTML = ""; document.getElementById('list-header').classList.add('hidden'); map.setView([39.82, -98.57], 4); setTimeout(() => { document.getElementById('result').innerText = ""; }, 2500); }
-  function copyToClipboard(text) { navigator.clipboard.writeText(text); alert('Number copied!'); }
-  function resetMap() { map.setView([39.82, -98.57], 4); document.getElementById('location-list').innerHTML = ""; document.getElementById('list-header').classList.add('hidden'); document.getElementById('result').innerText = ""; }
-  function switchTab(t) { document.getElementById('locator-section').classList.toggle('hidden', t !== 'locator'); document.getElementById('breed-section').classList.toggle('hidden', t === 'locator'); document.getElementById('tab-loc').classList.toggle('active', t === 'locator'); document.getElementById('tab-breed').classList.toggle('active', t !== 'locator'); if(t === 'locator') setTimeout(() => map.invalidateSize(), 200); }
   
+  function resetSearchState() { document.getElementById('location-list').innerHTML = ""; document.getElementById('list-header').classList.add('hidden'); map.setView([39.82, -98.57], 4); }
+  function copyToClipboard(text) { navigator.clipboard.writeText(text); alert('Number copied!'); }
+  function switchTab(t) { document.getElementById('locator-section').classList.toggle('hidden', t !== 'locator'); document.getElementById('breed-section').classList.toggle('hidden', t === 'locator'); document.getElementById('tab-loc').classList.toggle('active', t === 'locator'); document.getElementById('tab-breed').classList.toggle('active', t !== 'locator'); if(t === 'locator') setTimeout(() => map.invalidateSize(), 200); }
   window.onclick = (e) => { if (!e.target.matches('#hubSearchInput')) document.getElementById('customDropdown').style.display = 'none'; }
   document.getElementById('zipInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') lookup(); });
   
   loadData();
 </script>
+</body>
+</html>
