@@ -336,7 +336,7 @@ function setVibe(city) {
   }
 
 function resetMap() { 
-    // 1. Standard UI Reset (Keep your view/innerText lines)
+    // 1. Reset Map & UI (Keep your existing map.setView/innerText lines)
     if (typeof map !== 'undefined') map.setView([39.82, -98.57], 4); 
     document.getElementById('location-list').innerHTML = ""; 
     document.getElementById('list-header').classList.add('hidden'); 
@@ -344,8 +344,8 @@ function resetMap() {
     document.getElementById('zipInput').value = "";
     document.getElementById('hubSearchInput').value = "";
 
-    // 2. THE FIX: Force the background back to Tan and kill the image layer
-    document.body.style.background = "#efeee9"; // Use the actual color
+    // 2. THE FIX: Kill the 'background' property entirely to return to tan
+    document.body.style.background = "#efeee9"; 
     document.body.style.backgroundImage = "none";
 }
 
