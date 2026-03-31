@@ -279,15 +279,15 @@ body {
   }
 
 function setVibe(city) {
+    // 1. Clean the city name (e.g., "Austin, TX" becomes "Austin")
     const cityClean = city.split(',')[0].trim();
-    // Using a more robust Unsplash keyword search URL
-    const imageUrl = `https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1600&q=80&sig=${Math.random()}`;
     
-    // If you want the specific city skyline:
-    const citySkylineUrl = `https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1600&q=80&keywords=${encodeURIComponent(cityClean)},skyline`;
+    // 2. THE FIX: We use the city name as the "featured" keyword AND the seed.
+    // This ensures Boise ALWAYS shows the same Boise photo every time you search it.
+    const imgUrl = `https://source.unsplash.com/featured/1600x900/?${encodeURIComponent(cityClean)},skyline`;
 
-    // Apply BOTH the gradient and the image to the same property
-    document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${citySkylineUrl}')`;
+    // 3. Apply the "Shade" and the "City Photo"
+    document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${imgUrl}')`;
 }
 
   async function lookup() {
