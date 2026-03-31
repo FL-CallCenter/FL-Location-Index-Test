@@ -24,7 +24,7 @@
         background-attachment: fixed;
         background-size: cover;
         background-position: center;
-        transition: background 0.5s ease-in-out; 
+        transition: background 0.4s ease-in-out; 
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -38,7 +38,7 @@
     .tab-btn.active { background: var(--fl-blue); color: white; box-shadow: 0 4px 10px rgba(37, 118, 208, 0.3); }
 
     .card {
-        background: rgba(255, 255, 255, 0.8) !important;
+        background: rgba(255, 255, 255, 0.85) !important;
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         border: 1px solid rgba(255, 255, 255, 0.3);
@@ -55,7 +55,7 @@
         flex-direction: column;
         align-items: center;
         position: relative;
-        z-index: 1000; /* Keeps card above map */
+        z-index: 1000;
     }    
     
     h2 { color: var(--fl-orange); margin: 0; font-weight: 800; text-transform: uppercase; font-size: 26px; }
@@ -65,7 +65,6 @@
     
     .search-container { position: relative; width: 100%; }
     
-    /* FIX: High Z-Index to stay above Leaflet Map */
     #customDropdown { 
         position: absolute; 
         top: 100%; 
@@ -86,7 +85,7 @@
     .dropdown-item:hover { background: var(--fl-accent); color: var(--fl-blue); }
     
     #searchBtn { padding: 14px; width: 100%; background-color: var(--fl-orange); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 14px; }
-    #result { margin-top: 12px; font-size: 14px; font-weight: 600; color: var(--fl-blue); min-height: 20px; }
+    #result { margin-top: 12px; font-size: 14px; font-weight: 700; color: var(--fl-blue); min-height: 20px; }
 
     #list-header { color: var(--fl-blue); margin: 30px 0 12px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 800; }
     #location-list { width: 100%; max-width: 1000px; background: rgba(255, 255, 255, 0.9); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; margin-top: 10px; }
@@ -96,8 +95,8 @@
     .directory-table td { padding: 15px; border-bottom: 1px solid #f2f2f2; font-size: 14px; vertical-align: middle; }
 
     .city-name { font-weight: 700; color: var(--fl-orange); font-size: 15px; }
-    .phone-text { font-family: monospace; font-size: 15px; color: #333; }
     .action-link { text-decoration: none; font-weight: 700; color: #28a745; background: #e8f5e9; padding: 8px 16px; border-radius: 8px; font-size: 12px; display: inline-block; }
+    .copy-btn { border:none; background:#eee; cursor:pointer; border-radius:4px; padding:2px 5px; margin-left:5px; font-size:12px; }
 
     #map-wrapper { position: relative; width: 100%; max-width: 1000px; margin-top: 40px; margin-bottom: 50px; z-index: 1; }
     #map { height: 500px; width: 100%; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); }
@@ -148,69 +147,32 @@
   let data = [];
   let markers = {};
 
-const rawCoords = {
-    "Central Indiana": [39.7684, -86.1581],
-    "Columbus-Auburn": [32.4676, -84.9877],
-    "Columbus OH": [39.9612, -82.9988],
-    "Greenville-Spartanburg // WNC & Upstate SC// The Carolinas": [34.8526, -82.3940],
-    "Central PA/Harrisburg/Lancaster": [40.2732, -76.8867],
-    "NWA (Fayetteville)": [36.0822, -94.1719],
-    "Raleigh-Durham": [35.8900, -78.8500],
-    "Tyler-Longview": [32.3513, -95.3011],
-    "Palm Beach County": [26.7153, -80.0534],
-    "Green Bay-Appleton": [44.5191, -88.0198],
-    "Hartford": [41.7658, -72.6734],
-    "Tri-Cities": [36.5243, -82.3193],
-    "Sherman/Ada": [33.6357, -96.6089],
-    "NoVa Northern Virginia": [38.8462, -77.3064],
-    "Albuquerque": [35.0844, -106.6504],
-    "Atlanta": [33.7490, -84.3880],
-    "Austin": [30.2672, -97.7431],
-    "Baton Rouge": [30.4515, -91.1871],
-    "Beaumont": [30.0802, -94.1266],
-    "Boise": [43.6150, -116.2023],
-    "Boston": [42.3601, -71.0589],
-    "Central New Jersey": [40.5330, -74.4442],
-    "Central Florida (Orlando)": [28.5383, -81.3792],
-    "Charleston": [32.7765, -79.9311],
-    "Charlotte": [35.2271, -80.8431],
-    "Chattanooga": [35.0456, -85.3097],
-    "Cincinnati": [39.1031, -84.5120],
-    "Colorado Springs": [38.8339, -104.8214],
-    "Corpus Christi": [27.8006, -97.3964],
-    "Denver": [39.7392, -104.9903],
-    "Detroit": [42.3314, -83.0458],
-    "DFW - Dallas Fort Worth": [32.7767, -96.7970],
-    "Fairfield": [41.1412, -73.2637],
-    "Fort Myers": [26.6406, -81.8723],
-    "Greensboro": [36.0726, -79.7920],
-    "Houston": [29.7604, -95.3698],
-    "Huntsville": [34.7304, -86.5861],
-    "Knoxville": [35.9606, -83.9207],
-    "Las Vegas": [36.1699, -115.1398],
-    "Lexington": [38.0406, -84.5037],
-    "Little Rock": [34.7465, -92.2896],
-    "Louisville": [38.2527, -85.7585],
-    "Lubbock": [33.5779, -101.8552],
-    "Madison": [43.0731, -89.4012],
-    "Milwaukee": [43.0389, -87.9065],
-    "Nashville": [36.1627, -86.7816],
-    "Oklahoma City": [35.4676, -97.5164],
-    "Phoenix": [33.4484, -112.0740],
-    "Pittsburgh": [40.4406, -79.9959],
-    "Portland": [45.5152, -122.6784],
-    "Reno": [39.5296, -119.8138],
-    "Salt Lake City": [40.7608, -111.8910],
-    "San Antonio": [29.4241, -98.4936],
-    "Savannah": [32.0809, -81.0912],
-    "West Michigan": [42.9634, -85.6681],
-    "Wilmington": [34.2104, -77.8868],
-    "Cleveland": [41.4993, -81.6944],
-    "Omaha": [41.2565, -95.9345],
-    "Vermont": [44.5588, -72.5778],
-    "Augusta": [33.4735, -82.0105],
-    "Kansas City": [39.0997, -94.5786],
-    "Hartford/New Haven": [41.5367, -72.8059],
+  // Exception list for Serviceable Distances
+  const distanceExceptions = {
+  };
+
+  const rawCoords = {
+    "Central Indiana": [39.7684, -86.1581], "Columbus-Auburn": [32.4676, -84.9877], "Columbus OH": [39.9612, -82.9988],
+    "Greenville-Spartanburg // WNC & Upstate SC// The Carolinas": [34.8526, -82.3940], "Central PA/Harrisburg/Lancaster": [40.2732, -76.8867],
+    "NWA (Fayetteville)": [36.0822, -94.1719], "Raleigh-Durham": [35.8900, -78.8500], "Tyler-Longview": [32.3513, -95.3011],
+    "Palm Beach County": [26.7153, -80.0534], "Green Bay-Appleton": [44.5191, -88.0198], "Hartford": [41.7658, -72.6734],
+    "Tri-Cities": [36.5243, -82.3193], "Sherman/Ada": [33.6357, -96.6089], "NoVa Northern Virginia": [38.8462, -77.3064],
+    "Albuquerque": [35.0844, -106.6504], "Atlanta": [33.7490, -84.3880], "Austin": [30.2672, -97.7431],
+    "Baton Rouge": [30.4515, -91.1871], "Beaumont": [30.0802, -94.1266], "Boise": [43.6150, -116.2023],
+    "Boston": [42.3601, -71.0589], "Central New Jersey": [40.5330, -74.4442], "Central Florida (Orlando)": [28.5383, -81.3792],
+    "Charleston": [32.7765, -79.9311], "Charlotte": [35.2271, -80.8431], "Chattanooga": [35.0456, -85.3097],
+    "Cincinnati": [39.1031, -84.5120], "Colorado Springs": [38.8339, -104.8214], "Corpus Christi": [27.8006, -97.3964],
+    "Denver": [39.7392, -104.9903], "Detroit": [42.3314, -83.0458], "DFW - Dallas Fort Worth": [32.7767, -96.7970],
+    "Fairfield": [41.1412, -73.2637], "Fort Myers": [26.6406, -81.8723], "Greensboro": [36.0726, -79.7920],
+    "Houston": [29.7604, -95.3698], "Huntsville": [34.7304, -86.5861], "Knoxville": [35.9606, -83.9207],
+    "Las Vegas": [36.1699, -115.1398], "Lexington": [38.0406, -84.5037], "Little Rock": [34.7465, -92.2896],
+    "Louisville": [38.2527, -85.7585], "Lubbock": [33.5779, -101.8552], "Madison": [43.0731, -89.4012],
+    "Milwaukee": [43.0389, -87.9065], "Nashville": [36.1627, -86.7816], "Oklahoma City": [35.4676, -97.5164],
+    "Phoenix": [33.4484, -112.0740], "Pittsburgh": [40.4406, -79.9959], "Portland": [45.5152, -122.6784],
+    "Reno": [39.5296, -119.8138], "Salt Lake City": [40.7608, -111.8910], "San Antonio": [29.4241, -98.4936],
+    "Savannah": [32.0809, -81.0912], "West Michigan": [42.9634, -85.6681], "Wilmington": [34.2104, -77.8868],
+    "Cleveland": [41.4993, -81.6944], "Omaha": [41.2565, -95.9345], "Vermont": [44.5588, -72.5778],
+    "Augusta": [33.4735, -82.0105], "Kansas City": [39.0997, -94.5786], "Hartford/New Haven": [41.5367, -72.8059],
     "Central Texas (Waco)": [31.5493, -97.1467]
   };
       
@@ -287,9 +249,6 @@ const rawCoords = {
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=874715943&single=true&output=csv'
   ];
 
-  
-  const stateCodes = { 'New Mexico': 'NM', 'Georgia': 'GA', 'Texas': 'TX', 'Louisiana': 'LA', 'Idaho': 'ID', 'Massachusetts': 'MA', 'New Jersey': 'NJ', 'Florida': 'FL', 'Indiana': 'IN', 'South Carolina': 'SC', 'North Carolina': 'NC', 'Tennessee': 'TN', 'Ohio': 'OH', 'Colorado': 'CO', 'Michigan': 'MI', 'Connecticut': 'CT', 'Pennsylvania': 'PA', 'Alabama': 'AL', 'Nevada': 'NV', 'Kentucky': 'KY', 'Arkansas': 'AR', 'Wisconsin': 'WI', 'Oklahoma': 'OK', 'Arizona': 'AZ', 'Oregon': 'OR', 'Nebraska': 'NE', 'Vermont': 'VT', 'Virginia': 'VA', 'Missouri': 'MO', 'Kansas': 'KS' };
-
   const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
@@ -318,8 +277,7 @@ const rawCoords = {
 
   function setVibe(city) {
       const cityClean = city.split(',')[0].trim();
-      // Using a more reliable Unsplash URL format
-      document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://source.unsplash.com/1600x900/?${encodeURIComponent(cityClean)},skyline')`;
+      document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://source.unsplash.com/1600x900/?${encodeURIComponent(cityClean)},skyline')`;
   }
 
   async function lookup() {
@@ -327,6 +285,8 @@ const rawCoords = {
     const res = document.getElementById('result');
     const list = document.getElementById('location-list');
     const head = document.getElementById('list-header');
+    
+    // START FRESH
     list.innerHTML = ""; res.innerHTML = "";
 
     const match = data.find(d => d.zip === zip);
@@ -336,7 +296,6 @@ const rawCoords = {
         head.classList.remove('hidden'); head.innerText = "SEARCH RESULT";
         renderSingleRow(match, false);
         
-        // ZOOM FIX: Prioritize Hub Coordinates
         let flyLat = match.lat ? parseFloat(match.lat) : (rawCoords[match.city] ? rawCoords[match.city][0] : null);
         let flyLng = match.lng ? parseFloat(match.lng) : (rawCoords[match.city] ? rawCoords[match.city][1] : null);
         if (flyLat && flyLng) map.flyTo([flyLat, flyLng], 14);
@@ -361,13 +320,16 @@ const rawCoords = {
                 }
             });
 
-            if (closestRow && closestDist <= 8) {
+            // EXCEPTION LOGIC: Check custom limits
+            const limit = closestRow ? (distanceExceptions[closestRow.city] || 8.0) : 8.0;
+
+            if (closestRow && closestDist <= limit) {
                 res.innerHTML = `<span style="color: #c53030;">🛑 Neighbor Found: ${closestDist.toFixed(1)} miles away</span>`;
                 setVibe(closestRow.city);
                 head.classList.remove('hidden'); head.innerText = "NEIGHBOR ALERT";
                 list.innerHTML = `<div style="background:#fff5f5; padding:25px; border-radius:15px; text-align:center; color:#c53030; margin-bottom:20px; border:2px solid #feb2b2; line-height:1.8;">
                     <strong style="font-size:19px; display:block; margin-bottom:10px;">🛑 NEIGHBOR ZIP: APPROVAL REQUIRED</strong>
-                    ZIP ${zip} is ${closestDist.toFixed(1)} miles from ${closestRow.zip}.<br>
+                    ZIP ${zip} is ${closestDist.toFixed(1)} miles from ${closestRow.zip} (${closestRow.city}).<br>
                     <strong style="display:block; margin-top:15px; background:#fed7d7; padding:10px; border-radius:8px;">Ask the SLACK CHANNEL if this is serviceable.</strong>
                 </div>`;
                 renderSingleRow(closestRow, true);
@@ -384,6 +346,9 @@ const rawCoords = {
       document.getElementById('location-list').innerHTML = ""; 
       document.getElementById('list-header').classList.add('hidden'); 
       document.getElementById('result').innerText = "";
+      document.getElementById('zipInput').value = "";
+      document.getElementById('hubSearchInput').value = "";
+      // HARD CLEAR BACKGROUND
       document.body.style.backgroundImage = "none";
       document.body.style.backgroundColor = "var(--fl-bg)";
   }
@@ -408,7 +373,9 @@ const rawCoords = {
   function renderSingleRow(m, isNeighbor = false) {
     const list = document.getElementById('location-list');
     const badge = isNeighbor ? `<span style="background:#718096; color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:12px; font-weight:800;">INQUIRY ONLY</span>` : "";
-    list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span>${badge}</td><td>${m.phone} <button onclick="navigator.clipboard.writeText('${m.phone}');alert('Copied!')">📋</button></td><td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td></tr></tbody></table>`;
+    
+    // USE "=" TO PREVENT STACKING
+    list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span>${badge}</td><td><span class="phone-text">${m.phone}</span> <button class="copy-btn" onclick="navigator.clipboard.writeText('${m.phone}');alert('Copied!')">📋</button></td><td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td></tr></tbody></table>`;
   }
 
   function buildCustomDropdown() {
@@ -416,6 +383,7 @@ const rawCoords = {
     const cities = [...new Set(data.map(d => d.city.trim()))].filter(c => c && rawCoords[c]).sort();
     dropdown.innerHTML = cities.map(city => `<div class="dropdown-item" onclick="selectCity('${city}')">${city}</div>`).join('');
   }
+  
   function selectCity(city) {
     document.getElementById('hubSearchInput').value = city;
     document.getElementById('customDropdown').style.display = 'none';
@@ -427,6 +395,7 @@ const rawCoords = {
         renderSingleRow(match);
     }
   }
+  
   function showDropdown() { document.getElementById('customDropdown').style.display = 'block'; }
   function filterDropdown() {
     const input = document.getElementById('hubSearchInput').value.toLowerCase();
