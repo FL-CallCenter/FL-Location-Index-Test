@@ -360,10 +360,15 @@ function resetMap() {
     document.getElementById('zipInput').value = "";
     document.getElementById('hubSearchInput').value = "";
 
-    // 2. Wipe all background styles completely
+    // 2. THE FIX: Forcefully wipe the image AND the shade
+    // We use .background (shorthand) to clear everything at once
+    document.body.style.background = "var(--fl-bg)";
     document.body.style.backgroundImage = "none";
-    document.body.style.background = "var(--fl-bg)"; 
-    console.log("UI Reset: Background cleared.");
+    
+    // Additional safeguard: ensure the color is locked in
+    document.body.style.backgroundColor = "var(--fl-bg)";
+
+    console.log("UI Reset: Shade and Image cleared.");
 }
 
   function plotHubs() {
