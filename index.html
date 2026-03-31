@@ -20,20 +20,26 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    /* This is your default tan color */
-    background-color: var(--fl-bg); 
+    background-color: var(--fl-bg); /* Default Tan */
     background-attachment: fixed;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    /* This ensures the 'tan' and 'image' transition smoothly */
-    transition: background-color 0.4s ease, background-image 0.4s ease;
+    /* Smooth transition between tan and images */
+    transition: background-color 0.4s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 20px;
     margin: 0;
     min-height: 100vh;
+}
+
+/* This class is added by JavaScript only when a city is found */
+body.has-vibe {
+    background-size: cover !important;
+    background-attachment: fixed !important;
+    background-position: center !important;
 }
     
     .tabs { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; z-index: 10; }
@@ -281,13 +287,15 @@ body {
 function setVibe(city) {
     const cityClean = city.split(',')[0].trim();
     
-    // THE FIX: We add a 'sig' (signature) to the end. 
-    // This trick forces the browser to fetch a NEW photo for every city.
+    // THE SEARCH URL: Uses city name + 'sig' to force a unique photo every time
     const imgUrl = `https://source.unsplash.com/featured/1600x900/?${encodeURIComponent(cityClean)},skyline&sig=${Math.random()}`;
 
-    // Apply everything to the .style.background shorthand
-    document.body.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${imgUrl}') center/cover no-repeat fixed`;
-}
+    // 1. Activate the 'vibe' CSS rules
+    document.body.classList.add('has-vibe');
+    
+    // 2. Inject the unique image and the dark shade
+    document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${imgUrl}')`;
+  }
 
   async function lookup() {
     const zip = document.getElementById('zipInput').value.trim();
@@ -351,20 +359,23 @@ function setVibe(city) {
   }
 
 function resetMap() { 
-    // 1. Reset Map & UI
-    if (map) map.setView([39.82, -98.57], 4); 
+    // 1. Reset Map & UI Elements
+    if (typeof map !== 'undefined') map.setView([39.82, -98.57], 4); 
     document.getElementById('location-list').innerHTML = ""; 
     document.getElementById('list-header').classList.add('hidden'); 
     document.getElementById('result').innerText = "";
     document.getElementById('zipInput').value = "";
     document.getElementById('hubSearchInput').value = "";
 
-// 2. THE FIX: Match the property used in setVibe to clear it
-    // This kills the image/shade and returns to your brand tan
-    document.body.style.background = "#efeee9"; 
+    // 2. THE NUCLEAR RESET: Remove the 'vibe' tag and wipe the image
+    document.body.classList.remove('has-vibe');
+    document.body.style.backgroundImage = "none";
     
-    console.log("UI Reset: City image cleared, returned to tan.");
-}
+    // 3. Force return to brand tan
+    document.body.style.background = "var(--fl-bg)";
+    
+    console.log("UI Reset: Returned to tan vibe.");
+  }
 
   function plotHubs() {
     for(let k in markers) map.removeLayer(markers[k]);
