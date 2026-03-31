@@ -267,14 +267,14 @@
 function setVibe(city) {
     const cityClean = city.split(',')[0].trim();
     
-    // THE FIX: We use a search query that includes the city + skyline + landscape.
-    // By adding "v=" with Date.now(), we make the URL unique to the millisecond, 
-    // which prevents the "Same Image" bug you're seeing.
-    const imgUrl = `https://source.unsplash.com/1600x900/?${encodeURIComponent(cityClean)},skyline,downtown&v=${Date.now()}`;
+    // THE FIX: We use a high-quality "Base" city image but append the city name
+    // as a search parameter. This is the most stable way to get an image now.
+    const imgUrl = `https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=1600&auto=format&fit=crop&city=${encodeURIComponent(cityClean)}&sig=${Date.now()}`;
 
-    // Apply the background using the shorthand to ensure the 'shade' (gradient) updates too
+    // Apply the Shade + Image using the SHORTHAND 'background'
+    // This wipes the tan and sets the photo in one move.
     document.body.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${imgUrl}') center/cover no-repeat fixed`;
-  }
+}
 
   async function lookup() {
     const zip = document.getElementById('zipInput').value.trim();
@@ -335,7 +335,7 @@ function setVibe(city) {
   }
 
 function resetMap() { 
-    // 1. Reset Map & UI
+    // 1. Standard UI Reset (Keep your view/innerText lines)
     if (typeof map !== 'undefined') map.setView([39.82, -98.57], 4); 
     document.getElementById('location-list').innerHTML = ""; 
     document.getElementById('list-header').classList.add('hidden'); 
@@ -343,14 +343,10 @@ function resetMap() {
     document.getElementById('zipInput').value = "";
     document.getElementById('hubSearchInput').value = "";
 
-    // 2. THE NUCLEAR RESET: 
-    // We clear the background entirely and force the tan color back.
-    document.body.style.background = "#efeee9";
+    // 2. THE FIX: Force the background back to Tan and kill the image layer
+    document.body.style.background = "#efeee9"; // Use the actual color
     document.body.style.backgroundImage = "none";
-    document.body.style.backgroundColor = "var(--fl-bg)";
-    
-    console.log("UI Reset: Background returned to tan.");
-  }
+}
 
   function plotHubs() {
     for(let k in markers) map.removeLayer(markers[k]);
