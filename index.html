@@ -279,14 +279,12 @@ body {
   }
 
 function setVibe(city) {
-    // 1. Clean the city name (e.g., "Austin, TX" -> "Austin")
     const cityClean = city.split(',')[0].trim();
     
-    // 2. THE FIX: We add a 'sig' (signature) at the end. 
-    // Math.random() creates a new ID so the browser doesn't reuse the old photo.
-    const imgUrl = `https://source.unsplash.com/featured/1600x900/?${encodeURIComponent(cityClean)},city,skyline&sig=${Math.random()}`;
+    // THE FIX: High-res direct URL with a random signature for unique photos
+    const imgUrl = `https://source.unsplash.com/featured/1600x900/?${encodeURIComponent(cityClean)},skyline&sig=${Math.random()}`;
 
-    // 3. Apply the Shade + Unique Image
+    // Apply EVERYTHING to the .background property at once
     document.body.style.background = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${imgUrl}') center/cover no-repeat fixed`;
 }
 
@@ -360,11 +358,10 @@ function resetMap() {
     document.getElementById('zipInput').value = "";
     document.getElementById('hubSearchInput').value = "";
 
-// 2. Wipe all background styles completely
-    document.body.style.background = "var(--fl-bg)";
+// 2. THE FIX: Match the property used in setVibe to clear it
+    document.body.style.background = "#efeee9"; // This is your brand tan color
     
-    console.log("UI Reset: Background cleared.");
-}
+    console.log("UI Reset: City image cleared, returned to tan.");
 
   function plotHubs() {
     for(let k in markers) map.removeLayer(markers[k]);
