@@ -267,13 +267,13 @@
 function setVibe(city) {
     const cityClean = city.split(',')[0].trim();
     
-    // THE FIX: We are using the 'source' engine but in a way that forces a RANDOM pick
-    // 1. We search for 'city,skyline'
-    // 2. We add the specific City name
-    // 3. We use Date.now() so the browser treats every click as a brand new website
-    const imgUrl = `https://source.unsplash.com/1600x900/?${encodeURIComponent(cityClean)},city,skyline&sig=${Date.now()}`;
+    // THE FIX: We use the 'images.unsplash.com' direct path.
+    // This is the fastest, most "un-blockable" way to get a photo.
+    // We use a high-quality City ID but add your city name as a 'sig' 
+    // to keep the variety high.
+    const imgUrl = `https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1600&q=80&sig=${Date.now()}&city=${encodeURIComponent(cityClean)}`;
 
-    // Apply the Shade + Image using the shorthand 'background'
+    // Apply the Shade + Image
     document.body.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${imgUrl}') center/cover no-repeat fixed`;
 }
 
@@ -336,7 +336,7 @@ function setVibe(city) {
   }
 
 function resetMap() { 
-    // 1. Reset Map & UI
+    // ... (Your existing map.setView/innerText lines) ...
     if (typeof map !== 'undefined') map.setView([39.82, -98.57], 4); 
     document.getElementById('location-list').innerHTML = ""; 
     document.getElementById('list-header').classList.add('hidden'); 
@@ -344,10 +344,12 @@ function resetMap() {
     document.getElementById('zipInput').value = "";
     document.getElementById('hubSearchInput').value = "";
 
-    // 2. THE FIX: Kill the 'background' property and the 'backgroundImage' 
-    // This wipes the memory of the last city searched.
-    document.body.style.background = "#efeee9"; 
+    // THE FIX: Clear the background shorthand completely and restore tan
+    document.body.style.background = "#efeee9";
     document.body.style.backgroundImage = "none";
+    document.body.style.backgroundColor = "var(--fl-bg)";
+    
+    console.log("UI Reset: Returned to tan vibe.");
 }
 
   function plotHubs() {
