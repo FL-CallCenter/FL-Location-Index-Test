@@ -279,15 +279,12 @@ body {
   }
 
 function setVibe(city) {
-    // 1. Clean the city name (e.g., "Austin, TX" becomes "Austin")
     const cityClean = city.split(',')[0].trim();
-    
-    // 2. THE FIX: We use the city name as the "featured" keyword AND the seed.
-    // This ensures Boise ALWAYS shows the same Boise photo every time you search it.
-    const imgUrl = `https://source.unsplash.com/featured/1600x900/?${encodeURIComponent(cityClean)},skyline`;
+    // Using a high-quality search seed for consistency
+    const imgUrl = `https://source.unsplash.com/featured/1600x900?${encodeURIComponent(cityClean)},city,skyline`;
 
-    // 3. Apply the "Shade" and the "City Photo"
-    document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${imgUrl}')`;
+    // THE FIX: We set the whole background at once so it clears the 'tan'
+    document.body.style.background = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${imgUrl}') center/cover no-repeat fixed`;
 }
 
   async function lookup() {
@@ -352,7 +349,7 @@ function setVibe(city) {
   }
 
 function resetMap() { 
-    // 1. Reset Map & UI
+    // 1. Reset Map & UI (Same as before)
     map.setView([39.82, -98.57], 4); 
     document.getElementById('location-list').innerHTML = ""; 
     document.getElementById('list-header').classList.add('hidden'); 
@@ -360,15 +357,11 @@ function resetMap() {
     document.getElementById('zipInput').value = "";
     document.getElementById('hubSearchInput').value = "";
 
-    // 2. THE FIX: Forcefully wipe the image AND the shade
-    // We use .background (shorthand) to clear everything at once
+    // 2. THE FIX: Switch back to the tan vibe
+    // This removes the image/gradient and restores the default color
     document.body.style.background = "var(--fl-bg)";
-    document.body.style.backgroundImage = "none";
     
-    // Additional safeguard: ensure the color is locked in
-    document.body.style.backgroundColor = "var(--fl-bg)";
-
-    console.log("UI Reset: Shade and Image cleared.");
+    console.log("UI Reset: Returned to tan vibe.");
 }
 
   function plotHubs() {
