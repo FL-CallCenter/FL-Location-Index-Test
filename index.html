@@ -267,13 +267,13 @@
 function setVibe(city) {
     const cityClean = city.split(',')[0].trim();
     
-    // THE FIX: We use the 'images.unsplash.com' search path.
-    // 1. 'fit=crop' ensures it fills the screen.
-    // 2. 'sig=' with Date.now() ensures it's a NEW photo every second.
-    // 3. We removed the "Chicago ID" entirely.
-    const imgUrl = `https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=1600&q=80&sig=${Date.now()}&city=${encodeURIComponent(cityClean)}`;
+    // THE FIX: We are using the 'source' engine but in a way that forces a RANDOM pick
+    // 1. We search for 'city,skyline'
+    // 2. We add the specific City name
+    // 3. We use Date.now() so the browser treats every click as a brand new website
+    const imgUrl = `https://source.unsplash.com/1600x900/?${encodeURIComponent(cityClean)},city,skyline&sig=${Date.now()}`;
 
-    // Apply the Shade + Image
+    // Apply the Shade + Image using the shorthand 'background'
     document.body.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${imgUrl}') center/cover no-repeat fixed`;
 }
 
@@ -336,7 +336,7 @@ function setVibe(city) {
   }
 
 function resetMap() { 
-    // 1. Reset Map & UI (Keep your View/innerText lines)
+    // 1. Reset Map & UI
     if (typeof map !== 'undefined') map.setView([39.82, -98.57], 4); 
     document.getElementById('location-list').innerHTML = ""; 
     document.getElementById('list-header').classList.add('hidden'); 
@@ -344,12 +344,10 @@ function resetMap() {
     document.getElementById('zipInput').value = "";
     document.getElementById('hubSearchInput').value = "";
 
-    // 2. THE FIX: Physically wipe the background styles
-    document.body.style.background = "#efeee9"; // Your Tan
+    // 2. THE FIX: Kill the 'background' property and the 'backgroundImage' 
+    // This wipes the memory of the last city searched.
+    document.body.style.background = "#efeee9"; 
     document.body.style.backgroundImage = "none";
-    document.body.style.backgroundColor = "#efeee9";
-    
-    console.log("Background Reset: Clean slate.");
 }
 
   function plotHubs() {
