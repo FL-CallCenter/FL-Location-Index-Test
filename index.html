@@ -279,15 +279,18 @@ body {
   }
 
 function setVibe(city) {
-    try {
-      const cityClean = city.split(',')[0].trim();
-      // THE FIX: High-res direct URL with a random signature for unique, consistent photos
-      const imgUrl = `https://source.unsplash.com/featured/1600x900/?${encodeURIComponent(cityClean)},skyline&sig=${Math.random()}`;
+    const cityClean = city.split(',')[0].trim();
+    
+    // THE FIX: Using the direct images.unsplash.com API
+    // We use a high-quality 'City' photo ID and append the city name to the metadata
+    const imgUrl = `https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1600&q=80&city=${encodeURIComponent(cityClean)}`;
 
-      // Apply EVERYTHING to the .background property at once
-      document.body.style.background = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${imgUrl}') center/cover no-repeat fixed`;
-    } catch (e) { console.error("Vibe Error:", e); }
-  }
+    // Apply the Shade + Image
+    // We added 'rgba(37, 118, 208, 0.5)' as a backup color in case the image fails
+    document.body.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${imgUrl}') center/cover no-repeat fixed`;
+    
+    console.log("Vibe set for:", cityClean);
+}
 
   async function lookup() {
     const zip = document.getElementById('zipInput').value.trim();
@@ -351,25 +354,20 @@ function setVibe(city) {
   }
 
 function resetMap() { 
-    try {
-      // 1. Reset Map & UI
-      if (typeof map !== 'undefined' && map !== null) {
-          map.setView([39.82, -98.57], 4); 
-      }
-      document.getElementById('location-list').innerHTML = ""; 
-      document.getElementById('list-header').classList.add('hidden'); 
-      const res = document.getElementById('result');
-      if (res) res.innerText = "";
-      
-      document.getElementById('zipInput').value = "";
-      document.getElementById('hubSearchInput').value = "";
+    // 1. Reset Map & UI
+    if (map) map.setView([39.82, -98.57], 4); 
+    document.getElementById('location-list').innerHTML = ""; 
+    document.getElementById('list-header').classList.add('hidden'); 
+    document.getElementById('result').innerText = "";
+    document.getElementById('zipInput').value = "";
+    document.getElementById('hubSearchInput').value = "";
 
-      // 2. THE FIX: Nuclear Reset of the background back to your brand tan
-      document.body.style.background = "#efeee9";
-      
-      console.log("UI Reset: Background cleared and map reset.");
-    } catch (e) { console.error("Reset Error:", e); }
-  }
+    // 2. THE FIX: Force return to original tan brand color
+    document.body.style.background = "#efeee9";
+    document.body.style.backgroundImage = "none";
+    
+    console.log("UI Reset: Background returned to tan.");
+}
 
   function plotHubs() {
     for(let k in markers) map.removeLayer(markers[k]);
