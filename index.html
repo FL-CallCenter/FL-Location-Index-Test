@@ -279,14 +279,15 @@ body {
   }
 
 function setVibe(city) {
-    const cityClean = city.split(',')[0].trim();
-    
-    // THE FIX: High-res direct URL with a random signature for unique photos
-    const imgUrl = `https://source.unsplash.com/featured/1600x900/?${encodeURIComponent(cityClean)},skyline&sig=${Math.random()}`;
+    try {
+      const cityClean = city.split(',')[0].trim();
+      // THE FIX: High-res direct URL with a random signature for unique, consistent photos
+      const imgUrl = `https://source.unsplash.com/featured/1600x900/?${encodeURIComponent(cityClean)},skyline&sig=${Math.random()}`;
 
-    // Apply EVERYTHING to the .background property at once
-    document.body.style.background = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${imgUrl}') center/cover no-repeat fixed`;
-}
+      // Apply EVERYTHING to the .background property at once
+      document.body.style.background = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${imgUrl}') center/cover no-repeat fixed`;
+    } catch (e) { console.error("Vibe Error:", e); }
+  }
 
   async function lookup() {
     const zip = document.getElementById('zipInput').value.trim();
@@ -350,18 +351,24 @@ function setVibe(city) {
   }
 
 function resetMap() { 
-    // 1. Reset Map & UI
-    map.setView([39.82, -98.57], 4); 
-    document.getElementById('location-list').innerHTML = ""; 
-    document.getElementById('list-header').classList.add('hidden'); 
-    document.getElementById('result').innerText = "";
-    document.getElementById('zipInput').value = "";
-    document.getElementById('hubSearchInput').value = "";
+    try {
+      // 1. Reset Map & UI
+      if (typeof map !== 'undefined' && map !== null) {
+          map.setView([39.82, -98.57], 4); 
+      }
+      document.getElementById('location-list').innerHTML = ""; 
+      document.getElementById('list-header').classList.add('hidden'); 
+      const res = document.getElementById('result');
+      if (res) res.innerText = "";
+      
+      document.getElementById('zipInput').value = "";
+      document.getElementById('hubSearchInput').value = "";
 
-// 2. THE FIX: Match the property used in setVibe to clear it
-    document.body.style.background = "#efeee9"; // This is your brand tan color
-    
-    console.log("UI Reset: City image cleared, returned to tan.");
+      // 2. THE FIX: Nuclear Reset of the background back to your brand tan
+      document.body.style.background = "#efeee9";
+      
+      console.log("UI Reset: Background cleared and map reset.");
+    } catch (e) { console.error("Reset Error:", e); }
   }
 
   function plotHubs() {
