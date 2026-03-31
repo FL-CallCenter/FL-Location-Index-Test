@@ -280,11 +280,15 @@ body {
 
 function setVibe(city) {
     const cityClean = city.split(',')[0].trim();
-    // Using a high-quality search seed for consistency
-    const imgUrl = `https://source.unsplash.com/featured/1600x900?${encodeURIComponent(cityClean)},city,skyline`;
+    
+    // We use a high-res direct URL and add a 'sig' to force a refresh
+    const imgUrl = `https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1600&q=80&q=${encodeURIComponent(cityClean)}`;
 
-    // THE FIX: We set the whole background at once so it clears the 'tan'
-    document.body.style.background = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${imgUrl}') center/cover no-repeat fixed`;
+    // This command clears the solid tan and replaces it with the Image + Shade
+    document.body.style.background = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${imgUrl}')`;
+    document.body.style.backgroundSize = "cover";
+    document.body.style.backgroundAttachment = "fixed";
+    document.body.style.backgroundPosition = "center";
 }
 
   async function lookup() {
@@ -349,7 +353,7 @@ function setVibe(city) {
   }
 
 function resetMap() { 
-    // 1. Reset Map & UI (Same as before)
+    // 1. Reset Map & UI
     map.setView([39.82, -98.57], 4); 
     document.getElementById('location-list').innerHTML = ""; 
     document.getElementById('list-header').classList.add('hidden'); 
@@ -357,11 +361,12 @@ function resetMap() {
     document.getElementById('zipInput').value = "";
     document.getElementById('hubSearchInput').value = "";
 
-    // 2. THE FIX: Switch back to the tan vibe
-    // This removes the image/gradient and restores the default color
-    document.body.style.background = "var(--fl-bg)";
+    // 2. THE FIX: Force the background to be a solid color and REMOVE all images
+    document.body.style.background = "#efeee9"; // Hardcoded tan color
+    document.body.style.backgroundImage = "none";
+    document.body.style.backgroundColor = "#efeee9";
     
-    console.log("UI Reset: Returned to tan vibe.");
+    console.log("Background Hard Reset to Tan");
 }
 
   function plotHubs() {
