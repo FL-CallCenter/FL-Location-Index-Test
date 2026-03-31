@@ -279,16 +279,15 @@ body {
   }
 
 function setVibe(city) {
+    // 1. Clean the city name (e.g., "Austin, TX" -> "Austin")
     const cityClean = city.split(',')[0].trim();
     
-    // We use a high-res direct URL and add a 'sig' to force a refresh
-    const imgUrl = `https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1600&q=80&q=${encodeURIComponent(cityClean)}`;
+    // 2. THE FIX: We add a 'sig' (signature) at the end. 
+    // Math.random() creates a new ID so the browser doesn't reuse the old photo.
+    const imgUrl = `https://source.unsplash.com/featured/1600x900/?${encodeURIComponent(cityClean)},city,skyline&sig=${Math.random()}`;
 
-    // This command clears the solid tan and replaces it with the Image + Shade
-    document.body.style.background = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${imgUrl}')`;
-    document.body.style.backgroundSize = "cover";
-    document.body.style.backgroundAttachment = "fixed";
-    document.body.style.backgroundPosition = "center";
+    // 3. Apply the Shade + Unique Image
+    document.body.style.background = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${imgUrl}') center/cover no-repeat fixed`;
 }
 
   async function lookup() {
@@ -361,12 +360,10 @@ function resetMap() {
     document.getElementById('zipInput').value = "";
     document.getElementById('hubSearchInput').value = "";
 
-    // 2. THE FIX: Force the background to be a solid color and REMOVE all images
-    document.body.style.background = "#efeee9"; // Hardcoded tan color
-    document.body.style.backgroundImage = "none";
-    document.body.style.backgroundColor = "#efeee9";
+// 2. Wipe all background styles completely
+    document.body.style.background = "var(--fl-bg)";
     
-    console.log("Background Hard Reset to Tan");
+    console.log("UI Reset: Background cleared.");
 }
 
   function plotHubs() {
