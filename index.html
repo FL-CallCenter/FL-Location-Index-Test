@@ -279,14 +279,13 @@ body {
   }
 
 function setVibe(city) {
-    // 1. Clean the city name
     const cityClean = city.split(',')[0].trim();
     
-    // 2. THE FIX: Search by city name + skyline. 
-    // We add a 'sig' (signature) to force the browser to find a NEW photo every time.
-    const imgUrl = `https://source.unsplash.com/1600x900/?${encodeURIComponent(cityClean)},skyline&sig=${Math.random()}`;
+    // THE FIX: We add a 'sig' (signature) to the end. 
+    // This trick forces the browser to fetch a NEW photo for every city.
+    const imgUrl = `https://source.unsplash.com/featured/1600x900/?${encodeURIComponent(cityClean)},skyline&sig=${Math.random()}`;
 
-    // 3. Apply the Shade + Unique Image
+    // Apply everything to the .style.background shorthand
     document.body.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${imgUrl}') center/cover no-repeat fixed`;
 }
 
@@ -360,12 +359,11 @@ function resetMap() {
     document.getElementById('zipInput').value = "";
     document.getElementById('hubSearchInput').value = "";
 
-// 2. THE FIX: Nuclear Reset of all background styles
-    // This wipes the specific city background and returns to your tan brand color
-    document.body.style.background = "#efeee9";
-    document.body.style.backgroundImage = "none";
+// 2. THE FIX: Match the property used in setVibe to clear it
+    // This kills the image/shade and returns to your brand tan
+    document.body.style.background = "#efeee9"; 
     
-    console.log("UI Reset: Background returned to tan.");
+    console.log("UI Reset: City image cleared, returned to tan.");
 }
 
   function plotHubs() {
