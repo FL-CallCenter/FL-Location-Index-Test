@@ -279,17 +279,15 @@ body {
   }
 
 function setVibe(city) {
+    // 1. Clean the city name
     const cityClean = city.split(',')[0].trim();
     
-    // THE FIX: Using the direct images.unsplash.com API
-    // We use a high-quality 'City' photo ID and append the city name to the metadata
-    const imgUrl = `https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1600&q=80&city=${encodeURIComponent(cityClean)}`;
+    // 2. THE FIX: Search by city name + skyline. 
+    // We add a 'sig' (signature) to force the browser to find a NEW photo every time.
+    const imgUrl = `https://source.unsplash.com/1600x900/?${encodeURIComponent(cityClean)},skyline&sig=${Math.random()}`;
 
-    // Apply the Shade + Image
-    // We added 'rgba(37, 118, 208, 0.5)' as a backup color in case the image fails
+    // 3. Apply the Shade + Unique Image
     document.body.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${imgUrl}') center/cover no-repeat fixed`;
-    
-    console.log("Vibe set for:", cityClean);
 }
 
   async function lookup() {
@@ -362,7 +360,8 @@ function resetMap() {
     document.getElementById('zipInput').value = "";
     document.getElementById('hubSearchInput').value = "";
 
-    // 2. THE FIX: Force return to original tan brand color
+// 2. THE FIX: Nuclear Reset of all background styles
+    // This wipes the specific city background and returns to your tan brand color
     document.body.style.background = "#efeee9";
     document.body.style.backgroundImage = "none";
     
