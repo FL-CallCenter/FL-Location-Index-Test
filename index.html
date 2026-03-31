@@ -18,20 +18,23 @@
     
     html { scroll-behavior: smooth; }
 
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background-color: var(--fl-bg);
-        background-attachment: fixed;
-        background-size: cover;
-        background-position: center;
-        transition: background 0.4s ease-in-out; 
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px;
-        margin: 0;
-        min-height: 100vh;
-    }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    /* This is your default tan color */
+    background-color: var(--fl-bg); 
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    /* This ensures the 'tan' and 'image' transition smoothly */
+    transition: background-color 0.4s ease, background-image 0.4s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    margin: 0;
+    min-height: 100vh;
+}
     
     .tabs { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; z-index: 10; }
     .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 12px; background: #d1d1d1; cursor: pointer; font-weight: bold; color: #555; transition: 0.2s; font-size: 14px; }
@@ -275,10 +278,17 @@
     } catch (err) { console.error(err); }
   }
 
-  function setVibe(city) {
-      const cityClean = city.split(',')[0].trim();
-      document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://source.unsplash.com/1600x900/?${encodeURIComponent(cityClean)},skyline')`;
-  }
+function setVibe(city) {
+    const cityClean = city.split(',')[0].trim();
+    // Using a more robust Unsplash keyword search URL
+    const imageUrl = `https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1600&q=80&sig=${Math.random()}`;
+    
+    // If you want the specific city skyline:
+    const citySkylineUrl = `https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1600&q=80&keywords=${encodeURIComponent(cityClean)},skyline`;
+
+    // Apply BOTH the gradient and the image to the same property
+    document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${citySkylineUrl}')`;
+}
 
   async function lookup() {
     const zip = document.getElementById('zipInput').value.trim();
@@ -341,17 +351,20 @@
     }
   }
 
-  function resetMap() { 
-      map.setView([39.82, -98.57], 4); 
-      document.getElementById('location-list').innerHTML = ""; 
-      document.getElementById('list-header').classList.add('hidden'); 
-      document.getElementById('result').innerText = "";
-      document.getElementById('zipInput').value = "";
-      document.getElementById('hubSearchInput').value = "";
-      // HARD CLEAR BACKGROUND
-      document.body.style.backgroundImage = "none";
-      document.body.style.backgroundColor = "var(--fl-bg)";
-  }
+function resetMap() { 
+    // 1. Reset Map & UI
+    map.setView([39.82, -98.57], 4); 
+    document.getElementById('location-list').innerHTML = ""; 
+    document.getElementById('list-header').classList.add('hidden'); 
+    document.getElementById('result').innerText = "";
+    document.getElementById('zipInput').value = "";
+    document.getElementById('hubSearchInput').value = "";
+
+    // 2. Wipe all background styles completely
+    document.body.style.backgroundImage = "none";
+    document.body.style.background = "var(--fl-bg)"; 
+    console.log("UI Reset: Background cleared.");
+}
 
   function plotHubs() {
     for(let k in markers) map.removeLayer(markers[k]);
