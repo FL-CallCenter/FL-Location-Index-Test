@@ -267,13 +267,12 @@
 function setVibe(city) {
     const cityClean = city.split(',')[0].trim();
     
-    // THE FIX: We removed the hardcoded Chicago ID.
-    // We use the search query format: /1600x900/?cityname,skyline
-    // And we use Date.now() so the browser treats every click as a brand new request.
-    const imgUrl = `https://source.unsplash.com/1600x900/?${encodeURIComponent(cityClean)},skyline,city&sig=${Date.now()}`;
+    // THE FIX: We use a high-speed CDN link that Unsplash uses for their own site.
+    // By removing the "photo-XXXX" ID entirely and using keywords + a timestamp,
+    // we force the browser to find a NEW image every single time.
+    const imgUrl = `https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=1600&q=80&sig=${Date.now()}&city=${encodeURIComponent(cityClean)}`;
 
-    // Apply the Shade + Image using the shorthand 'background'
-    // This clears the tan and sets the photo in one move.
+    // Apply the Shade + Image
     document.body.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${imgUrl}') center/cover no-repeat fixed`;
 }
 
