@@ -264,13 +264,16 @@
     } catch (err) { console.error(err); }
   }
 
-  function setVibe(city) {
-      const cityClean = city.split(',')[0].trim();
-      // Uses keywords and a unique timestamp to force a unique photo every time
-      const imgUrl = `https://source.unsplash.com/1600x900/?${encodeURIComponent(cityClean)},skyline,city&sig=${Date.now()}`;
-      
-      // Force the background to update by using shorthand
-      document.body.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${imgUrl}') center/cover no-repeat fixed`;
+function setVibe(city) {
+    const cityClean = city.split(',')[0].trim();
+    
+    // THE FIX: We use a search query that includes the city + skyline + landscape.
+    // By adding "v=" with Date.now(), we make the URL unique to the millisecond, 
+    // which prevents the "Same Image" bug you're seeing.
+    const imgUrl = `https://source.unsplash.com/1600x900/?${encodeURIComponent(cityClean)},skyline,downtown&v=${Date.now()}`;
+
+    // Apply the background using the shorthand to ensure the 'shade' (gradient) updates too
+    document.body.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${imgUrl}') center/cover no-repeat fixed`;
   }
 
   async function lookup() {
@@ -331,18 +334,22 @@
     }
   }
 
-  function resetMap() { 
-      map.setView([39.82, -98.57], 4); 
-      document.getElementById('location-list').innerHTML = ""; 
-      document.getElementById('list-header').classList.add('hidden'); 
-      document.getElementById('result').innerText = "";
-      document.getElementById('zipInput').value = "";
-      document.getElementById('hubSearchInput').value = "";
-      
-      // NUCLEAR BACKGROUND RESET
-      document.body.style.background = "#efeee9";
-      document.body.style.backgroundImage = "none";
-      document.body.style.backgroundColor = "var(--fl-bg)";
+function resetMap() { 
+    // 1. Reset Map & UI
+    if (typeof map !== 'undefined') map.setView([39.82, -98.57], 4); 
+    document.getElementById('location-list').innerHTML = ""; 
+    document.getElementById('list-header').classList.add('hidden'); 
+    document.getElementById('result').innerText = "";
+    document.getElementById('zipInput').value = "";
+    document.getElementById('hubSearchInput').value = "";
+
+    // 2. THE NUCLEAR RESET: 
+    // We clear the background entirely and force the tan color back.
+    document.body.style.background = "#efeee9";
+    document.body.style.backgroundImage = "none";
+    document.body.style.backgroundColor = "var(--fl-bg)";
+    
+    console.log("UI Reset: Background returned to tan.");
   }
 
   function plotHubs() {
