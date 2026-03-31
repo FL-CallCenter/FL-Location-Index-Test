@@ -408,7 +408,7 @@ const rawCoords = {
   function renderSingleRow(m, isNeighbor = false) {
     const list = document.getElementById('location-list');
     const badge = isNeighbor ? `<span style="background:#718096; color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:12px; font-weight:800;">INQUIRY ONLY</span>` : "";
-    list.innerHTML += `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span>${badge}</td><td>${m.phone} <button onclick="navigator.clipboard.writeText('${m.phone}');alert('Copied!')">📋</button></td><td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td></tr></tbody></table>`;
+    list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span>${badge}</td><td>${m.phone} <button onclick="navigator.clipboard.writeText('${m.phone}');alert('Copied!')">📋</button></td><td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td></tr></tbody></table>`;
   }
 
   function buildCustomDropdown() {
