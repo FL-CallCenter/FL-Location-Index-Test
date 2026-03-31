@@ -267,12 +267,13 @@
 function setVibe(city) {
     const cityClean = city.split(',')[0].trim();
     
-    // THE FIX: We use a high-quality "Base" city image but append the city name
-    // as a search parameter. This is the most stable way to get an image now.
-    const imgUrl = `https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=1600&auto=format&fit=crop&city=${encodeURIComponent(cityClean)}&sig=${Date.now()}`;
+    // THE FIX: We removed the Chicago ID (1477959858617-67f85cf4f1df).
+    // Instead, we use 'source.unsplash.com' with the city name AND a 'sig' 
+    // that changes every millisecond (Date.now).
+    const imgUrl = `https://source.unsplash.com/1600x900/?${encodeURIComponent(cityClean)},skyline,city&sig=${Date.now()}`;
 
-    // Apply the Shade + Image using the SHORTHAND 'background'
-    // This wipes the tan and sets the photo in one move.
+    // Apply the Shade + Image using the shorthand 'background'
+    // This clears the tan and sets the photo in one move.
     document.body.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${imgUrl}') center/cover no-repeat fixed`;
 }
 
