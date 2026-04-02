@@ -393,14 +393,10 @@ async function loadData() {
   }
 
   // --- STARTUP SEQUENCE ---
-  async function startup() {
-    // 1. Load Breeds (Instant)
-    await loadBreeds(); 
-    // 2. Start ZIPs (Will show progress on the button)
-    loadData(); 
+async function startup() {
+    await loadBreeds(); // This stays fast
+    loadData();        // This is now "Turbo-Batched"
   }
-
-  // Final Call
   startup();
 
   function setVibe(city) {
