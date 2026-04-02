@@ -274,20 +274,18 @@
   const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-  // --- BREED LOGIC FUNCTIONS ---
-async function loadBreeds() {
+// --- BREED LOGIC FUNCTIONS ---
+  async function loadBreeds() {
     const breedCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=552993732&single=true&output=csv';
 
     try {
         const response = await fetch(breedCsvUrl);
         const csvText = await response.text();
-        // This regex split handles weird hidden line breaks better
         const rows = csvText.split(/\r?\n/); 
         breedDatabase = []; 
 
         rows.slice(1).forEach(row => {
             const cols = row.split(',');
-            // Clean up quotes and hidden spaces
             if (cols[0]) {
                 let nameA = cols[0].replace(/"/g, "").trim();
                 if (nameA) breedDatabase.push({ name: nameA, type: "Complex" });
@@ -303,7 +301,7 @@ async function loadBreeds() {
     } catch (err) { 
         console.error("❌ Breed Load Failed:", err); 
     }
-}
+  }
 
   function buildBreedDropdown() {
     const dropdown = document.getElementById('customBreedDropdown');
@@ -339,23 +337,26 @@ async function loadBreeds() {
   }
 
   // --- LOCATOR LOGIC FUNCTIONS ---
-// 1. The main ZIP loader
   async function loadData() {
     try {
-      const responses = await Promise.all(csvUrls.map(url => fetch(url).then(r => r.text())));
+      // Promise.allSettled is safer for 60+ tabs; one bad tab won't break the app
+      const results = await Promise.allSettled(csvUrls.map(url => fetch(url).then(r => r.text())));
       
-      responses.forEach(csv => {
-        const rows = csv.split('\n');
-        rows.slice(1).forEach(row => {
-          const m = row.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
-          if (m && m.length >= 5) {
-            data.push({ 
-              name: m[0].replace(/"/g, '').trim(), zip: m[1].trim(), phone: m[2]?.trim() || "No phone", 
-              link: m[3]?.replace(/"/g, '').trim() || "#", city: m[4]?.trim() || "",
-              state: m[5]?.trim() || "", lat: m[6]?.trim() || null, lng: m[7]?.replace(/\r/g, '').trim() || null 
-            });
-          }
-        });
+      results.forEach(result => {
+        if (result.status === 'fulfilled') {
+          const csv = result.value;
+          const rows = csv.split('\n');
+          rows.slice(1).forEach(row => {
+            const m = row.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
+            if (m && m.length >= 5) {
+              data.push({ 
+                name: m[0].replace(/"/g, '').trim(), zip: m[1].trim(), phone: m[2]?.trim() || "No phone", 
+                link: m[3]?.replace(/"/g, '').trim() || "#", city: m[4]?.trim() || "",
+                state: m[5]?.trim() || "", lat: m[6]?.trim() || null, lng: m[7]?.replace(/\r/g, '').trim() || null 
+              });
+            }
+          });
+        }
       });
 
       document.getElementById('searchBtn').disabled = false;
@@ -367,17 +368,19 @@ async function loadBreeds() {
     } catch (err) { 
       console.error("ZIP Sync Error:", err); 
       document.getElementById('searchBtn').textContent = "Sync Error - Refresh";
+      document.getElementById('searchBtn').disabled = false; // Enable anyway as failsafe
     }
   }
 
-  // 2. The trigger at the very bottom of your script
-  // We fire them off one after another here instead of inside each other
+  // --- STARTUP SEQUENCE ---
   async function startup() {
-    await loadBreeds(); // Load the small breed list first (Fast!)
-    loadData();        // Then start the big 60+ ZIP sync
+    // 1. Load the small breed list FIRST and FAST
+    await loadBreeds(); 
+    // 2. Then start the heavy 60+ ZIP sync in the background
+    loadData(); 
   }
 
-  // Replace the old loadData(); call at the bottom with this:
+  // ONLY CALL STARTUP ONCE
   startup();
 
   function setVibe(city) {
@@ -513,7 +516,6 @@ async function loadBreeds() {
   }
 
   document.getElementById('zipInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') lookup(); });
-  loadData();
 </script>
 </body>
 </html>
