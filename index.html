@@ -275,29 +275,35 @@
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
   // --- BREED LOGIC FUNCTIONS ---
-  async function loadBreeds() {
+async function loadBreeds() {
     const breedCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=552993732&single=true&output=csv';
 
     try {
         const response = await fetch(breedCsvUrl);
         const csvText = await response.text();
-        const rows = csvText.split('\n');
+        // This regex split handles weird hidden line breaks better
+        const rows = csvText.split(/\r?\n/); 
         breedDatabase = []; 
 
         rows.slice(1).forEach(row => {
             const cols = row.split(',');
-            if (cols[0] && cols[0].trim()) {
-                breedDatabase.push({ name: cols[0].trim().replace(/"/g, ""), type: "Complex" });
+            // Clean up quotes and hidden spaces
+            if (cols[0]) {
+                let nameA = cols[0].replace(/"/g, "").trim();
+                if (nameA) breedDatabase.push({ name: nameA, type: "Complex" });
             }
-            if (cols[1] && cols[1].trim()) {
-                breedDatabase.push({ name: cols[1].trim().replace(/"/g, ""), type: "Non-Complex" });
+            if (cols[1]) {
+                let nameB = cols[1].replace(/"/g, "").trim();
+                if (nameB) breedDatabase.push({ name: nameB, type: "Non-Complex" });
             }
         });
 
         buildBreedDropdown();
-        console.log("✅ Breed CSV Loaded");
-    } catch (err) { console.error("❌ Breed Failed:", err); }
-  }
+        console.log("✅ Breed CSV Loaded: " + breedDatabase.length + " breeds.");
+    } catch (err) { 
+        console.error("❌ Breed Load Failed:", err); 
+    }
+}
 
   function buildBreedDropdown() {
     const dropdown = document.getElementById('customBreedDropdown');
