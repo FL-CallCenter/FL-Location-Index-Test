@@ -136,10 +136,12 @@
 
     #breedImg {
         width: 100%;
-        height: 320px; 
+        height: 350px; 
         object-fit: cover; /* Prevents dog from looking squished */
         display: block;
         transition: opacity 0.3s ease-in-out;
+        image-rendering: -webkit-optimize-contrast; /* Sharpens the image in the browser */
+        background-color: #1a202c; /* Prevents a white flash while loading */
     }
 
     /* Directory and Map - Ultra Wide */
@@ -382,26 +384,26 @@ async function checkBreed(val) {
         const isComplex = found.type === "Complex";
         display.innerHTML = `<div class="result-display ${isComplex ? 'is-complex' : 'is-simple'}">${found.name} is a ${found.type} coat</div>`;
         
-        // --- WIKIPEDIA SMART FETCH ---
         try {
+            // We use the 'page/summary' but specifically grab the 'originalimage' source
             const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(found.name)}`;
             const response = await fetch(wikiUrl);
             const data = await response.json();
             
-            if (data.thumbnail && data.thumbnail.source) {
-                imgEl.src = data.thumbnail.source;
+            // Check for the high-res 'originalimage' first, then fallback to thumbnail
+            const highResUrl = data.originalimage ? data.originalimage.source : (data.thumbnail ? data.thumbnail.source : null);
+
+            if (highResUrl) {
+                imgEl.src = highResUrl;
                 imgCont.style.display = "block";
+                imgEl.style.opacity = "1";
             } else {
-                // If specific breed fails, try a broader search (e.g. "Poodle")
-                const broadName = found.name.split(' ').pop();
-                const res2 = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${broadName}`);
-                const data2 = await res2.json();
-                if (data2.thumbnail) {
-                    imgEl.src = data2.thumbnail.source;
-                    imgCont.style.display = "block";
-                } else { imgCont.style.display = "none"; }
+                imgCont.style.display = "none";
             }
-        } catch (e) { imgCont.style.display = "none"; }
+        } catch (e) { 
+            console.error("Image fetch error:", e);
+            imgCont.style.display = "none"; 
+        }
     } else {
         display.innerHTML = `<p style="color:rgba(255,255,255,0.6); font-style: italic;">Results will appear here...</p>`;
         imgCont.style.display = "none";
