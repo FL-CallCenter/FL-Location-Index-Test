@@ -34,6 +34,30 @@
         min-height: 100vh;
     }
     
+    /* Styling for the Breed Result box */
+.result-display {
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+    margin-top: 15px;
+    border: 2px solid transparent;
+}
+
+/* Red for Column A (Complex) */
+.is-complex {
+    background-color: #ffebee;
+    color: #c62828;
+    border-color: #c62828;
+}
+
+/* Green for Column B (Non-Complex) */
+.is-simple {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border-color: #2e7d32;
+}
+    
     /* Layout Elements */
     .tabs { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; z-index: 10; }
     .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 12px; background: #d1d1d1; cursor: pointer; font-weight: bold; color: #555; transition: 0.2s; font-size: 14px; }
@@ -133,11 +157,22 @@
 <div id="breed-section" class="card hidden">
   <h2>FURRYLAND</h2>
   <p class="subtitle">Breed Guide</p>
-  <p style="padding-top:20px; color:#666; font-size: 15px;">MoeGo Breed Database loading...</p>
+  
+  <div class="breed-checker-container" style="margin-top: 20px;">
+    <input type="text" id="breedInput" list="breedOptions" placeholder="Start typing a breed..." oninput="checkBreed(this.value)" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+    
+    <datalist id="breedOptions">
+        </datalist>
+
+    <div id="breedResult" style="margin-top: 20px;">
+       <p style="color:#999; font-style: italic;">Results will appear here...</p>
+    </div>
+  </div>
 </div>
 
 <script>
   let data = [];
+  let breedDatabase = []; // NEW: Bucket for your breed list
   let markers = {};
 
   const rawCoords = {
@@ -164,7 +199,7 @@
     "Augusta": [33.4735, -82.0105], "Kansas City": [39.0997, -94.5786], "Hartford/New Haven": [41.5367, -72.8059],
     "Central Texas (Waco)": [31.5493, -97.1467]
   };
-      
+
   const csvUrls = [
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1188497872&single=true&output=csv',
@@ -241,6 +276,47 @@
   const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
+  // NEW: Function to load the Breeds tab specifically
+  async function loadBreeds() {
+    // Make sure your sheet ID is correct here
+    const sheetID = "1QXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf"; 
+    const tabName = "Breeds"; 
+    const url = `https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=552993732&single=true&output=csv`;
+
+    try {
+      const response = await fetch(url);
+      const text = await response.text();
+      const json = JSON.parse(text.substr(47).slice(0, -2));
+      const rows = json.table.rows;
+
+      breedDatabase = []; 
+
+      rows.forEach(row => {
+        if (row.c[0] && row.c[0].v) breedDatabase.push({ name: row.c[0].v, type: "Complex" });
+        if (row.c[1] && row.c[1].v) breedDatabase.push({ name: row.c[1].v, type: "Non-Complex" });
+      });
+
+      const datalist = document.getElementById('breedOptions');
+      if(datalist) {
+        datalist.innerHTML = breedDatabase.map(b => `<option value="${b.name}">`).join('');
+      }
+      console.log("Breed Database Loaded");
+    } catch (err) { console.error("Breeds failed to load:", err); }
+  }
+
+  // NEW: Function to handle the Breed Search logic
+  function checkBreed(val) {
+    const display = document.getElementById('breedResult');
+    const found = breedDatabase.find(b => b.name.toLowerCase() === val.toLowerCase());
+
+    if (found) {
+        const isComplex = found.type === "Complex";
+        display.innerHTML = `<div class="result-display ${isComplex ? 'is-complex' : 'is-simple'}">${found.name} is a ${found.type.toUpperCase()} coat</div>`;
+    } else {
+        display.innerHTML = `<p style="color:#999; font-style: italic;">Results will appear here...</p>`;
+    }
+  }
+
   async function loadData() {
     try {
       const responses = await Promise.all(csvUrls.map(url => fetch(url).then(r => r.text())));
@@ -261,22 +337,23 @@
       document.getElementById('searchBtn').textContent = "Search ZIP";
       plotHubs(); 
       buildCustomDropdown();
+      
+      // TURN ON BREEDS AFTER ZIPS LOAD
+      await loadBreeds(); 
+
     } catch (err) { console.error(err); }
   }
 
-function setVibe(city) {
-    // Instead of a photo, we use a deep, animated "Command Center" gradient
+  function setVibe(city) {
     document.body.style.background = "radial-gradient(circle at center, #2d3748 0%, #1a202c 100%)";
     document.body.style.transition = "background 0.5s ease";
-}
+  }
 
   async function lookup() {
     const zip = document.getElementById('zipInput').value.trim();
     const res = document.getElementById('result');
     const list = document.getElementById('location-list');
     const head = document.getElementById('list-header');
-    
-    // CLEAR EVERYTHING BEFORE SEARCH
     list.innerHTML = ""; res.innerHTML = "";
 
     const match = data.find(d => d.zip === zip);
@@ -285,7 +362,6 @@ function setVibe(city) {
         setVibe(match.city);
         head.classList.remove('hidden'); head.innerText = "SEARCH RESULT";
         renderSingleRow(match, false);
-        
         let flyLat = match.lat ? parseFloat(match.lat) : (rawCoords[match.city] ? rawCoords[match.city][0] : null);
         let flyLng = match.lng ? parseFloat(match.lng) : (rawCoords[match.city] ? rawCoords[match.city][1] : null);
         if (flyLat && flyLng) map.flyTo([flyLat, flyLng], 14);
@@ -328,18 +404,15 @@ function setVibe(city) {
     }
   }
 
-function resetMap() { 
-    // Standard UI Reset
+  function resetMap() { 
     map.setView([39.82, -98.57], 4); 
     document.getElementById('location-list').innerHTML = ""; 
     document.getElementById('list-header').classList.add('hidden'); 
     document.getElementById('result').innerText = "";
     document.getElementById('zipInput').value = "";
     document.getElementById('hubSearchInput').value = "";
-
-    // Return to Tan
     document.body.style.background = "#efeee9";
-}
+  }
 
   function plotHubs() {
     for(let k in markers) map.removeLayer(markers[k]);
@@ -361,8 +434,6 @@ function resetMap() {
   function renderSingleRow(m, isNeighbor = false) {
     const list = document.getElementById('location-list');
     const badge = isNeighbor ? `<span style="background:#718096; color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:12px; font-weight:800;">INQUIRY ONLY</span>` : "";
-    
-    // NO PLUS SIGN HERE: This fixes the "Stacking Bug"
     list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span>${badge}</td><td>${m.phone} <button class="copy-btn" onclick="navigator.clipboard.writeText('${m.phone}');alert('Copied!')">📋</button></td><td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td></tr></tbody></table>`;
   }
 
@@ -388,9 +459,17 @@ function resetMap() {
     document.querySelectorAll('.dropdown-item').forEach(item => item.style.display = item.innerText.toLowerCase().includes(input) ? 'block' : 'none');
   }
   function resetSearchState() { document.getElementById('location-list').innerHTML = ""; document.getElementById('list-header').classList.add('hidden'); }
-  function switchTab(t) { document.getElementById('locator-section').classList.toggle('hidden', t !== 'locator'); document.getElementById('breed-section').classList.toggle('hidden', t === 'locator'); document.getElementById('tab-loc').classList.toggle('active', t === 'locator'); document.getElementById('tab-breed').classList.toggle('active', t !== 'locator'); if(t === 'locator') setTimeout(() => map.invalidateSize(), 200); }
+  function switchTab(t) { 
+    document.getElementById('locator-section').classList.toggle('hidden', t !== 'locator'); 
+    document.getElementById('breed-section').classList.toggle('hidden', t === 'locator'); 
+    document.getElementById('tab-loc').classList.toggle('active', t === 'locator'); 
+    document.getElementById('tab-breed').classList.toggle('active', t !== 'locator'); 
+    if(t === 'locator') setTimeout(() => map.invalidateSize(), 200); 
+  }
   window.onclick = (e) => { if (!e.target.matches('#hubSearchInput')) document.getElementById('customDropdown').style.display = 'none'; }
   document.getElementById('zipInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') lookup(); });
+  
+  // START THE DATA FETCHING
   loadData();
 </script>
 </body>
