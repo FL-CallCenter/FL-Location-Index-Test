@@ -337,50 +337,67 @@
   }
 
   // --- LOCATOR LOGIC FUNCTIONS ---
+// --- FIXED LOCATOR LOGIC ---
   async function loadData() {
     try {
-      // Promise.allSettled is safer for 60+ tabs; one bad tab won't break the app
-      const results = await Promise.allSettled(csvUrls.map(url => fetch(url).then(r => r.text())));
-      
-      results.forEach(result => {
-        if (result.status === 'fulfilled') {
-          const csv = result.value;
-          const rows = csv.split('\n');
-          rows.slice(1).forEach(row => {
-            const m = row.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
-            if (m && m.length >= 5) {
-              data.push({ 
-                name: m[0].replace(/"/g, '').trim(), zip: m[1].trim(), phone: m[2]?.trim() || "No phone", 
-                link: m[3]?.replace(/"/g, '').trim() || "#", city: m[4]?.trim() || "",
-                state: m[5]?.trim() || "", lat: m[6]?.trim() || null, lng: m[7]?.replace(/\r/g, '').trim() || null 
-              });
+        console.log("📡 Starting ZIP Sync...");
+        
+        // We split the 60+ URLs into smaller chunks so the browser doesn't choke
+        for (let i = 0; i < csvUrls.length; i++) {
+            try {
+                const response = await fetch(csvUrls[i]);
+                if (!response.ok) continue;
+                const csv = await response.text();
+                
+                const rows = csv.split('\n');
+                rows.slice(1).forEach(row => {
+                    const m = row.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
+                    if (m && m.length >= 5) {
+                        data.push({ 
+                            name: m[0].replace(/"/g, '').trim(), 
+                            zip: m[1].trim(), 
+                            phone: m[2]?.trim() || "No phone", 
+                            link: m[3]?.replace(/"/g, '').trim() || "#", 
+                            city: m[4]?.trim() || "",
+                            state: m[5]?.trim() || "", 
+                            lat: m[6]?.trim() || null, 
+                            lng: m[7]?.replace(/\r/g, '').trim() || null 
+                        });
+                    }
+                });
+            } catch (e) {
+                console.warn(`⚠️ Tab ${i} skipped: `, e);
             }
-          });
-        }
-      });
 
-      document.getElementById('searchBtn').disabled = false;
-      document.getElementById('searchBtn').textContent = "Search ZIP";
-      plotHubs(); 
-      buildCustomDropdown();
-      console.log("✅ ZIP Data Sync Complete");
+            // Every 10 tabs, update the button to show progress
+            if (i % 10 === 0) {
+                document.getElementById('searchBtn').textContent = `Syncing (${i}/${csvUrls.length})`;
+            }
+        }
+
+        // Final UI Activation
+        document.getElementById('searchBtn').disabled = false;
+        document.getElementById('searchBtn').textContent = "Search ZIP";
+        plotHubs(); 
+        buildCustomDropdown();
+        console.log("✅ ZIP Sync Complete. Total entries:", data.length);
       
     } catch (err) { 
-      console.error("ZIP Sync Error:", err); 
-      document.getElementById('searchBtn').textContent = "Sync Error - Refresh";
-      document.getElementById('searchBtn').disabled = false; // Enable anyway as failsafe
+        console.error("Critical ZIP Error:", err);
+        document.getElementById('searchBtn').disabled = false;
+        document.getElementById('searchBtn').textContent = "Search ZIP (Error)";
     }
   }
 
   // --- STARTUP SEQUENCE ---
   async function startup() {
-    // 1. Load the small breed list FIRST and FAST
+    // 1. Load Breeds (Instant)
     await loadBreeds(); 
-    // 2. Then start the heavy 60+ ZIP sync in the background
+    // 2. Start ZIPs (Will show progress on the button)
     loadData(); 
   }
 
-  // ONLY CALL STARTUP ONCE
+  // Final Call
   startup();
 
   function setVibe(city) {
