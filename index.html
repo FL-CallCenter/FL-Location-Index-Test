@@ -20,50 +20,63 @@
 
 body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background: var(--fl-bg);
-        transition: background 0.8s ease-in-out; 
+        background: #efeee9; /* Tan default */
+        transition: background 1.2s cubic-bezier(0.4, 0, 0.2, 1); 
         display: flex;
         flex-direction: column;
         align-items: center;
         padding: 20px;
         margin: 0;
         min-height: 100vh;
-        position: relative; /* Required for the grid */
+        position: relative;
         overflow-x: hidden;
     }
 
-    /* THE TACTICAL GRID LAYER */
+    /* THE ATMOSPHERE LAYER */
     body::before {
         content: "";
         position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background-image: 
-            linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-        background-size: 40px 40px; /* Size of the grid squares */
+        top: -50%; left: -50%; width: 200%; height: 200%;
+        /* This creates a soft "nebula" of blue and orange light */
+        background: radial-gradient(circle at 30% 30%, rgba(37, 118, 208, 0.15) 0%, transparent 40%),
+                    radial-gradient(circle at 70% 70%, rgba(240, 123, 35, 0.1) 0%, transparent 40%);
         pointer-events: none;
-        opacity: 0; /* Hidden by default (on Tan) */
-        transition: opacity 0.8s ease;
+        opacity: 0;
+        transition: opacity 1.2s ease;
         z-index: -1;
+        animation: rotateAtmosphere 20s linear infinite;
     }
 
-    /* When 'dark-vibe' class is active, show the grid */
     body.dark-vibe::before {
         opacity: 1;
     }
 
-    /* Breed Result Styling - Keeping your bold style */
-    .result-display {
-        padding: 20px;
-        border-radius: 12px;
+    @keyframes rotateAtmosphere {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .card {
+        background: rgba(255, 255, 255, 0.75) !important;
+        backdrop-filter: blur(20px) saturate(160%);
+        -webkit-backdrop-filter: blur(20px) saturate(160%);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        padding: 25px;
+        border-radius: 24px; /* More rounded = more modern */
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        width: 100%;
+        max-width: 400px;
         text-align: center;
-        font-weight: 800;
-        margin-top: 15px;
-        font-size: 20px;
-        text-transform: uppercase;
-        border: 3px solid transparent;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        animation: popIn 0.3s ease-out;
+        border-top: 6px solid var(--fl-orange);
+        margin-bottom: 12px;
+        position: relative;
+        transition: transform 0.3s ease;
+    }
+
+    /* Subtle glow for the active card */
+    body.dark-vibe .card {
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 20px rgba(37, 118, 208, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .is-complex { background-color: #ffebee; color: #c62828; border-color: #c62828; }
@@ -293,13 +306,14 @@ body {
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
 function setVibe(city) {
-    document.body.classList.add('dark-vibe'); // Turns on the Grid
-    document.body.style.background = "radial-gradient(circle at center, #1e293b 0%, #0f172a 70%, #020617 100%)";
+    document.body.classList.add('dark-vibe');
+    // A much deeper, more textured dark blue/grey
+    document.body.style.background = "#0f172a"; 
   }
 
   function resetVibe() {
-    document.body.classList.remove('dark-vibe'); // Turns off the Grid
-    document.body.style.background = "#efeee9"; // Back to Tan
+    document.body.classList.remove('dark-vibe');
+    document.body.style.background = "#efeee9";
   }
 
   // --- BREED LOGIC FUNCTIONS ---
