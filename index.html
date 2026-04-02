@@ -20,7 +20,7 @@
 
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background: var(--fl-bg); /* Default Tan */
+        background: var(--fl-bg);
         background-attachment: fixed;
         background-size: cover;
         background-position: center;
@@ -34,44 +34,25 @@
         min-height: 100vh;
     }
     
-/* Make the Breed Section Card match the ZIP card's impact */
-#breed-section {
-    max-width: 450px;
-    transition: all 0.3s ease;
-}
+    /* Breed Result Styling */
+    .result-display {
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        font-weight: 800;
+        margin-top: 15px;
+        font-size: 20px;
+        text-transform: uppercase;
+        border: 3px solid transparent;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        animation: popIn 0.3s ease-out;
+    }
 
-/* Big, bold result box */
-.result-display {
-    padding: 25px;
-    border-radius: 15px;
-    text-align: center;
-    font-weight: 800;
-    margin-top: 20px;
-    font-size: 1.3rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-    animation: breedPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
+    .is-complex { background-color: #ffebee; color: #c62828; border-color: #c62828; }
+    .is-simple { background-color: #e8f5e9; color: #2e7d32; border-color: #2e7d32; }
 
-@keyframes breedPop {
-    0% { transform: scale(0.8); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-}
+    @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-/* Make the search input feel more "Command Center" */
-#breedInput {
-    height: 60px;
-    font-size: 18px;
-    border: 2px solid #eee;
-    transition: border-color 0.3s;
-}
-
-#breedInput:focus {
-    border-color: var(--fl-blue);
-    background-color: #fff;
-}
-    
     /* Layout Elements */
     .tabs { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; z-index: 10; }
     .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 12px; background: #d1d1d1; cursor: pointer; font-weight: bold; color: #555; transition: 0.2s; font-size: 14px; }
@@ -105,15 +86,16 @@
     
     .search-container { position: relative; width: 100%; }
     
-    #customDropdown { 
+    /* Shared Dropdown Style */
+    #customDropdown, #customBreedDropdown { 
         position: absolute; top: 100%; left: 0; right: 0; 
         background: white; border-radius: 12px; max-height: 220px; 
         overflow-y: auto; z-index: 9999; display: none; 
         box-shadow: 0 15px 35px rgba(0,0,0,0.2); margin-top: 5px; border: 1px solid #eee; 
     }
     
-    .dropdown-item { padding: 14px; cursor: pointer; font-size: 15px; text-align: center; border-bottom: 1px solid #f5f5f5; color: #333; }
-    .dropdown-item:hover { background: var(--fl-accent); color: var(--fl-blue); }
+    .dropdown-item, .breed-item { padding: 14px; cursor: pointer; font-size: 15px; text-align: center; border-bottom: 1px solid #f5f5f5; color: #333; }
+    .dropdown-item:hover, .breed-item:hover { background: var(--fl-accent); color: var(--fl-blue); }
     
     #searchBtn { padding: 14px; width: 100%; background-color: var(--fl-orange); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 14px; }
     #result { margin-top: 12px; font-size: 14px; font-weight: 700; color: var(--fl-blue); min-height: 20px; }
@@ -168,20 +150,19 @@
     </div>
 </div>
 
-<div id="breed-section" class="card hidden">
+<div id="breed-section" class="card hidden" style="max-width: 450px;">
   <h2>FURRYLAND</h2>
   <p class="subtitle">Breed Guide</p>
   
-  <div class="breed-checker-container" style="margin-top: 20px;">
-<input type="text" id="breedInput" list="breedOptions" 
-       placeholder="Start typing a breed..." 
-       oninput="checkBreed(this.value)" 
-       onkeypress="if(event.key === 'Enter') checkBreed(this.value)"
-       style="width: 100%; padding: 16px; border-radius: 12px; border: 1px solid #ddd; font-size: 16px;">    
-    <datalist id="breedOptions">
-        </datalist>
+  <div class="breed-checker-container" style="margin-top: 20px; width: 100%;">
+    <div class="search-container">
+        <input type="text" id="breedInput" placeholder="Type or Browse Breeds..." 
+               onfocus="showBreedDropdown()" oninput="filterBreeds()" 
+               onkeypress="if(event.key === 'Enter') checkBreed(this.value)">
+        <div id="customBreedDropdown"></div>
+    </div>
 
-    <div id="breedResult" style="margin-top: 20px;">
+    <div id="breedResult" style="margin-top: 20px; min-height: 80px;">
        <p style="color:#999; font-style: italic;">Results will appear here...</p>
     </div>
   </div>
@@ -189,7 +170,7 @@
 
 <script>
   let data = [];
-  let breedDatabase = []; // NEW: Bucket for your breed list
+  let breedDatabase = [];
   let markers = {};
 
   const rawCoords = {
@@ -293,57 +274,65 @@
   const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-async function loadBreeds() {
+  // --- BREED LOGIC FUNCTIONS ---
+  async function loadBreeds() {
     const breedCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=552993732&single=true&output=csv';
 
     try {
         const response = await fetch(breedCsvUrl);
         const csvText = await response.text();
         const rows = csvText.split('\n');
+        breedDatabase = []; 
 
-        breedDatabase = []; // Clear the bucket
-
-        // We skip row 0 because it's the header (Complex / Non-Complex)
         rows.slice(1).forEach(row => {
-            const columns = row.split(',');
-            
-            // Column A (Index 0) - Complex
-            if (columns[0] && columns[0].trim()) {
-                breedDatabase.push({ name: columns[0].trim(), type: "Complex" });
+            const cols = row.split(',');
+            if (cols[0] && cols[0].trim()) {
+                breedDatabase.push({ name: cols[0].trim().replace(/"/g, ""), type: "Complex" });
             }
-            // Column B (Index 1) - Non-Complex
-            if (columns[1] && columns[1].trim()) {
-                breedDatabase.push({ name: columns[1].trim(), type: "Non-Complex" });
+            if (cols[1] && cols[1].trim()) {
+                breedDatabase.push({ name: cols[1].trim().replace(/"/g, ""), type: "Non-Complex" });
             }
         });
 
-        // Fill the dropdown list
-        const datalist = document.getElementById('breedOptions');
-        if (datalist) {
-            datalist.innerHTML = breedDatabase
-                .sort((a, b) => a.name.localeCompare(b.name)) // Sort A-Z
-                .map(b => `<option value="${b.name}">`)
-                .join('');
-        }
-        console.log("Breed CSV Loaded Successfully");
-    } catch (err) {
-        console.error("Error loading Breed CSV:", err);
-    }
-}
+        buildBreedDropdown();
+        console.log("✅ Breed CSV Loaded");
+    } catch (err) { console.error("❌ Breed Failed:", err); }
+  }
 
-  // NEW: Function to handle the Breed Search logic
+  function buildBreedDropdown() {
+    const dropdown = document.getElementById('customBreedDropdown');
+    const sortedBreeds = breedDatabase.sort((a, b) => a.name.localeCompare(b.name));
+    dropdown.innerHTML = sortedBreeds.map(b => `<div class="breed-item" onclick="selectBreed('${b.name}')">${b.name}</div>`).join('');
+  }
+
+  function showBreedDropdown() { document.getElementById('customBreedDropdown').style.display = 'block'; }
+  
+  function filterBreeds() {
+    const input = document.getElementById('breedInput').value.toLowerCase();
+    document.querySelectorAll('.breed-item').forEach(item => {
+        item.style.display = item.innerText.toLowerCase().includes(input) ? 'block' : 'none';
+    });
+  }
+
+  function selectBreed(name) {
+    document.getElementById('breedInput').value = name;
+    document.getElementById('customBreedDropdown').style.display = 'none';
+    checkBreed(name);
+  }
+
   function checkBreed(val) {
     const display = document.getElementById('breedResult');
     const found = breedDatabase.find(b => b.name.toLowerCase() === val.toLowerCase());
 
     if (found) {
         const isComplex = found.type === "Complex";
-        display.innerHTML = `<div class="result-display ${isComplex ? 'is-complex' : 'is-simple'}">${found.name} is a ${found.type.toUpperCase()} coat</div>`;
+        display.innerHTML = `<div class="result-display ${isComplex ? 'is-complex' : 'is-simple'}">${found.name} is a ${found.type} coat</div>`;
     } else {
         display.innerHTML = `<p style="color:#999; font-style: italic;">Results will appear here...</p>`;
     }
   }
 
+  // --- LOCATOR LOGIC FUNCTIONS ---
   async function loadData() {
     try {
       const responses = await Promise.all(csvUrls.map(url => fetch(url).then(r => r.text())));
@@ -364,10 +353,7 @@ async function loadBreeds() {
       document.getElementById('searchBtn').textContent = "Search ZIP";
       plotHubs(); 
       buildCustomDropdown();
-      
-      // TURN ON BREEDS AFTER ZIPS LOAD
       await loadBreeds(); 
-
     } catch (err) { console.error(err); }
   }
 
@@ -469,6 +455,7 @@ async function loadBreeds() {
     const cities = [...new Set(data.map(d => d.city.trim()))].filter(c => c && rawCoords[c]).sort();
     dropdown.innerHTML = cities.map(city => `<div class="dropdown-item" onclick="selectCity('${city}')">${city}</div>`).join('');
   }
+
   function selectCity(city) {
     document.getElementById('hubSearchInput').value = city;
     document.getElementById('customDropdown').style.display = 'none';
@@ -480,12 +467,15 @@ async function loadBreeds() {
         renderSingleRow(match);
     }
   }
+
   function showDropdown() { document.getElementById('customDropdown').style.display = 'block'; }
   function filterDropdown() {
     const input = document.getElementById('hubSearchInput').value.toLowerCase();
     document.querySelectorAll('.dropdown-item').forEach(item => item.style.display = item.innerText.toLowerCase().includes(input) ? 'block' : 'none');
   }
+
   function resetSearchState() { document.getElementById('location-list').innerHTML = ""; document.getElementById('list-header').classList.add('hidden'); }
+  
   function switchTab(t) { 
     document.getElementById('locator-section').classList.toggle('hidden', t !== 'locator'); 
     document.getElementById('breed-section').classList.toggle('hidden', t === 'locator'); 
@@ -493,10 +483,13 @@ async function loadBreeds() {
     document.getElementById('tab-breed').classList.toggle('active', t !== 'locator'); 
     if(t === 'locator') setTimeout(() => map.invalidateSize(), 200); 
   }
-  window.onclick = (e) => { if (!e.target.matches('#hubSearchInput')) document.getElementById('customDropdown').style.display = 'none'; }
+
+  window.onclick = (e) => { 
+    if (!e.target.matches('#hubSearchInput')) document.getElementById('customDropdown').style.display = 'none';
+    if (!e.target.matches('#breedInput')) document.getElementById('customBreedDropdown').style.display = 'none';
+  }
+
   document.getElementById('zipInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') lookup(); });
-  
-  // START THE DATA FETCHING
   loadData();
 </script>
 </body>
