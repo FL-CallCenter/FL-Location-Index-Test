@@ -12,16 +12,15 @@
     :root { 
         --fl-orange: #f07b23; 
         --fl-blue: #2576d0; 
-        --fl-bg: #efeee9; 
+        --fl-bg: #0f172a; 
         --fl-accent: #f2ffff; 
     }
     
     html { scroll-behavior: smooth; }
 
-body {
+    body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background: #efeee9; /* Tan default */
-        transition: background 1.2s cubic-bezier(0.4, 0, 0.2, 1); 
+        background: var(--fl-bg);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -32,23 +31,20 @@ body {
         overflow-x: hidden;
     }
 
-    /* THE ATMOSPHERE LAYER */
+    /* THE ALWAYS-ON ATMOSPHERE (Moving Nebula + Grid) */
     body::before {
         content: "";
         position: fixed;
         top: -50%; left: -50%; width: 200%; height: 200%;
-        /* This creates a soft "nebula" of blue and orange light */
         background: radial-gradient(circle at 30% 30%, rgba(37, 118, 208, 0.15) 0%, transparent 40%),
-                    radial-gradient(circle at 70% 70%, rgba(240, 123, 35, 0.1) 0%, transparent 40%);
+                    radial-gradient(circle at 70% 70%, rgba(240, 123, 35, 0.1) 0%, transparent 40%),
+                    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+        background-size: 200% 200%, 200% 200%, 40px 40px, 40px 40px;
         pointer-events: none;
-        opacity: 0;
-        transition: opacity 1.2s ease;
         z-index: -1;
-        animation: rotateAtmosphere 20s linear infinite;
-    }
-
-    body.dark-vibe::before {
-        opacity: 1;
+        animation: rotateAtmosphere 30s linear infinite;
+        opacity: 1; 
     }
 
     @keyframes rotateAtmosphere {
@@ -56,65 +52,31 @@ body {
         to { transform: rotate(360deg); }
     }
 
+    .tabs { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; z-index: 1010; }
+    .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 12px; background: rgba(255,255,255,0.2); cursor: pointer; font-weight: bold; color: #fff; transition: 0.2s; font-size: 14px; backdrop-filter: blur(5px); }
+    .tab-btn.active { background: var(--fl-blue); color: white; box-shadow: 0 4px 15px rgba(37, 118, 208, 0.4); }
+
     .card {
-        background: rgba(255, 255, 255, 0.75) !important;
+        background: rgba(255, 255, 255, 0.8) !important;
         backdrop-filter: blur(20px) saturate(160%);
         -webkit-backdrop-filter: blur(20px) saturate(160%);
-        border: 1px solid rgba(255, 255, 255, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         padding: 25px;
-        border-radius: 24px; /* More rounded = more modern */
-        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 20px rgba(37, 118, 208, 0.1);
         width: 100%;
         max-width: 400px;
         text-align: center;
         border-top: 6px solid var(--fl-orange);
         margin-bottom: 12px;
-        position: relative;
-        transition: transform 0.3s ease;
-    }
-
-    /* Subtle glow for the active card */
-    body.dark-vibe .card {
-        box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 20px rgba(37, 118, 208, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .is-complex { background-color: #ffebee; color: #c62828; border-color: #c62828; }
-    .is-simple { background-color: #e8f5e9; color: #2e7d32; border-color: #2e7d32; }
-
-    @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-
-    /* Tabs */
-    .tabs { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; max-width: 380px; z-index: 10; }
-    .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 12px; background: #d1d1d1; cursor: pointer; font-weight: bold; color: #555; transition: 0.2s; font-size: 14px; }
-    .tab-btn.active { background: var(--fl-blue); color: white; box-shadow: 0 4px 10px rgba(37, 118, 208, 0.3); }
-
-    /* Card Glassmorphism */
-    .card {
-        background: rgba(255, 255, 255, 0.82) !important;
-        backdrop-filter: blur(15px) saturate(180%);
-        -webkit-backdrop-filter: blur(15px) saturate(180%);
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        padding: 25px;
-        border-radius: 18px;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-        width: 100%;
-        max-width: 400px;
-        text-align: center;
-        border-top: 6px solid var(--fl-orange);
-        margin-bottom: 12px;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
         position: relative;
         z-index: 1000;
     }    
     
     h2 { color: var(--fl-orange); margin: 0; font-weight: 800; text-transform: uppercase; font-size: 26px; }
-    .subtitle { color: #444; font-size: 14px; margin: 2px 0 18px 0; font-weight: 600; text-transform: uppercase; }
+    .subtitle { color: #222; font-size: 14px; margin: 2px 0 18px 0; font-weight: 600; text-transform: uppercase; }
     
-    input { padding: 14px; font-size: 16px; width: 100%; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; background-color: var(--fl-accent); outline: none; margin-bottom: 10px; text-align: center; }
+    input { padding: 14px; font-size: 16px; width: 100%; border: 1px solid rgba(0,0,0,0.1); border-radius: 12px; box-sizing: border-box; background-color: rgba(255,255,255,0.9); outline: none; margin-bottom: 10px; text-align: center; }
     
     .search-container { position: relative; width: 100%; }
     
@@ -122,20 +84,20 @@ body {
         position: absolute; top: 100%; left: 0; right: 0; 
         background: white; border-radius: 12px; max-height: 220px; 
         overflow-y: auto; z-index: 9999; display: none; 
-        box-shadow: 0 15px 35px rgba(0,0,0,0.2); margin-top: 5px; border: 1px solid #eee; 
+        box-shadow: 0 15px 35px rgba(0,0,0,0.4); margin-top: 5px; 
     }
     
     .dropdown-item, .breed-item { padding: 14px; cursor: pointer; font-size: 15px; text-align: center; border-bottom: 1px solid #f5f5f5; color: #333; }
     .dropdown-item:hover, .breed-item:hover { background: var(--fl-accent); color: var(--fl-blue); }
     
     #searchBtn { padding: 14px; width: 100%; background-color: var(--fl-orange); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 14px; }
-    #result { margin-top: 12px; font-size: 14px; font-weight: 700; color: var(--fl-blue); min-height: 20px; }
+    #result { margin-top: 12px; font-size: 14px; font-weight: 700; color: white; min-height: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
-    #list-header { color: var(--fl-blue); margin: 30px 0 12px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 800; }
-    #location-list { width: 100%; max-width: 1000px; background: rgba(255, 255, 255, 0.9); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; margin-top: 10px; }
+    #list-header { color: #fff; margin: 30px 0 12px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 800; }
+    #location-list { width: 100%; max-width: 1000px; background: rgba(255, 255, 255, 0.95); border-radius: 18px; overflow: hidden; margin-top: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
 
     .directory-table { width: 100%; border-collapse: collapse; text-align: left; }
-    .directory-table th { background: #f8f9fa; color: #666; padding: 15px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #eee; }
+    .directory-table th { background: #f8f9fa; color: #666; padding: 15px; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #eee; }
     .directory-table td { padding: 15px; border-bottom: 1px solid #f2f2f2; font-size: 14px; vertical-align: middle; }
 
     .city-name { font-weight: 700; color: var(--fl-orange); font-size: 15px; }
@@ -143,16 +105,21 @@ body {
     .copy-btn { border:none; background:#eee; cursor:pointer; border-radius:4px; padding:2px 5px; margin-left:5px; font-size:12px; }
 
     #map-wrapper { position: relative; width: 100%; max-width: 1000px; margin-top: 40px; margin-bottom: 50px; z-index: 1; }
-    #map { height: 500px; width: 100%; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); }
-    #resetMapBtn { position: absolute; top: 15px; right: 15px; z-index: 1000; background: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    #map { height: 500px; width: 100%; border-radius: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); }
+    #resetMapBtn { position: absolute; top: 15px; right: 15px; z-index: 1000; background: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
     
     .pulsing-marker { width: 10px; height: 10px; background-color: var(--fl-blue); border-radius: 50%; border: 2px solid white; position: relative; }
     .pulsing-marker::after { content: ""; width: 100%; height: 100%; border: 3px solid var(--fl-blue); border-radius: 50%; position: absolute; top: -3px; left: -3px; animation: pulse 2.5s infinite ease-out; }
     @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3); opacity: 0; } }
+    
+    .result-display { padding: 20px; border-radius: 12px; text-align: center; font-weight: 800; margin-top: 15px; font-size: 20px; text-transform: uppercase; border: 3px solid transparent; box-shadow: 0 8px 20px rgba(0,0,0,0.3); animation: popIn 0.3s ease-out; }
+    .is-complex { background-color: #ffebee; color: #c62828; border-color: #c62828; }
+    .is-simple { background-color: #e8f5e9; color: #2e7d32; border-color: #2e7d32; }
+    
     .hidden { display: none !important; }
   </style>
 </head>
-<body>
+<body class="dark-vibe">
 
 <div class="tabs">
   <button id="tab-loc" class="tab-btn active" onclick="switchTab('locator')">ZIP Locator</button>
@@ -194,7 +161,7 @@ body {
     </div>
 
     <div id="breedResult" style="margin-top: 20px; min-height: 80px;">
-       <p style="color:#999; font-style: italic;">Results will appear here...</p>
+       <p style="color:#fff; font-style: italic; opacity: 0.6;">Results will appear here...</p>
     </div>
   </div>
 </div>
@@ -305,27 +272,18 @@ body {
   const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-function setVibe(city) {
-    document.body.classList.add('dark-vibe');
-    // A much deeper, more textured dark blue/grey
-    document.body.style.background = "#0f172a"; 
-  }
+  // Vibe handled by CSS Classes
+  function setVibe(city) {}
+  function resetVibe() {}
 
-  function resetVibe() {
-    document.body.classList.remove('dark-vibe');
-    document.body.style.background = "#efeee9";
-  }
-
-  // --- BREED LOGIC FUNCTIONS ---
+  // --- BREED LOGIC ---
   async function loadBreeds() {
     const breedCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=552993732&single=true&output=csv';
-
     try {
         const response = await fetch(breedCsvUrl);
         const csvText = await response.text();
         const rows = csvText.split(/\r?\n/); 
         breedDatabase = []; 
-
         rows.slice(1).forEach(row => {
             const cols = row.split(',');
             if (cols[0]) {
@@ -337,10 +295,8 @@ function setVibe(city) {
                 if (nameB) breedDatabase.push({ name: nameB, type: "Non-Complex" });
             }
         });
-
         buildBreedDropdown();
-        console.log("✅ Breed CSV Loaded: " + breedDatabase.length + " breeds.");
-    } catch (err) { console.error("❌ Breed Load Failed:", err); }
+    } catch (err) { console.error("Breed Sync Error", err); }
   }
 
   function buildBreedDropdown() {
@@ -350,40 +306,35 @@ function setVibe(city) {
   }
 
   function showBreedDropdown() { document.getElementById('customBreedDropdown').style.display = 'block'; }
-  
   function filterBreeds() {
     const input = document.getElementById('breedInput').value.toLowerCase();
     document.querySelectorAll('.breed-item').forEach(item => {
         item.style.display = item.innerText.toLowerCase().includes(input) ? 'block' : 'none';
     });
   }
-
   function selectBreed(name) {
     document.getElementById('breedInput').value = name;
     document.getElementById('customBreedDropdown').style.display = 'none';
     checkBreed(name);
   }
-
   function checkBreed(val) {
     const display = document.getElementById('breedResult');
     const found = breedDatabase.find(b => b.name.toLowerCase() === val.toLowerCase());
-
     if (found) {
         const isComplex = found.type === "Complex";
         display.innerHTML = `<div class="result-display ${isComplex ? 'is-complex' : 'is-simple'}">${found.name} is a ${found.type} coat</div>`;
     } else {
-        display.innerHTML = `<p style="color:#999; font-style: italic;">Results will appear here...</p>`;
+        display.innerHTML = `<p style="color:#fff; font-style: italic; opacity:0.6;">Results will appear here...</p>`;
     }
   }
 
-  // --- TURBO LOCATOR LOGIC ---
+  // --- TURBO LOCATOR DATA ---
   async function loadData() {
     try {
         const batchSize = 10; 
         for (let i = 0; i < csvUrls.length; i += batchSize) {
             const batch = csvUrls.slice(i, i + batchSize);
             const results = await Promise.allSettled(batch.map(url => fetch(url).then(r => r.text())));
-
             results.forEach(result => {
                 if (result.status === 'fulfilled') {
                     const csv = result.value;
@@ -403,19 +354,14 @@ function setVibe(city) {
             let progress = Math.min(i + batchSize, csvUrls.length);
             document.getElementById('searchBtn').textContent = `Syncing (${progress}/${csvUrls.length})`;
         }
-
         document.getElementById('searchBtn').disabled = false;
         document.getElementById('searchBtn').textContent = "Search ZIP";
         plotHubs(); 
         buildCustomDropdown();
-    } catch (err) { 
-        console.error("Sync Error:", err);
-        document.getElementById('searchBtn').disabled = false;
-        document.getElementById('searchBtn').textContent = "Search ZIP";
-    }
+    } catch (err) { console.error("ZIP Sync Error", err); }
   }
 
-  // --- LOOKUP & NAVIGATION ---
+  // --- SEARCH & NAVIGATION ---
   async function lookup() {
     const zip = document.getElementById('zipInput').value.trim();
     const res = document.getElementById('result');
@@ -426,13 +372,12 @@ function setVibe(city) {
     const match = data.find(d => d.zip === zip);
     if (match) {
         res.innerText = "📍 Match Found: " + match.city;
-        setVibe(match.city);
         head.classList.remove('hidden'); head.innerText = "SEARCH RESULT";
         renderSingleRow(match, false);
 
-        // FLY TO MANUAL PIN FIRST
-        let flyLat = rawCoords[match.city] ? rawCoords[match.city][0] : (match.lat ? parseFloat(match.lat) : null);
-        let flyLng = rawCoords[match.city] ? rawCoords[match.city][1] : (match.lng ? parseFloat(match.lng) : null);
+        let hubCoords = rawCoords[match.city]; 
+        let flyLat = hubCoords ? hubCoords[0] : (match.lat ? parseFloat(match.lat) : null);
+        let flyLng = hubCoords ? hubCoords[1] : (match.lng ? parseFloat(match.lng) : null);
         if (flyLat && flyLng) map.flyTo([flyLat, flyLng], 14);
         return;
     }
@@ -444,40 +389,29 @@ function setVibe(city) {
             const zipData = await response.json();
             const tLat = parseFloat(zipData.places[0].latitude);
             const tLon = parseFloat(zipData.places[0].longitude);
-
             let closestDist = Infinity; let closestRow = null;
             data.forEach(row => {
-                let rLat = rawCoords[row.city] ? rawCoords[row.city][0] : (row.lat ? parseFloat(row.lat) : null);
-                let rLng = rawCoords[row.city] ? rawCoords[row.city][1] : (row.lng ? parseFloat(row.lng) : null);
+                let hubCoords = rawCoords[row.city];
+                let rLat = hubCoords ? hubCoords[0] : (row.lat ? parseFloat(row.lat) : null);
+                let rLng = hubCoords ? hubCoords[1] : (row.lng ? parseFloat(row.lng) : null);
                 if (rLat && rLng) {
                     const dist = getDistance(tLat, tLon, rLat, rLng);
                     if (dist < closestDist) { closestDist = dist; closestRow = row; }
                 }
             });
-
             if (closestRow && closestDist <= 8) {
-                res.innerHTML = `<span style="color: #c53030;">🛑 Neighbor Found: ${closestDist.toFixed(1)} miles away</span>`;
-                setVibe(closestRow.city);
+                res.innerHTML = `<span style="color: #ff8080;">🛑 Neighbor Found: ${closestDist.toFixed(1)} miles away</span>`;
                 head.classList.remove('hidden'); head.innerText = "NEIGHBOR ALERT";
-                list.innerHTML = `<div style="background:#fff5f5; padding:25px; border-radius:15px; text-align:center; color:#c53030; margin-bottom:20px; border:2px solid #feb2b2; line-height:1.8;">
-                    <strong style="font-size:19px; display:block; margin-bottom:10px;">🛑 NEIGHBOR ZIP: APPROVAL REQUIRED</strong>
-                    ZIP ${zip} is ${closestDist.toFixed(1)} miles from ${closestRow.zip}.<br>
-                    <strong style="display:block; margin-top:15px; background:#fed7d7; padding:10px; border-radius:8px;">Ask the SLACK CHANNEL if this is serviceable.</strong>
+                list.innerHTML = `<div style="background:#fff5f5; padding:25px; border-radius:15px; text-align:center; color:#c53030; margin-bottom:20px; border:2px solid #feb2b2;">
+                    <strong>🛑 NEIGHBOR ZIP: APPROVAL REQUIRED</strong><br>ZIP ${zip} is ${closestDist.toFixed(1)} miles from FurryLand ${closestRow.city}.
                 </div>`;
                 renderSingleRow(closestRow, true);
-                let fLat = rawCoords[closestRow.city] ? rawCoords[closestRow.city][0] : parseFloat(closestRow.lat);
-                let fLng = rawCoords[closestRow.city] ? rawCoords[closestRow.city][1] : parseFloat(closestRow.lng);
+                let hubCoords = rawCoords[closestRow.city];
+                let fLat = hubCoords ? hubCoords[0] : parseFloat(closestRow.lat);
+                let fLng = hubCoords ? hubCoords[1] : parseFloat(closestRow.lng);
                 map.flyTo([fLat, fLng], 12);
-            } else { 
-              res.innerText = "❌ No service within range."; 
-              resetSearchState(); 
-              resetVibe();
-            }
-        } catch (e) { 
-          res.innerText = "❌ Invalid ZIP."; 
-          resetSearchState(); 
-          resetVibe();
-        }
+            } else { res.innerText = "❌ No service within range."; resetSearchState(); }
+        } catch (e) { res.innerText = "❌ Invalid ZIP."; resetSearchState(); }
     }
   }
 
@@ -488,7 +422,6 @@ function setVibe(city) {
     document.getElementById('result').innerText = "";
     document.getElementById('zipInput').value = "";
     document.getElementById('hubSearchInput').value = "";
-    resetVibe();
   }
 
   function plotHubs() {
@@ -525,8 +458,8 @@ function setVibe(city) {
     document.getElementById('customDropdown').style.display = 'none';
     const match = data.find(d => d.city.trim() === city);
     if (match) { 
-        map.flyTo(rawCoords[city], 10); setVibe(city); 
-        document.getElementById('result').innerText = "📍 Match Found: " + city;
+        map.flyTo(rawCoords[city], 10); 
+        document.getElementById('result').innerText = "📍 Hub Selected: " + city;
         document.getElementById('list-header').classList.remove('hidden');
         renderSingleRow(match);
     }
@@ -545,7 +478,6 @@ function setVibe(city) {
     document.getElementById('breed-section').classList.toggle('hidden', t === 'locator'); 
     document.getElementById('tab-loc').classList.toggle('active', t === 'locator'); 
     document.getElementById('tab-breed').classList.toggle('active', t !== 'locator'); 
-    resetVibe();
     if(t === 'locator') setTimeout(() => map.invalidateSize(), 200); 
   }
 
@@ -556,11 +488,7 @@ function setVibe(city) {
 
   document.getElementById('zipInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') lookup(); });
 
-  // --- STARTUP ---
-  async function startup() {
-    await loadBreeds(); 
-    loadData(); 
-  }
+  async function startup() { await loadBreeds(); loadData(); }
   startup();
 </script>
 </body>
