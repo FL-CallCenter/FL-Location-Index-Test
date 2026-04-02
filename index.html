@@ -382,45 +382,22 @@ async function checkBreed(val) {
         const isComplex = found.type === "Complex";
         display.innerHTML = `<div class="result-display ${isComplex ? 'is-complex' : 'is-simple'}">${found.name} is a ${found.type} coat</div>`;
         
-        // --- THE TRANSLATION LAYER ---
-        let name = found.name.toLowerCase();
-        let apiName = name;
-
-        // 1. Manual Fixes (Add any breeds here that show the wrong dog)
-        const manualMapping = {
-            "golden retriever": "retriever/golden",
-            "german shepherd": "germanshepherd",
-            "cocker spaniel": "spaniel/cocker",
-            "pit bull": "pitbull",
-            "labrador retriever": "labrador",
-            "french bulldog": "bulldog/french",
-            "boston terrier": "terrier/boston"
-        };
-
-        if (manualMapping[name]) {
-            apiName = manualMapping[name];
-        } else {
-            // 2. Auto-fix: Try flipping words (e.g. "Jack Russell" -> "russell/jack")
-            let words = name.split(' ');
-            if (words.length > 1) {
-                apiName = `${words[words.length - 1]}/${words[0]}`;
-            }
-        }
-
+        // --- WIKIPEDIA SMART FETCH ---
         try {
-            const response = await fetch(`https://dog.ceo/api/breed/${apiName}/images/random`);
+            const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(found.name)}`;
+            const response = await fetch(wikiUrl);
             const data = await response.json();
             
-            if (data.status === "success") {
-                imgEl.src = data.message;
+            if (data.thumbnail && data.thumbnail.source) {
+                imgEl.src = data.thumbnail.source;
                 imgCont.style.display = "block";
             } else {
-                // 3. Final Fallback: Just try the last word (e.g. "Terrier")
-                const finalTry = name.split(' ').pop();
-                const res2 = await fetch(`https://dog.ceo/api/breed/${finalTry}/images/random`);
+                // If specific breed fails, try a broader search (e.g. "Poodle")
+                const broadName = found.name.split(' ').pop();
+                const res2 = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${broadName}`);
                 const data2 = await res2.json();
-                if (data2.status === "success") {
-                    imgEl.src = data2.message;
+                if (data2.thumbnail) {
+                    imgEl.src = data2.thumbnail.source;
                     imgCont.style.display = "block";
                 } else { imgCont.style.display = "none"; }
             }
@@ -430,7 +407,6 @@ async function checkBreed(val) {
         imgCont.style.display = "none";
     }
 }
-
   // --- TURBO LOCATOR LOGIC ---
   async function loadData() {
     try {
