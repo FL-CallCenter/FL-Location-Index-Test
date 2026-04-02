@@ -339,9 +339,15 @@ async function loadBreeds() {
   }
 
   // --- LOCATOR LOGIC FUNCTIONS ---
-  async function loadData() {
+async function loadData() {
     try {
-      const responses = await Promise.all(csvUrls.map(url => fetch(url).then(r => r.text())));
+      // 1. Start both requests at the EXACT SAME TIME
+      const zipPromise = Promise.all(csvUrls.map(url => fetch(url).then(r => r.text())));
+      const breedPromise = loadBreeds(); // Fire off the breed loader immediately
+
+      // 2. Wait for the ZIP data to finish (so the button can turn on)
+      const responses = await zipPromise;
+      
       responses.forEach(csv => {
         const rows = csv.split('\n');
         rows.slice(1).forEach(row => {
@@ -355,12 +361,16 @@ async function loadBreeds() {
           }
         });
       });
+
+      // 3. Turn on the UI as soon as ZIPs are ready
       document.getElementById('searchBtn').disabled = false;
       document.getElementById('searchBtn').textContent = "Search ZIP";
       plotHubs(); 
       buildCustomDropdown();
-      await loadBreeds(); 
-    } catch (err) { console.error(err); }
+
+      // We don't 'await' breedPromise here anymore because it's already running in the background!
+      
+    } catch (err) { console.error("Sync Error:", err); }
   }
 
   function setVibe(city) {
