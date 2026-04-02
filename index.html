@@ -18,35 +18,31 @@
     
     html { scroll-behavior: smooth; }
 
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background: var(--fl-bg);
-        transition: background 1.2s cubic-bezier(0.4, 0, 0.2, 1); 
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px;
-        margin: 0;
-        min-height: 100vh;
-        position: relative;
-        overflow-x: hidden;
-    }
+ body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #0f172a; /* Permanent Midnight Navy */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    margin: 0;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
 
-    /* THE SMOOTH, BLENDED ATMOSPHERE (No Rotation, No Grid) */
-    body::before {
-        content: "";
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        /* These two radial gradients create a blended, stationary background "glow" */
-        background: 
-          radial-gradient(circle at 10% 20%, rgba(37, 118, 208, 0.08) 0%, transparent 50%),
-          radial-gradient(circle at 90% 80%, rgba(240, 123, 35, 0.05) 0%, transparent 50%);
-        pointer-events: none;
-        opacity: 0;
-        transition: opacity 1.2s ease;
-        z-index: -1;
-    }
-
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    /* Stationary blended glows */
+    background: 
+      radial-gradient(circle at 15% 15%, rgba(37, 118, 208, 0.12) 0%, transparent 50%),
+      radial-gradient(circle at 85% 85%, rgba(240, 123, 35, 0.08) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+    opacity: 1; /* Always visible */
+}
     /* When 'dark-vibe' class is active, fade in the atmosphere */
     body.dark-vibe::before {
         opacity: 1;
@@ -294,16 +290,13 @@
   const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-  // Vibe Functions (Now stationary atmosphere)
-  function setVibe(city) {
-    document.body.classList.add('dark-vibe');
-    document.body.style.background = "#0f172a"; 
-  }
+function setVibe(city) {
+    // Logic removed because background is now permanent CSS
+}
 
-  function resetVibe() {
-    document.body.classList.remove('dark-vibe');
-    document.body.style.background = "#efeee9";
-  }
+function resetVibe() {
+    // Logic removed because background is now permanent CSS
+}
 
   // --- BREED LOGIC ---
   async function loadBreeds() {
@@ -461,7 +454,6 @@
         } catch (e) { 
           res.innerText = "❌ Invalid ZIP."; 
           resetSearchState(); 
-          resetVibe();
         }
     }
   }
@@ -473,7 +465,6 @@
     document.getElementById('result').innerText = "";
     document.getElementById('zipInput').value = "";
     document.getElementById('hubSearchInput').value = "";
-    resetVibe();
   }
 
   function plotHubs() {
@@ -526,14 +517,15 @@
 
   function resetSearchState() { document.getElementById('location-list').innerHTML = ""; document.getElementById('list-header').classList.add('hidden'); }
   
-  function switchTab(t) { 
+function switchTab(t) { 
     document.getElementById('locator-section').classList.toggle('hidden', t !== 'locator'); 
     document.getElementById('breed-section').classList.toggle('hidden', t === 'locator'); 
     document.getElementById('tab-loc').classList.toggle('active', t === 'locator'); 
     document.getElementById('tab-breed').classList.toggle('active', t !== 'locator'); 
-    resetVibe();
+    
+    // Removed resetVibe() call to keep the atmosphere active
     if(t === 'locator') setTimeout(() => map.invalidateSize(), 200); 
-  }
+}
 
   window.onclick = (e) => { 
     if (!e.target.matches('#hubSearchInput')) document.getElementById('customDropdown').style.display = 'none';
