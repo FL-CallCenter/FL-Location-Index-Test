@@ -34,28 +34,42 @@
         min-height: 100vh;
     }
     
-    /* Styling for the Breed Result box */
+/* Make the Breed Section Card match the ZIP card's impact */
+#breed-section {
+    max-width: 450px;
+    transition: all 0.3s ease;
+}
+
+/* Big, bold result box */
 .result-display {
-    padding: 15px;
-    border-radius: 8px;
+    padding: 25px;
+    border-radius: 15px;
     text-align: center;
-    font-weight: bold;
-    margin-top: 15px;
-    border: 2px solid transparent;
+    font-weight: 800;
+    margin-top: 20px;
+    font-size: 1.3rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    animation: breedPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Red for Column A (Complex) */
-.is-complex {
-    background-color: #ffebee;
-    color: #c62828;
-    border-color: #c62828;
+@keyframes breedPop {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
 }
 
-/* Green for Column B (Non-Complex) */
-.is-simple {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-    border-color: #2e7d32;
+/* Make the search input feel more "Command Center" */
+#breedInput {
+    height: 60px;
+    font-size: 18px;
+    border: 2px solid #eee;
+    transition: border-color 0.3s;
+}
+
+#breedInput:focus {
+    border-color: var(--fl-blue);
+    background-color: #fff;
 }
     
     /* Layout Elements */
@@ -159,8 +173,11 @@
   <p class="subtitle">Breed Guide</p>
   
   <div class="breed-checker-container" style="margin-top: 20px;">
-    <input type="text" id="breedInput" list="breedOptions" placeholder="Start typing a breed..." oninput="checkBreed(this.value)" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
-    
+<input type="text" id="breedInput" list="breedOptions" 
+       placeholder="Start typing a breed..." 
+       oninput="checkBreed(this.value)" 
+       onkeypress="if(event.key === 'Enter') checkBreed(this.value)"
+       style="width: 100%; padding: 16px; border-radius: 12px; border: 1px solid #ddd; font-size: 16px;">    
     <datalist id="breedOptions">
         </datalist>
 
@@ -276,33 +293,43 @@
   const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-  // NEW: Function to load the Breeds tab specifically
-  async function loadBreeds() {
-    // Make sure your sheet ID is correct here
-    const sheetID = "1QXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf"; 
-    const tabName = "Breeds"; 
-    const url = `https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=552993732&single=true&output=csv`;
+async function loadBreeds() {
+    const breedCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=552993732&single=true&output=csv';
 
     try {
-      const response = await fetch(url);
-      const text = await response.text();
-      const json = JSON.parse(text.substr(47).slice(0, -2));
-      const rows = json.table.rows;
+        const response = await fetch(breedCsvUrl);
+        const csvText = await response.text();
+        const rows = csvText.split('\n');
 
-      breedDatabase = []; 
+        breedDatabase = []; // Clear the bucket
 
-      rows.forEach(row => {
-        if (row.c[0] && row.c[0].v) breedDatabase.push({ name: row.c[0].v, type: "Complex" });
-        if (row.c[1] && row.c[1].v) breedDatabase.push({ name: row.c[1].v, type: "Non-Complex" });
-      });
+        // We skip row 0 because it's the header (Complex / Non-Complex)
+        rows.slice(1).forEach(row => {
+            const columns = row.split(',');
+            
+            // Column A (Index 0) - Complex
+            if (columns[0] && columns[0].trim()) {
+                breedDatabase.push({ name: columns[0].trim(), type: "Complex" });
+            }
+            // Column B (Index 1) - Non-Complex
+            if (columns[1] && columns[1].trim()) {
+                breedDatabase.push({ name: columns[1].trim(), type: "Non-Complex" });
+            }
+        });
 
-      const datalist = document.getElementById('breedOptions');
-      if(datalist) {
-        datalist.innerHTML = breedDatabase.map(b => `<option value="${b.name}">`).join('');
-      }
-      console.log("Breed Database Loaded");
-    } catch (err) { console.error("Breeds failed to load:", err); }
-  }
+        // Fill the dropdown list
+        const datalist = document.getElementById('breedOptions');
+        if (datalist) {
+            datalist.innerHTML = breedDatabase
+                .sort((a, b) => a.name.localeCompare(b.name)) // Sort A-Z
+                .map(b => `<option value="${b.name}">`)
+                .join('');
+        }
+        console.log("Breed CSV Loaded Successfully");
+    } catch (err) {
+        console.error("Error loading Breed CSV:", err);
+    }
+}
 
   // NEW: Function to handle the Breed Search logic
   function checkBreed(val) {
