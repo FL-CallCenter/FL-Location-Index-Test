@@ -404,7 +404,7 @@ async function startup() {
     document.body.style.transition = "background 0.5s ease";
   }
 
-  async function lookup() {
+async function lookup() {
     const zip = document.getElementById('zipInput').value.trim();
     const res = document.getElementById('result');
     const list = document.getElementById('location-list');
@@ -417,9 +417,15 @@ async function startup() {
         setVibe(match.city);
         head.classList.remove('hidden'); head.innerText = "SEARCH RESULT";
         renderSingleRow(match, false);
-        let flyLat = match.lat ? parseFloat(match.lat) : (rawCoords[match.city] ? rawCoords[match.city][0] : null);
-        let flyLng = match.lng ? parseFloat(match.lng) : (rawCoords[match.city] ? rawCoords[match.city][1] : null);
-        if (flyLat && flyLng) map.flyTo([flyLat, flyLng], 14);
+
+        // --- FIX: PRIORITIZE rawCoords OVER CSV DATA ---
+        // We look for the hardcoded pin coordinates first
+        let flyLat = rawCoords[match.city] ? rawCoords[match.city][0] : (match.lat ? parseFloat(match.lat) : null);
+        let flyLng = rawCoords[match.city] ? rawCoords[match.city][1] : (match.lng ? parseFloat(match.lng) : null);
+        
+        if (flyLat && flyLng) {
+            map.flyTo([flyLat, flyLng], 14); // Now it flies to the Pulsing Pin
+        }
         return;
     }
 
@@ -433,8 +439,10 @@ async function startup() {
 
             let closestDist = Infinity; let closestRow = null;
             data.forEach(row => {
-                let rLat = row.lat ? parseFloat(row.lat) : (rawCoords[row.city] ? rawCoords[row.city][0] : null);
-                let rLng = row.lng ? parseFloat(row.lng) : (rawCoords[row.city] ? rawCoords[row.city][1] : null);
+                // Neighbor check also prioritizes hardcoded pins
+                let rLat = rawCoords[row.city] ? rawCoords[row.city][0] : (row.lat ? parseFloat(row.lat) : null);
+                let rLng = rawCoords[row.city] ? rawCoords[row.city][1] : (row.lng ? parseFloat(row.lng) : null);
+                
                 if (rLat && rLng) {
                     const dist = getDistance(tLat, tLon, rLat, rLng);
                     if (dist < closestDist) { closestDist = dist; closestRow = row; }
@@ -451,13 +459,15 @@ async function startup() {
                     <strong style="display:block; margin-top:15px; background:#fed7d7; padding:10px; border-radius:8px;">Ask the SLACK CHANNEL if this is serviceable.</strong>
                 </div>`;
                 renderSingleRow(closestRow, true);
-                let fLat = closestRow.lat ? parseFloat(closestRow.lat) : rawCoords[closestRow.city][0];
-                let fLng = closestRow.lng ? parseFloat(closestRow.lng) : rawCoords[closestRow.city][1];
-                map.flyTo([fLat, fLng], 11);
+                
+                // Fly to the nearest pin, not the middle of the neighbor city
+                let fLat = rawCoords[closestRow.city] ? rawCoords[closestRow.city][0] : parseFloat(closestRow.lat);
+                let fLng = rawCoords[closestRow.city] ? rawCoords[closestRow.city][1] : parseFloat(closestRow.lng);
+                map.flyTo([fLat, fLng], 12);
             } else { res.innerText = "❌ No service within range."; resetSearchState(); }
         } catch (e) { res.innerText = "❌ Invalid ZIP."; resetSearchState(); }
     }
-  }
+}
 
   function resetMap() { 
     map.setView([39.82, -98.57], 4); 
