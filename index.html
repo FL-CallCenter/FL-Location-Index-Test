@@ -18,13 +18,9 @@
     
     html { scroll-behavior: smooth; }
 
-    body {
+body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         background: var(--fl-bg);
-        background-attachment: fixed;
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
         transition: background 0.8s ease-in-out; 
         display: flex;
         flex-direction: column;
@@ -32,10 +28,31 @@
         padding: 20px;
         margin: 0;
         min-height: 100vh;
-        box-shadow: inset 0 0 150px rgba(0,0,0,0.05);
+        position: relative; /* Required for the grid */
+        overflow-x: hidden;
     }
-    
-    /* Breed Result Styling */
+
+    /* THE TACTICAL GRID LAYER */
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-image: 
+            linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+        background-size: 40px 40px; /* Size of the grid squares */
+        pointer-events: none;
+        opacity: 0; /* Hidden by default (on Tan) */
+        transition: opacity 0.8s ease;
+        z-index: -1;
+    }
+
+    /* When 'dark-vibe' class is active, show the grid */
+    body.dark-vibe::before {
+        opacity: 1;
+    }
+
+    /* Breed Result Styling - Keeping your bold style */
     .result-display {
         padding: 20px;
         border-radius: 12px;
@@ -275,13 +292,14 @@
   const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-  // --- VIBE FUNCTIONS ---
-  function setVibe(city) {
-    document.body.style.background = "radial-gradient(circle at 20% 20%, #1a202c 0%, #0f172a 50%, #020617 100%)";
+function setVibe(city) {
+    document.body.classList.add('dark-vibe'); // Turns on the Grid
+    document.body.style.background = "radial-gradient(circle at center, #1e293b 0%, #0f172a 70%, #020617 100%)";
   }
 
   function resetVibe() {
-    document.body.style.background = "#efeee9";
+    document.body.classList.remove('dark-vibe'); // Turns off the Grid
+    document.body.style.background = "#efeee9"; // Back to Tan
   }
 
   // --- BREED LOGIC FUNCTIONS ---
