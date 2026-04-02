@@ -338,41 +338,44 @@
 
   // --- LOCATOR LOGIC FUNCTIONS ---
 // --- FIXED LOCATOR LOGIC ---
-  async function loadData() {
+async function loadData() {
     try {
-        console.log("📡 Starting ZIP Sync...");
+        console.log("🚀 Starting Turbo-Sync...");
+        const batchSize = 10; // Load 10 tabs at a time for speed
         
-        // We split the 60+ URLs into smaller chunks so the browser doesn't choke
-        for (let i = 0; i < csvUrls.length; i++) {
-            try {
-                const response = await fetch(csvUrls[i]);
-                if (!response.ok) continue;
-                const csv = await response.text();
-                
-                const rows = csv.split('\n');
-                rows.slice(1).forEach(row => {
-                    const m = row.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
-                    if (m && m.length >= 5) {
-                        data.push({ 
-                            name: m[0].replace(/"/g, '').trim(), 
-                            zip: m[1].trim(), 
-                            phone: m[2]?.trim() || "No phone", 
-                            link: m[3]?.replace(/"/g, '').trim() || "#", 
-                            city: m[4]?.trim() || "",
-                            state: m[5]?.trim() || "", 
-                            lat: m[6]?.trim() || null, 
-                            lng: m[7]?.replace(/\r/g, '').trim() || null 
-                        });
-                    }
-                });
-            } catch (e) {
-                console.warn(`⚠️ Tab ${i} skipped: `, e);
-            }
+        for (let i = 0; i < csvUrls.length; i += batchSize) {
+            const batch = csvUrls.slice(i, i + batchSize);
+            
+            // This runs 10 fetches at once
+            const results = await Promise.allSettled(
+                batch.map(url => fetch(url).then(r => r.text()))
+            );
 
-            // Every 10 tabs, update the button to show progress
-            if (i % 10 === 0) {
-                document.getElementById('searchBtn').textContent = `Syncing (${i}/${csvUrls.length})`;
-            }
+            results.forEach(result => {
+                if (result.status === 'fulfilled') {
+                    const csv = result.value;
+                    const rows = csv.split('\n');
+                    rows.slice(1).forEach(row => {
+                        const m = row.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
+                        if (m && m.length >= 5) {
+                            data.push({ 
+                                name: m[0].replace(/"/g, '').trim(), 
+                                zip: m[1].trim(), 
+                                phone: m[2]?.trim() || "No phone", 
+                                link: m[3]?.replace(/"/g, '').trim() || "#", 
+                                city: m[4]?.trim() || "",
+                                state: m[5]?.trim() || "", 
+                                lat: m[6]?.trim() || null, 
+                                lng: m[7]?.replace(/\r/g, '').trim() || null 
+                            });
+                        }
+                    });
+                }
+            });
+
+            // Update the button so you see it jumping by 10s
+            let progress = Math.min(i + batchSize, csvUrls.length);
+            document.getElementById('searchBtn').textContent = `Syncing (${progress}/${csvUrls.length})`;
         }
 
         // Final UI Activation
@@ -380,12 +383,12 @@
         document.getElementById('searchBtn').textContent = "Search ZIP";
         plotHubs(); 
         buildCustomDropdown();
-        console.log("✅ ZIP Sync Complete. Total entries:", data.length);
+        console.log("✅ Sync Complete!");
       
     } catch (err) { 
-        console.error("Critical ZIP Error:", err);
+        console.error("Sync Error:", err);
         document.getElementById('searchBtn').disabled = false;
-        document.getElementById('searchBtn').textContent = "Search ZIP (Error)";
+        document.getElementById('searchBtn').textContent = "Search ZIP (Ready)";
     }
   }
 
