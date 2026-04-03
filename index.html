@@ -318,8 +318,14 @@
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=874715943&single=true&output=csv'
   ];
 
-  const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+let map;
+  function initMap() {
+    if (map) return;
+    map = L.map('map').setView([39.82, -98.57], 4);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+  }
 
   // --- BREED LOGIC ---
   async function loadBreeds() {
@@ -327,27 +333,21 @@
     try {
         const response = await fetch(breedCsvUrl);
         const csvText = await response.text();
-        const rows = csvText.split(/\r?\n/); 
-        breedDatabase = []; 
+        const rows = csvText.split(/\r?\n/);
+        breedDatabase = [];
         rows.slice(1).forEach(row => {
             const cols = row.split(',');
-            if (cols[0]) {
-                let nameA = cols[0].replace(/"/g, "").trim();
-                if (nameA) breedDatabase.push({ name: nameA, type: "Complex" });
-            }
-            if (cols[1]) {
-                let nameB = cols[1].replace(/"/g, "").trim();
-                if (nameB) breedDatabase.push({ name: nameB, type: "Non-Complex" });
-            }
+            if (cols[0]) breedDatabase.push({ name: cols[0].replace(/"/g, "").trim(), type: "Complex" });
+            if (cols[1]) breedDatabase.push({ name: cols[1].replace(/"/g, "").trim(), type: "Non-Complex" });
         });
         buildBreedDropdown();
-    } catch (err) { console.error("Breed Load Failed:", err); }
+    } catch (err) { console.error("Breed Load Failed"); }
   }
 
   function buildBreedDropdown() {
     const dropdown = document.getElementById('customBreedDropdown');
-    const sortedBreeds = breedDatabase.sort((a, b) => a.name.localeCompare(b.name));
-    dropdown.innerHTML = sortedBreeds.map(b => `<div class="breed-item" onclick="selectBreed('${b.name}')">${b.name}</div>`).join('');
+    dropdown.innerHTML = breedDatabase.sort((a,b) => a.name.localeCompare(b.name))
+        .map(b => `<div class="breed-item" onclick="selectBreed('${b.name}')">${b.name}</div>`).join('');
   }
 
   function selectBreed(name) {
@@ -364,39 +364,35 @@
 
     if (found) {
         const isComplex = found.type === "Complex";
-        display.innerHTML = `<div class="result-display ${isComplex ? 'is-complex' : 'is-simple'}">${found.name} is a ${found.type} coat</div>`;
+        display.innerHTML = `<div class="result-display ${isComplex ? 'is-complex' : 'is-simple'}">${found.name.toUpperCase()} IS A ${found.type.toUpperCase()} COAT</div>`;
         try {
             const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(found.name)}`;
             const response = await fetch(wikiUrl);
-            const data = await response.json();
-            const highResUrl = data.originalimage ? data.originalimage.source : (data.thumbnail ? data.thumbnail.source : null);
-            if (highResUrl) {
-                imgEl.src = highResUrl;
-                imgCont.style.display = "block";
-                imgEl.style.opacity = "1";
-            } else { imgCont.style.display = "none"; }
+            const wData = await response.json();
+            const imgUrl = wData.originalimage ? wData.originalimage.source : (wData.thumbnail ? wData.thumbnail.source : null);
+            if (imgUrl) { imgEl.src = imgUrl; imgCont.style.display = "block"; } 
+            else { imgCont.style.display = "none"; }
         } catch (e) { imgCont.style.display = "none"; }
-    } else {
-        display.innerHTML = `<p style="color:rgba(0,0,0,0.4); font-style: italic;">Results will appear here...</p>`;
-        imgCont.style.display = "none";
     }
   }
 
-  // --- TURBO LOCATOR LOGIC ---
+  // --- DATA SYNC LOGIC ---
   async function loadData() {
     try {
-        const batchSize = 10; 
+        const batchSize = 10;
         for (let i = 0; i < csvUrls.length; i += batchSize) {
             const batch = csvUrls.slice(i, i + batchSize);
             const results = await Promise.allSettled(batch.map(url => fetch(url).then(r => r.text())));
+            
             results.forEach(result => {
                 if (result.status === 'fulfilled') {
-                    const rows = result.value.split('\n');
+                    const csv = result.value;
+                    const rows = csv.split('\n');
                     rows.slice(1).forEach(row => {
                         const m = row.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
                         if (m && m.length >= 5) {
                             data.push({ 
-                                city: m[4]?.trim() || "", zip: m[1].trim(), phone: m[2]?.trim() || "No phone", 
+                                city: m[4]?.trim() || "", zip: m[1]?.trim() || "", phone: m[2]?.trim() || "No phone", 
                                 link: m[3]?.replace(/"/g, '').trim() || "#", lat: m[6] || null, lng: m[7] || null 
                             });
                         }
@@ -407,10 +403,12 @@
         }
         document.getElementById('searchBtn').disabled = false;
         document.getElementById('searchBtn').textContent = "Search ZIP";
-        plotHubs(); buildCustomDropdown();
-    } catch (err) { console.error("Sync Error:", err); }
+        plotHubs();
+        buildCustomDropdown();
+    } catch (err) { console.error("Data Sync Error", err); }
   }
 
+  // --- SEARCH & NEIGHBOR SEARCH ---
   async function lookup() {
     const zip = document.getElementById('zipInput').value.trim();
     const res = document.getElementById('result');
@@ -421,25 +419,26 @@
     if (match) {
         res.innerText = "📍 Match Found: " + match.city;
         renderSingleRow(match);
-        if (rawCoords[match.city]) map.flyTo(rawCoords[match.city], 14);
+        let coords = rawCoords[match.city] || [parseFloat(match.lat), parseFloat(match.lng)];
+        if (coords[0]) map.flyTo(coords, 14);
         return;
     }
 
     if (zip.length === 5) {
         res.innerText = "🔍 Checking nearby...";
         try {
-            const response = await fetch(`https://api.zippopotam.us/us/${zip}`);
-            const zipData = await response.json();
-            const tLat = parseFloat(zipData.places[0].latitude);
-            const tLon = parseFloat(zipData.places[0].longitude);
+            const zRes = await fetch(`https://api.zippopotam.us/us/${zip}`);
+            const zData = await zRes.json();
+            const tLat = parseFloat(zData.places[0].latitude);
+            const tLon = parseFloat(zData.places[0].longitude);
 
             let closestDist = Infinity; let closestRow = null;
             data.forEach(row => {
                 let rLat = rawCoords[row.city] ? rawCoords[row.city][0] : parseFloat(row.lat);
                 let rLng = rawCoords[row.city] ? rawCoords[row.city][1] : parseFloat(row.lng);
                 if (rLat && rLng) {
-                    const dist = getDistance(tLat, tLon, rLat, rLng);
-                    if (dist < closestDist) { closestDist = dist; closestRow = row; }
+                    const d = getDistance(tLat, tLon, rLat, rLng);
+                    if (d < closestDist) { closestDist = d; closestRow = row; }
                 }
             });
 
@@ -460,9 +459,8 @@
   }
 
   function renderSingleRow(m, isNeighbor = false) {
-    const list = document.getElementById('location-list');
     const badge = isNeighbor ? `<span style="background:#718096; color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:12px;">INQUIRY ONLY</span>` : "";
-    list.innerHTML += `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span>${badge}</td><td>${m.phone} <button onclick="navigator.clipboard.writeText('${m.phone}');alert('Copied!')" style="cursor:pointer;border:none;background:#eee;border-radius:4px;padding:2px 5px;">📋</button></td><td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td></tr></tbody></table>`;
+    document.getElementById('location-list').innerHTML += `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span>${badge}</td><td>${m.phone} <button onclick="navigator.clipboard.writeText('${m.phone}');alert('Copied!')" style="cursor:pointer;border:none;background:#eee;border-radius:4px;padding:2px 5px;">📋</button></td><td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td></tr></tbody></table>`;
   }
 
   function plotHubs() {
@@ -484,8 +482,7 @@
   function selectCity(city) {
     document.getElementById('hubSearchInput').value = city;
     document.getElementById('customDropdown').style.display = 'none';
-    const match = data.find(d => d.city.trim() === city);
-    if (match) { lookup(); }
+    lookup(); 
   }
 
   function switchTab(t) { 
@@ -493,7 +490,9 @@
     document.getElementById('breed-section').classList.toggle('hidden', t === 'locator'); 
     document.getElementById('tab-loc').classList.toggle('active', t === 'locator'); 
     document.getElementById('tab-breed').classList.toggle('active', t !== 'locator'); 
-    if(t === 'locator') setTimeout(() => map.invalidateSize(), 200); 
+    if(t === 'locator') {
+        setTimeout(() => { initMap(); map.invalidateSize(); }, 200); 
+    }
   }
 
   function showDropdown() { document.getElementById('customDropdown').style.display = 'block'; }
@@ -514,4 +513,10 @@
     if (!e.target.matches('#breedInput')) document.getElementById('customBreedDropdown').style.display = 'none';
   }
 
-  loadBreeds(); loadData();
+  // --- STARTUP ---
+  document.addEventListener('DOMContentLoaded', () => {
+    initMap();
+    loadBreeds();
+    loadData();
+  });
+</script>
