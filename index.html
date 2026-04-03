@@ -9,175 +9,16 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
-    :root { 
+:root { 
         --fl-orange: #f07b23; 
         --fl-blue: #2576d0; 
-        --fl-bg: #0f172a; /* Midnight Navy Base */
+        --fl-bg: #0f172a; 
         --fl-accent: #f2ffff; 
     }
     
     html { scroll-behavior: smooth; }
 
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background: var(--fl-bg); /* Permanent Dark Navy */
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px;
-        margin: 0;
-        min-height: 100vh;
-        position: relative;
-        overflow-x: hidden;
-    }
-
-    /* THE ALWAYS-ON BLENDED ATMOSPHERE */
-    body::before {
-        content: "";
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: 
-          radial-gradient(circle at 15% 15%, rgba(37, 118, 208, 0.12) 0%, transparent 50%),
-          radial-gradient(circle at 85% 85%, rgba(240, 123, 35, 0.08) 0%, transparent 50%);
-        pointer-events: none;
-        z-index: -1;
-        opacity: 1; 
-    }
-
-    /* Breed Guide Result Alerts */
-    .result-display {
-        padding: 20px;
-        border-radius: 12px;
-        text-align: center;
-        font-weight: 800;
-        margin-top: 15px;
-        font-size: 20px;
-        text-transform: uppercase;
-        border: 3px solid transparent;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-        animation: popIn 0.3s ease-out;
-        width: 100%; /* Stretch to wider card */
-        box-sizing: border-box;
-    }
-
-    .is-complex { background-color: #ffebee; color: #c62828; border-color: #c62828; }
-    .is-simple { background-color: #e8f5e9; color: #2e7d32; border-color: #2e7d32; }
-
-    @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-
-    /* Tabs - Glass Look for Dark Mode */
-    .tabs { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; max-width: 550px; z-index: 1010; }
-    .tab-btn { 
-        flex: 1; padding: 12px; border: none; border-radius: 12px; 
-        background: rgba(255,255,255,0.15); 
-        cursor: pointer; font-weight: bold; color: #fff; transition: 0.2s; font-size: 14px; 
-    }
-    .tab-btn.active { background: var(--fl-blue); color: white; box-shadow: 0 4px 15px rgba(37, 118, 208, 0.4); }
-
-    /* Frosted Glassmorphism Card - Wider Version */
-    .card {
-        background: rgba(255, 255, 255, 0.75) !important;
-        backdrop-filter: blur(20px) saturate(160%);
-        -webkit-backdrop-filter: blur(20px) saturate(160%);
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        padding: 25px;
-        border-radius: 24px;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        width: 95%;
-        max-width: 550px; /* WIDER CARD */
-        text-align: center;
-        border-top: 6px solid var(--fl-orange);
-        margin-bottom: 12px;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        position: relative;
-        z-index: 1000;
-        transition: transform 0.3s ease;
-    }    
-    
-    h2 { color: var(--fl-orange); margin: 0; font-weight: 800; text-transform: uppercase; font-size: 26px; }
-    .subtitle { color: #222; font-size: 14px; margin: 2px 0 18px 0; font-weight: 600; text-transform: uppercase; }
-    
-    input { padding: 14px; font-size: 16px; width: 100%; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; background-color: var(--fl-accent); outline: none; margin-bottom: 10px; text-align: center; }
-    
-    .search-container { position: relative; width: 100%; }
-    
-    /* Dropdowns */
-    #customDropdown, #customBreedDropdown { 
-        position: absolute; top: 100%; left: 0; right: 0; 
-        background: white; border-radius: 12px; max-height: 220px; 
-        overflow-y: auto; z-index: 9999; display: none; 
-        box-shadow: 0 15px 35px rgba(0,0,0,0.4); margin-top: 5px; border: 1px solid #eee; 
-    }
-    
-    .dropdown-item, .breed-item { padding: 14px; cursor: pointer; font-size: 15px; text-align: center; border-bottom: 1px solid #f5f5f5; color: #333; }
-    .dropdown-item:hover, .breed-item:hover { background: var(--fl-accent); color: var(--fl-blue); }
-    
-    #searchBtn { padding: 14px; width: 100%; background-color: var(--fl-orange); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 14px; }
-    
-    /* Dark Mode Result Text */
-    #result { margin-top: 12px; font-size: 15px; font-weight: 800; color: #ffffff; min-height: 20px; text-shadow: none; filter: none; }
-    #breedResult { width: 100%; display: flex; justify-content: center; align-items: center; min-height: 100px; margin-top: 10px; }
-    #breedResult p { color: rgba(255, 255, 255, 0.7); font-style: italic; }
-
-    /* NEW: Breed Image Container for Space Filling */
-    #breedImageContainer {
-        width: 100%;
-        margin-top: 20px;
-        border-radius: 15px;
-        overflow: hidden;
-        display: none; /* Controlled by JS */
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        border: 1px solid rgba(255,255,255,0.2);
-        animation: popIn 0.5s ease-out;
-    }
-
-    #breedImg {
-        width: 100%;
-        height: 350px; 
-        object-fit: cover; /* Prevents dog from looking squished */
-        display: block;
-        transition: opacity 0.3s ease-in-out;
-        image-rendering: -webkit-optimize-contrast; /* Sharpens the image in the browser */
-        background-color: #1a202c; /* Prevents a white flash while loading */
-    }
-  /* --- SEARCH HUB SEPARATION --- */
-    .search-module {
-        padding: 12px;
-        border-radius: 8px;
-        width: 100%;
-        box-sizing: border-box;
-        text-align: left;
-    }
-
-    .zip-box {
-        background: rgba(0, 242, 254, 0.05);
-        border: 1px solid rgba(0, 242, 254, 0.2);
-    }
-
-    .ui-divider {
-        width: 100%;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        margin: 20px 0;
-        position: relative;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .ui-divider span {
-        position: absolute;
-        background: #1a202c; 
-        padding: 0 10px;
-        font-size: 0.7rem;
-        color: rgba(255,255,255,0.4);
-        font-weight: bold;
-    }
-
-/* --- 1. HIGH-VISIBILITY DRIFTING BACKGROUND --- */
+    /* --- 1. HIGH-VISIBILITY DRIFTING BACKGROUND --- */
     @keyframes drift {
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
@@ -185,76 +26,81 @@
     }
 
     body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         margin: 0;
-        padding: 0;
-        /* Using higher contrast colors so the drift is actually visible */
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        /* Using higher contrast colors for a premium, visible drift */
         background: linear-gradient(-45deg, #020406, #0d1b2a, #16213e, #000000) !important;
         background-size: 200% 200% !important;
         animation: drift 10s ease infinite !important; 
-        height: 100vh;
-        overflow: hidden;
-    }
-
-    /* --- 2. SEARCH HUB CLEANUP (No Ugly Blue Border) --- */
-    .search-module {
-        width: 100%;
-        padding: 5px 0;
-        box-sizing: border-box;
-    }
-
-    .module-label {
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 1px;
-        display: block;
-        margin-bottom: 8px;
-        color: rgba(0,0,0,0.4); 
-    }
-
-    /* Professional blue accent for ZIP text only */
-    .accent-blue {
-        color: #00f2fe !important; 
-    }
-
-    /* Elegant "OR" Divider */
-    .ui-divider {
-        width: 100%;
-        height: 1px;
-        background: rgba(0,0,0,0.08);
-        margin: 20px 0;
+        overflow-x: hidden;
         position: relative;
     }
 
+    /* Tabs - Modern Glass Look */
+    .tabs { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; max-width: 550px; z-index: 2000; }
+    .tab-btn { 
+        flex: 1; padding: 12px; border: none; border-radius: 12px; 
+        background: rgba(255,255,255,0.15); 
+        cursor: pointer; font-weight: bold; color: #fff; transition: 0.2s; font-size: 14px; 
+    }
+    .tab-btn.active { background: var(--fl-blue); color: white; box-shadow: 0 4px 15px rgba(37, 118, 208, 0.4); }
+
+    /* Card Styling */
+    .card {
+        background: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(20px) saturate(160%);
+        border-radius: 24px;
+        padding: 25px;
+        width: 95%;
+        max-width: 550px;
+        text-align: center;
+        border-top: 6px solid var(--fl-orange);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        margin-bottom: 12px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        z-index: 1000;
+    }
+
+    h2 { color: var(--fl-orange); margin: 0; font-weight: 800; text-transform: uppercase; font-size: 26px; }
+    .subtitle { color: #222; font-size: 14px; margin: 2px 0 18px 0; font-weight: 600; text-transform: uppercase; }
+
+    /* --- 2. SEARCH HUB CLEANUP (No Ugly Blue Border) --- */
+    .search-module { width: 100%; padding: 5px 0; box-sizing: border-box; text-align: left; }
+    .module-label {
+        font-size: 10px; font-weight: 800; letter-spacing: 1px;
+        display: block; margin-bottom: 8px; color: rgba(0,0,0,0.4); 
+    }
+    .accent-blue { color: #00f2fe !important; text-shadow: 0 0 8px rgba(0, 242, 254, 0.3); }
+
+    input { 
+        padding: 14px; font-size: 16px; width: 100%; border: 1px solid #ddd; 
+        border-radius: 12px; box-sizing: border-box; background-color: #fff; 
+        outline: none; margin-bottom: 10px; text-align: center; 
+    }
+
+    .ui-divider { width: 100%; height: 1px; background: rgba(0,0,0,0.08); margin: 20px 0; position: relative; }
     .ui-divider span {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: #ced4da; /* Match your card's grey exactly */
-        padding: 0 12px;
-        font-size: 10px;
-        color: #495057;
-        font-weight: 900;
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        background: #ced4da; /* Matches the grey card color */
+        padding: 0 12px; font-size: 10px; color: #495057; font-weight: 900;
     }
 
-    /* --- 3. MAP ISOLATION (Stops it from showing in Breed Guide) --- */
-    #locator-section svg, 
-    #locator-section path, 
-    #map-wrapper {
-        display: block !important;
-        pointer-events: all !important;
-        cursor: pointer !important;
+    #searchBtn { 
+        padding: 14px; width: 100%; background-color: var(--fl-orange); 
+        color: white; border: none; border-radius: 12px; font-weight: bold; 
+        cursor: pointer; text-transform: uppercase; font-size: 14px; 
     }
 
-    /* Force-hide map in the breed guide */
-    #breed-section svg, 
-    #breed-section path, 
-    #breed-section #map-wrapper {
-        display: none !important;
-        visibility: hidden !important;
-    }
-
-    /* --- 4. HUB RESULT HEADER FIX --- */
+    /* --- 3. HUB RESULT HEADER FIX --- */
     .result-header {
         display: flex;
         justify-content: space-between;
@@ -270,31 +116,39 @@
         box-sizing: border-box;
     }
 
-    #map-wrapper, #map, path {
-        pointer-events: all !important;
-        cursor: pointer !important;
-    }
-    
+    /* --- 4. MAP ISOLATION (Stops leakage into Breed Guide) --- */
+    #map-wrapper { position: relative; width: 95%; max-width: 1200px; margin-top: 40px; margin-bottom: 50px; z-index: 1; }
+    #map { height: 500px; width: 100%; border-radius: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
+    #resetMapBtn { position: absolute; top: 15px; right: 15px; z-index: 1000; background: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
-    /* Directory and Map - Ultra Wide */
+    /* Logic to physically remove map visibility when breed-section is shown */
+    body:has(#breed-section:not(.hidden)) #map-wrapper,
+    body:has(#breed-section:not(.hidden)) .leaflet-container {
+        display: none !important;
+    }
+
+    /* Breed Guide Visuals */
+    .result-display { padding: 20px; border-radius: 12px; text-align: center; font-weight: 800; margin-top: 15px; font-size: 20px; text-transform: uppercase; border: 3px solid transparent; box-shadow: 0 8px 20px rgba(0,0,0,0.3); width: 100%; box-sizing: border-box; }
+    .is-complex { background-color: #ffebee; color: #c62828; border-color: #c62828; }
+    .is-simple { background-color: #e8f5e9; color: #2e7d32; border-color: #2e7d32; }
+
+    #breedImageContainer { width: 100%; margin-top: 20px; border-radius: 15px; overflow: hidden; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); }
+    #breedImg { width: 100%; height: 350px; object-fit: cover; display: block; background-color: #1a202c; }
+
+    /* Directory Table */
     #list-header { color: #fff; margin: 30px 0 12px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 800; }
     #location-list { width: 95%; max-width: 1200px; background: rgba(255, 255, 255, 0.95); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); overflow: hidden; margin-top: 10px; }
-
     .directory-table { width: 100%; border-collapse: collapse; text-align: left; }
     .directory-table th { background: #f8f9fa; color: #666; padding: 15px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #eee; }
-    .directory-table td { padding: 15px; border-bottom: 1px solid #f2f2f2; font-size: 14px; vertical-align: middle; }
-
+    .directory-table td { padding: 15px; border-bottom: 1px solid #f2f2f2; font-size: 14px; }
     .city-name { font-weight: 700; color: var(--fl-orange); font-size: 15px; }
     .action-link { text-decoration: none; font-weight: 700; color: #28a745; background: #e8f5e9; padding: 8px 16px; border-radius: 8px; font-size: 12px; display: inline-block; }
     .copy-btn { border:none; background:#eee; cursor:pointer; border-radius:4px; padding:2px 5px; margin-left:5px; font-size:12px; }
 
-    #map-wrapper { position: relative; width: 95%; max-width: 1200px; margin-top: 40px; margin-bottom: 50px; z-index: 1; }
-    #map { height: 500px; width: 100%; border-radius: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
-    #resetMapBtn { position: absolute; top: 15px; right: 15px; z-index: 1000; background: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-    
     .pulsing-marker { width: 10px; height: 10px; background-color: var(--fl-blue); border-radius: 50%; border: 2px solid white; position: relative; }
     .pulsing-marker::after { content: ""; width: 100%; height: 100%; border: 3px solid var(--fl-blue); border-radius: 50%; position: absolute; top: -3px; left: -3px; animation: pulse 2.5s infinite ease-out; }
     @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3); opacity: 0; } }
+    
     .hidden { display: none !important; }
 </style>
 </head>
@@ -305,19 +159,24 @@
   <button id="tab-breed" class="tab-btn" onclick="switchTab('breed')">Breed Guide</button>
 </div>
 
+<div class="tabs">
+    <button id="tab-loc" class="tab-btn active" onclick="switchTab('locator')">ZIP Locator</button>
+    <button id="tab-breed" class="tab-btn" onclick="switchTab('breed')">Breed Guide</button>
+</div>
+
 <div id="locator-section" style="width:100%; display:flex; flex-direction:column; align-items:center;">
     <div class="card">
         <h2>FURRYLAND</h2>
         <p class="subtitle">Search Hubs</p>
 
-        <div class="search-module zip-box">
+        <div class="search-module">
             <label class="module-label accent-blue">SEARCH BY ZIP</label>
             <input type="text" id="zipInput" placeholder="Enter ZIP Code" maxlength="5" inputmode="numeric">
         </div>
 
         <div class="ui-divider"><span>OR</span></div>
 
-        <div class="search-module city-box">
+        <div class="search-module">
             <label class="module-label">BROWSE BY CITY</label>
             <div class="search-container">
                 <input type="text" id="hubSearchInput" placeholder="Type or Browse City..." onfocus="showDropdown()" oninput="filterDropdown()">
@@ -326,51 +185,39 @@
         </div>
 
         <button id="searchBtn" onclick="lookup()" disabled>Syncing Data...</button>
-        <div id="result"></div>
-    </div>
-</div>
-
-        <button id="searchBtn" onclick="lookup()" disabled>Syncing Data...</button>
         
-        <div id="result">
-            </div>
-    </div>
-</div>
-
-        <button id="searchBtn" onclick="lookup()" disabled>Syncing Data...</button>
         <div id="result"></div>
     </div>
-</div>
 
     <p id="list-header" class="hidden">STATE DIRECTORY</p>
     <div id="location-list"></div>
 
     <div id="map-wrapper">
-      <button id="resetMapBtn" onclick="resetMap()">Reset USA View</button>
-      <div id="map"></div>
+        <button id="resetMapBtn" onclick="resetMap()">Reset USA View</button>
+        <div id="map"></div>
     </div>
 </div>
 
-<div id="breed-section" class="card hidden" style="max-width: 550px;">
-  <h2>FURRYLAND</h2>
-  <p class="subtitle">Breed Guide</p>
-  
-  <div class="breed-checker-container" style="margin-top: 20px; width: 100%; box-sizing: border-box; padding: 0 10px;">
-    <div class="search-container">
-        <input type="text" id="breedInput" placeholder="Type or Browse Breeds..." 
-               onfocus="showBreedDropdown()" oninput="filterBreeds()" 
-               onkeypress="if(event.key === 'Enter') checkBreed(this.value)">
-        <div id="customBreedDropdown"></div>
-    </div>
+<div id="breed-section" class="card hidden">
+    <h2>FURRYLAND</h2>
+    <p class="subtitle">Breed Guide</p>
+    
+    <div class="breed-checker-container" style="margin-top: 20px; width: 100%; box-sizing: border-box; padding: 0 10px;">
+        <div class="search-container">
+            <input type="text" id="breedInput" placeholder="Type or Browse Breeds..." 
+                   onfocus="showBreedDropdown()" oninput="filterBreeds()" 
+                   onkeypress="if(event.key === 'Enter') checkBreed(this.value)">
+            <div id="customBreedDropdown"></div>
+        </div>
 
-    <div id="breedResult" style="margin-top: 20px; min-height: 80px;">
-       <p style="color: rgba(255,255,255,0.6); font-style: italic;">Results will appear here...</p>
-    </div>
+        <div id="breedResult" style="margin-top: 20px; min-height: 80px;">
+           <p style="color: #666; font-style: italic;">Results will appear here...</p>
+        </div>
 
-    <div id="breedImageContainer">
-        <img id="breedImg" src="" alt="Breed Photo">
+        <div id="breedImageContainer">
+            <img id="breedImg" src="" alt="Breed Photo">
+        </div>
     </div>
-  </div>
 </div>
 
 <script>
@@ -474,18 +321,10 @@
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1216528010&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=874715943&single=true&output=csv'
-  ];
+]; // This closes your csvUrls list
 
   const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
-
-function setVibe(city) {
-    // Logic removed because background is now permanent CSS
-}
-
-function resetVibe() {
-    // Logic removed because background is now permanent CSS
-}
 
   // --- BREED LOGIC ---
   async function loadBreeds() {
@@ -507,8 +346,7 @@ function resetVibe() {
             }
         });
         buildBreedDropdown();
-        console.log("✅ Breed CSV Loaded: " + breedDatabase.length + " breeds.");
-    } catch (err) { console.error("❌ Breed Load Failed:", err); }
+    } catch (err) { console.error("Breed Load Failed:", err); }
   }
 
   function buildBreedDropdown() {
@@ -517,54 +355,38 @@ function resetVibe() {
     dropdown.innerHTML = sortedBreeds.map(b => `<div class="breed-item" onclick="selectBreed('${b.name}')">${b.name}</div>`).join('');
   }
 
-  function showBreedDropdown() { document.getElementById('customBreedDropdown').style.display = 'block'; }
-  function filterBreeds() {
-    const input = document.getElementById('breedInput').value.toLowerCase();
-    document.querySelectorAll('.breed-item').forEach(item => {
-        item.style.display = item.innerText.toLowerCase().includes(input) ? 'block' : 'none';
-    });
-  }
   function selectBreed(name) {
     document.getElementById('breedInput').value = name;
     document.getElementById('customBreedDropdown').style.display = 'none';
     checkBreed(name);
   }
-async function checkBreed(val) {
+
+  async function checkBreed(val) {
     const display = document.getElementById('breedResult');
     const imgCont = document.getElementById('breedImageContainer');
     const imgEl = document.getElementById('breedImg');
-    
     const found = breedDatabase.find(b => b.name.toLowerCase() === val.toLowerCase());
 
     if (found) {
         const isComplex = found.type === "Complex";
         display.innerHTML = `<div class="result-display ${isComplex ? 'is-complex' : 'is-simple'}">${found.name} is a ${found.type} coat</div>`;
-        
         try {
-            // We use the 'page/summary' but specifically grab the 'originalimage' source
             const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(found.name)}`;
             const response = await fetch(wikiUrl);
             const data = await response.json();
-            
-            // Check for the high-res 'originalimage' first, then fallback to thumbnail
             const highResUrl = data.originalimage ? data.originalimage.source : (data.thumbnail ? data.thumbnail.source : null);
-
             if (highResUrl) {
                 imgEl.src = highResUrl;
                 imgCont.style.display = "block";
                 imgEl.style.opacity = "1";
-            } else {
-                imgCont.style.display = "none";
-            }
-        } catch (e) { 
-            console.error("Image fetch error:", e);
-            imgCont.style.display = "none"; 
-        }
+            } else { imgCont.style.display = "none"; }
+        } catch (e) { imgCont.style.display = "none"; }
     } else {
-        display.innerHTML = `<p style="color:rgba(255,255,255,0.6); font-style: italic;">Results will appear here...</p>`;
+        display.innerHTML = `<p style="color:rgba(0,0,0,0.4); font-style: italic;">Results will appear here...</p>`;
         imgCont.style.display = "none";
     }
-}
+  }
+
   // --- TURBO LOCATOR LOGIC ---
   async function loadData() {
     try {
@@ -572,58 +394,39 @@ async function checkBreed(val) {
         for (let i = 0; i < csvUrls.length; i += batchSize) {
             const batch = csvUrls.slice(i, i + batchSize);
             const results = await Promise.allSettled(batch.map(url => fetch(url).then(r => r.text())));
-
             results.forEach(result => {
                 if (result.status === 'fulfilled') {
-                    const csv = result.value;
-                    const rows = csv.split('\n');
+                    const rows = result.value.split('\n');
                     rows.slice(1).forEach(row => {
                         const m = row.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
                         if (m && m.length >= 5) {
                             data.push({ 
-                                name: m[0].replace(/"/g, '').trim(), zip: m[1].trim(), phone: m[2]?.trim() || "No phone", 
-                                link: m[3]?.replace(/"/g, '').trim() || "#", city: m[4]?.trim() || "",
-                                state: m[5]?.trim() || "", lat: m[6]?.trim() || null, lng: m[7]?.replace(/\r/g, '').trim() || null 
+                                city: m[4]?.trim() || "", zip: m[1].trim(), phone: m[2]?.trim() || "No phone", 
+                                link: m[3]?.replace(/"/g, '').trim() || "#", lat: m[6] || null, lng: m[7] || null 
                             });
                         }
                     });
                 }
             });
-            let progress = Math.min(i + batchSize, csvUrls.length);
-            document.getElementById('searchBtn').textContent = `Syncing (${progress}/${csvUrls.length})`;
+            document.getElementById('searchBtn').textContent = `Syncing (${Math.min(i+batchSize, csvUrls.length)}/${csvUrls.length})`;
         }
-
         document.getElementById('searchBtn').disabled = false;
         document.getElementById('searchBtn').textContent = "Search ZIP";
-        plotHubs(); 
-        buildCustomDropdown();
-    } catch (err) { 
-        console.error("Sync Error:", err);
-        document.getElementById('searchBtn').disabled = false;
-        document.getElementById('searchBtn').textContent = "Search ZIP";
-    }
+        plotHubs(); buildCustomDropdown();
+    } catch (err) { console.error("Sync Error:", err); }
   }
 
-  // --- SEARCH & NAVIGATION ---
   async function lookup() {
     const zip = document.getElementById('zipInput').value.trim();
     const res = document.getElementById('result');
     const list = document.getElementById('location-list');
-    const head = document.getElementById('list-header');
     list.innerHTML = ""; res.innerHTML = "";
 
     const match = data.find(d => d.zip === zip);
     if (match) {
         res.innerText = "📍 Match Found: " + match.city;
-        setVibe(match.city);
-        head.classList.remove('hidden'); head.innerText = "SEARCH RESULT";
-        renderSingleRow(match, false);
-
-        // --- HUB-FIRST PIN ZOOM ---
-        let hubCoords = rawCoords[match.city]; 
-        let flyLat = hubCoords ? hubCoords[0] : (match.lat ? parseFloat(match.lat) : null);
-        let flyLng = hubCoords ? hubCoords[1] : (match.lng ? parseFloat(match.lng) : null);
-        if (flyLat && flyLng) map.flyTo([flyLat, flyLng], 14);
+        renderSingleRow(match);
+        if (rawCoords[match.city]) map.flyTo(rawCoords[match.city], 14);
         return;
     }
 
@@ -637,9 +440,8 @@ async function checkBreed(val) {
 
             let closestDist = Infinity; let closestRow = null;
             data.forEach(row => {
-                let hubCoords = rawCoords[row.city];
-                let rLat = hubCoords ? hubCoords[0] : (row.lat ? parseFloat(row.lat) : null);
-                let rLng = hubCoords ? hubCoords[1] : (row.lng ? parseFloat(row.lng) : null);
+                let rLat = rawCoords[row.city] ? rawCoords[row.city][0] : parseFloat(row.lat);
+                let rLng = rawCoords[row.city] ? rawCoords[row.city][1] : parseFloat(row.lng);
                 if (rLat && rLng) {
                     const dist = getDistance(tLat, tLon, rLat, rLng);
                     if (dist < closestDist) { closestDist = dist; closestRow = row; }
@@ -647,49 +449,13 @@ async function checkBreed(val) {
             });
 
             if (closestRow && closestDist <= 8) {
-                res.innerHTML = `<span style="color: #ff8080;">🛑 Neighbor Found: ${closestDist.toFixed(1)} miles away</span>`;
-                setVibe(closestRow.city);
-                head.classList.remove('hidden'); head.innerText = "NEIGHBOR ALERT";
-                list.innerHTML = `<div style="background:#fff5f5; padding:25px; border-radius:15px; text-align:center; color:#c53030; margin-bottom:20px; border:2px solid #feb2b2; line-height:1.8;">
-                    <strong>🛑 NEIGHBOR ZIP: APPROVAL REQUIRED</strong><br>ZIP ${zip} is ${closestDist.toFixed(1)} miles from FurryLand ${closestRow.city}.
-                </div>`;
+                res.innerHTML = `<span style="color: #c53030;">🛑 Neighbor Found: ${closestDist.toFixed(1)} miles</span>`;
+                list.innerHTML = `<div style="background:#fff5f5; padding:20px; border-radius:15px; text-align:center; color:#c53030; border:2px solid #feb2b2; margin-bottom:15px;"><strong>🛑 NEIGHBOR ZIP: APPROVAL REQUIRED</strong></div>`;
                 renderSingleRow(closestRow, true);
-                
-                // --- NEIGHBOR HUB PIN ZOOM ---
-                let hubCoords = rawCoords[closestRow.city];
-                let fLat = hubCoords ? hubCoords[0] : parseFloat(closestRow.lat);
-                let fLng = hubCoords ? hubCoords[1] : parseFloat(closestRow.lng);
-                map.flyTo([fLat, fLng], 12);
-            } else { 
-              res.innerText = "❌ No service within range."; 
-              resetSearchState(); 
-              resetVibe();
-            }
-        } catch (e) { 
-          res.innerText = "❌ Invalid ZIP."; 
-          resetSearchState(); 
-        }
+                if (rawCoords[closestRow.city]) map.flyTo(rawCoords[closestRow.city], 12);
+            } else { res.innerText = "❌ No service within range."; }
+        } catch (e) { res.innerText = "❌ Invalid ZIP."; }
     }
-  }
-
-  function resetMap() { 
-    map.setView([39.82, -98.57], 4); 
-    document.getElementById('location-list').innerHTML = ""; 
-    document.getElementById('list-header').classList.add('hidden'); 
-    document.getElementById('result').innerText = "";
-    document.getElementById('zipInput').value = "";
-    document.getElementById('hubSearchInput').value = "";
-  }
-
-  function plotHubs() {
-    for(let k in markers) map.removeLayer(markers[k]);
-    data.forEach(d => {
-      const city = d.city.trim();
-      if (city && rawCoords[city] && !markers[city]) {
-        const icon = L.divIcon({ className: '', html: '<div class="pulsing-marker"></div>', iconSize: [10, 10], iconAnchor: [5, 5] });
-        markers[city] = L.marker(rawCoords[city], { icon: icon }).addTo(map).bindPopup(`<strong>FurryLand ${city}</strong><br>📞 ${d.phone}<br><a href="${d.link}" target="_blank" class="action-link">OPEN MOEGO</a>`);
-      }
-    });
   }
 
   function getDistance(lat1, lon1, lat2, lon2) {
@@ -698,11 +464,20 @@ async function checkBreed(val) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
   }
 
-  // --- FULL RESULTS TABLE (With Phone & Copy Button) ---
   function renderSingleRow(m, isNeighbor = false) {
     const list = document.getElementById('location-list');
-    const badge = isNeighbor ? `<span style="background:#718096; color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:12px; font-weight:800;">INQUIRY ONLY</span>` : "";
-    list.innerHTML = `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span>${badge}</td><td>${m.phone} <button class="copy-btn" onclick="navigator.clipboard.writeText('${m.phone}');alert('Copied!')">📋</button></td><td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td></tr></tbody></table>`;
+    const badge = isNeighbor ? `<span style="background:#718096; color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:12px;">INQUIRY ONLY</span>` : "";
+    list.innerHTML += `<table class="directory-table"><thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead><tbody><tr><td><span class="city-name">${m.city}</span>${badge}</td><td>${m.phone} <button onclick="navigator.clipboard.writeText('${m.phone}');alert('Copied!')" style="cursor:pointer;border:none;background:#eee;border-radius:4px;padding:2px 5px;">📋</button></td><td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td></tr></tbody></table>`;
+  }
+
+  function plotHubs() {
+    data.forEach(d => {
+      const city = d.city.trim();
+      if (city && rawCoords[city] && !markers[city]) {
+        const icon = L.divIcon({ className: '', html: '<div class="pulsing-marker"></div>', iconSize: [10, 10], iconAnchor: [5, 5] });
+        markers[city] = L.marker(rawCoords[city], { icon: icon }).addTo(map).bindPopup(`<strong>FurryLand ${city}</strong><br>📞 ${d.phone}`);
+      }
+    });
   }
 
   function buildCustomDropdown() {
@@ -715,45 +490,33 @@ async function checkBreed(val) {
     document.getElementById('hubSearchInput').value = city;
     document.getElementById('customDropdown').style.display = 'none';
     const match = data.find(d => d.city.trim() === city);
-    if (match) { 
-        map.flyTo(rawCoords[city], 10); setVibe(city); 
-        document.getElementById('result').innerText = "📍 Hub Selected: " + city;
-        document.getElementById('list-header').classList.remove('hidden');
-        renderSingleRow(match);
-    }
+    if (match) { lookup(); }
   }
 
-  function showDropdown() { document.getElementById('customDropdown').style.display = 'block'; }
-  function filterDropdown() {
-    const input = document.getElementById('hubSearchInput').value.toLowerCase();
-    document.querySelectorAll('.dropdown-item').forEach(item => item.style.display = item.innerText.toLowerCase().includes(input) ? 'block' : 'none');
-  }
-
-  function resetSearchState() { document.getElementById('location-list').innerHTML = ""; document.getElementById('list-header').classList.add('hidden'); }
-  
-function switchTab(t) { 
+  function switchTab(t) { 
     document.getElementById('locator-section').classList.toggle('hidden', t !== 'locator'); 
     document.getElementById('breed-section').classList.toggle('hidden', t === 'locator'); 
     document.getElementById('tab-loc').classList.toggle('active', t === 'locator'); 
     document.getElementById('tab-breed').classList.toggle('active', t !== 'locator'); 
-    
-    // Removed resetVibe() call to keep the atmosphere active
     if(t === 'locator') setTimeout(() => map.invalidateSize(), 200); 
-}
+  }
+
+  function showDropdown() { document.getElementById('customDropdown').style.display = 'block'; }
+  function showBreedDropdown() { document.getElementById('customBreedDropdown').style.display = 'block'; }
+  function filterDropdown() {
+    const input = document.getElementById('hubSearchInput').value.toLowerCase();
+    document.querySelectorAll('.dropdown-item').forEach(item => item.style.display = item.innerText.toLowerCase().includes(input) ? 'block' : 'none');
+  }
+  function filterBreeds() {
+    const input = document.getElementById('breedInput').value.toLowerCase();
+    document.querySelectorAll('.breed-item').forEach(item => item.style.display = item.innerText.toLowerCase().includes(input) ? 'block' : 'none');
+  }
+
+  function resetMap() { map.setView([39.82, -98.57], 4); document.getElementById('location-list').innerHTML = ""; }
 
   window.onclick = (e) => { 
     if (!e.target.matches('#hubSearchInput')) document.getElementById('customDropdown').style.display = 'none';
     if (!e.target.matches('#breedInput')) document.getElementById('customBreedDropdown').style.display = 'none';
   }
 
-  document.getElementById('zipInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') lookup(); });
-
-  // --- STARTUP ---
-  async function startup() {
-    await loadBreeds(); // Instantly load Breed Guide
-    loadData(); // Backgroud Sync ZIPs
-  }
-  startup();
-</script>
-</body>
-</html>
+  loadBreeds(); loadData();
