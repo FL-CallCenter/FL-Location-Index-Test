@@ -177,25 +177,97 @@
         font-weight: bold;
     }
 
-    /* --- RE-ACTIVATE EFFECTS --- */
-/* 1. The Instructions for the movement */
-    @keyframes gradientAnimation {
+/* --- 1. HIGH-VISIBILITY DRIFTING BACKGROUND --- */
+    @keyframes drift {
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
         100% { background-position: 0% 50%; }
     }
 
-    /* 2. The Body Application */
     body {
         margin: 0;
         padding: 0;
-        /* The colors for the gradient */
-        background: linear-gradient(-45deg, #07090f, #1a202c, #0f172a, #000000);
-        background-size: 400% 400%;
-        /* The command that starts the motion */
-        animation: gradientAnimation 15s ease infinite !important;
+        /* Using higher contrast colors so the drift is actually visible */
+        background: linear-gradient(-45deg, #020406, #0d1b2a, #16213e, #000000) !important;
+        background-size: 200% 200% !important;
+        animation: drift 10s ease infinite !important; 
         height: 100vh;
         overflow: hidden;
+    }
+
+    /* --- 2. SEARCH HUB CLEANUP (No Ugly Blue Border) --- */
+    .search-module {
+        width: 100%;
+        padding: 5px 0;
+        box-sizing: border-box;
+    }
+
+    .module-label {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        display: block;
+        margin-bottom: 8px;
+        color: rgba(0,0,0,0.4); 
+    }
+
+    /* Professional blue accent for ZIP text only */
+    .accent-blue {
+        color: #00f2fe !important; 
+    }
+
+    /* Elegant "OR" Divider */
+    .ui-divider {
+        width: 100%;
+        height: 1px;
+        background: rgba(0,0,0,0.08);
+        margin: 20px 0;
+        position: relative;
+    }
+
+    .ui-divider span {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #ced4da; /* Match your card's grey exactly */
+        padding: 0 12px;
+        font-size: 10px;
+        color: #495057;
+        font-weight: 900;
+    }
+
+    /* --- 3. MAP ISOLATION (Stops it from showing in Breed Guide) --- */
+    #locator-section svg, 
+    #locator-section path, 
+    #map-wrapper {
+        display: block !important;
+        pointer-events: all !important;
+        cursor: pointer !important;
+    }
+
+    /* Force-hide map in the breed guide */
+    #breed-section svg, 
+    #breed-section path, 
+    #breed-section #map-wrapper {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* --- 4. HUB RESULT HEADER FIX --- */
+    .result-header {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 20px;
+        background: #ffffff;
+        border-radius: 30px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        font-size: 11px;
+        font-weight: 800;
+        color: #495057;
+        margin-top: 15px;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     #map-wrapper, #map, path {
@@ -239,19 +311,31 @@
         <p class="subtitle">Search Hubs</p>
 
         <div class="search-module zip-box">
-            <label style="font-size: 0.7rem; color: #00f2fe; letter-spacing: 1px; display: block; margin-bottom: 5px;">SEARCH BY ZIP</label>
+            <label class="module-label accent-blue">SEARCH BY ZIP</label>
             <input type="text" id="zipInput" placeholder="Enter ZIP Code" maxlength="5" inputmode="numeric">
         </div>
 
         <div class="ui-divider"><span>OR</span></div>
 
         <div class="search-module city-box">
-            <label style="font-size: 0.7rem; color: rgba(255,255,255,0.5); letter-spacing: 1px; display: block; margin-bottom: 5px;">BROWSE BY CITY</label>
+            <label class="module-label">BROWSE BY CITY</label>
             <div class="search-container">
                 <input type="text" id="hubSearchInput" placeholder="Type or Browse City..." onfocus="showDropdown()" oninput="filterDropdown()">
                 <div id="customDropdown"></div>
             </div>
         </div>
+
+        <button id="searchBtn" onclick="lookup()" disabled>Syncing Data...</button>
+        <div id="result"></div>
+    </div>
+</div>
+
+        <button id="searchBtn" onclick="lookup()" disabled>Syncing Data...</button>
+        
+        <div id="result">
+            </div>
+    </div>
+</div>
 
         <button id="searchBtn" onclick="lookup()" disabled>Syncing Data...</button>
         <div id="result"></div>
