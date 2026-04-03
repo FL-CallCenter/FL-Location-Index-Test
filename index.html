@@ -159,11 +159,6 @@
   <button id="tab-breed" class="tab-btn" onclick="switchTab('breed')">Breed Guide</button>
 </div>
 
-<div class="tabs">
-    <button id="tab-loc" class="tab-btn active" onclick="switchTab('locator')">ZIP Locator</button>
-    <button id="tab-breed" class="tab-btn" onclick="switchTab('breed')">Breed Guide</button>
-</div>
-
 <div id="locator-section" style="width:100%; display:flex; flex-direction:column; align-items:center;">
     <div class="card">
         <h2>FURRYLAND</h2>
@@ -193,7 +188,7 @@
     <div id="location-list"></div>
 
     <div id="map-wrapper">
-        <button id="resetMapBtn" onclick="resetMap()">Reset USA View</button>
+        <button id="resetMapBtn" onclick="resetMap()" style="position: absolute; top: 15px; right: 15px; z-index: 1000; background: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">Reset USA View</button>
         <div id="map"></div>
     </div>
 </div>
@@ -321,7 +316,7 @@
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1216528010&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=874715943&single=true&output=csv'
-]; // This closes your csvUrls list
+  ];
 
   const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
