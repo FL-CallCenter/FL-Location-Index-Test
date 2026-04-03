@@ -200,8 +200,8 @@
     "Cleveland": [41.4993, -81.6944], "Omaha": [41.2565, -95.9345], "Vermont": [44.5588, -72.5778],
     "Augusta": [33.4735, -82.0105], "Kansas City": [39.0997, -94.5786], "Hartford/New Haven": [41.5367, -72.8059],
     "Central Texas (Waco)": [31.5493, -97.1467]
-  };
-
+};
+  
   const csvUrls = [
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1188497872&single=true&output=csv',
@@ -273,15 +273,28 @@
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1216528010&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=874715943&single=true&output=csv'
- ];
+];
+  
+// --- 2. MAP & STATE INITIALIZATION ---
+  function initMap() {
+    if (map) return;
+    map = L.map('map').setView([39.82, -98.57], 4);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+    loadStateShapes();
+  }
 
-async function loadStateShapes() {
+  async function loadStateShapes() {
     try {
       const res = await fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json');
       const geoData = await res.json();
       L.geoJson(geoData, {
         style: { color: "transparent", fillOpacity: 0.0, weight: 2 },
         onEachFeature: function(feature, layer) {
+          // Hover Effects
+          layer.on('mouseover', function() { this.setStyle({ fillOpacity: 0.1, color: "#2576d0" }); });
+          layer.on('mouseout', function() { this.setStyle({ fillOpacity: 0.0, color: "transparent" }); });
+          
+          // Click Effect
           layer.on('click', function(e) {
             const stateName = feature.properties.name;
             filterByState(stateName);
@@ -301,88 +314,49 @@ async function loadStateShapes() {
       d.state.toLowerCase() === fullName.toLowerCase() || 
       fullName.toLowerCase().includes(d.state.toLowerCase())
     );
-    if (matches.length > 0) {
-      res.innerHTML = `📍 Hubs in ${fullName}`;
-      matches.forEach(m => renderSingleRow(m));
-    } else {
-      res.innerHTML = `❌ No hubs found in ${fullName}`;
-    }
+    res.innerHTML = matches.length > 0 ? `📍 Hubs in ${fullName}` : `❌ No hubs found in ${fullName}`;
+    matches.forEach(m => renderSingleRow(m));
   }
 
-  // --- 2. BREED GUIDE LOGIC ---
-  async function loadBreeds() {
-    const breedCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=552993732&single=true&output=csv';
-    try {
-      const response = await fetch(breedCsvUrl);
-      const csvText = await response.text();
-      const rows = csvText.split(/\r?\n/);
-      breedDatabase = [];
-      rows.slice(1).forEach(row => {
-        const cols = row.split(',');
-        if (cols[0]) breedDatabase.push({ name: cols[0].replace(/"/g, "").trim(), type: "Complex" });
-        if (cols[1]) breedDatabase.push({ name: cols[1].replace(/"/g, "").trim(), type: "Non-Complex" });
-      });
-      buildBreedDropdown();
-    } catch (err) { console.error("Breed Sync Error"); }
-  }
-
-  function buildBreedDropdown() {
-    const dropdown = document.getElementById('customBreedDropdown');
-    dropdown.innerHTML = breedDatabase.sort((a,b) => a.name.localeCompare(b.name))
-      .map(b => `<div class="breed-item" onclick="selectBreed('${b.name}')">${b.name}</div>`).join('');
-  }
-
-  function selectBreed(name) {
-    document.getElementById('breedInput').value = name;
-    document.getElementById('customBreedDropdown').style.display = 'none';
-    checkBreed(name);
-  }
-
-  async function checkBreed(val) {
-    const display = document.getElementById('breedResult');
-    const imgCont = document.getElementById('breedImageContainer');
-    const imgEl = document.getElementById('breedImg');
-    const found = breedDatabase.find(b => b.name.toLowerCase() === val.toLowerCase());
-    if (found) {
-      const isComplex = found.type === "Complex";
-      display.innerHTML = `<div class="result-display ${isComplex ? 'is-complex' : 'is-simple'}">${found.name} is a ${found.type} coat</div>`;
-      try {
-        const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(found.name)}`);
-        const wData = await res.json();
-        const imgUrl = wData.originalimage ? wData.originalimage.source : (wData.thumbnail ? wData.thumbnail.source : null);
-        if (imgUrl) { imgEl.src = imgUrl; imgCont.style.display = "block"; } else { imgCont.style.display = "none"; }
-      } catch (e) { imgCont.style.display = "none"; }
-    }
-  }
-
-  // --- 3. DATA SYNC & PIN PLOTTING ---
+  // --- 3. DATA SYNC (With Safety Catch) ---
   async function loadData() {
+    const btn = document.getElementById('searchBtn');
     try {
       const batchSize = 10;
       for (let i = 0; i < csvUrls.length; i += batchSize) {
         const batch = csvUrls.slice(i, i + batchSize);
         const results = await Promise.allSettled(batch.map(url => fetch(url).then(r => r.text())));
+
         results.forEach(result => {
-          if (result.status === 'fulfilled') {
+          if (result.status === 'fulfilled' && result.value) {
             const rows = result.value.split('\n').slice(1);
             rows.forEach(row => {
               const m = row.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
               if (m && m.length >= 5) {
                 data.push({ 
-                  city: m[4]?.trim() || "", zip: m[1]?.trim() || "", phone: m[2]?.trim() || "No phone", 
-                  link: m[3]?.replace(/"/g, '').trim() || "#", state: m[5]?.trim() || "", lat: m[6] || null, lng: m[7] || null 
+                  city: m[4]?.trim() || "", 
+                  zip: m[1]?.trim() || "", 
+                  phone: m[2]?.trim() || "No phone", 
+                  link: m[3]?.replace(/"/g, '').trim() || "#", 
+                  state: m[5]?.trim() || "", 
+                  lat: m[6], lng: m[7] 
                 });
               }
             });
           }
         });
-        document.getElementById('searchBtn').textContent = `Syncing (${Math.min(i+batchSize, csvUrls.length)}/${csvUrls.length})`;
+        btn.textContent = `Syncing (${Math.min(i+batchSize, csvUrls.length)}/${csvUrls.length})`;
       }
-      document.getElementById('searchBtn').disabled = false;
-      document.getElementById('searchBtn').textContent = "Search ZIP";
+      // Success: Unlock UI
+      btn.disabled = false;
+      btn.textContent = "Search ZIP";
       plotHubs();
       buildCustomDropdown();
-    } catch (err) { console.error("Sync Error"); }
+    } catch (err) { 
+      console.error("Sync Error");
+      btn.disabled = false;
+      btn.textContent = "Search ZIP (Partial)"; 
+    }
   }
 
   function plotHubs() {
@@ -410,6 +384,7 @@ async function loadStateShapes() {
       if (rawCoords[match.city]) map.flyTo(rawCoords[match.city], 14);
       return;
     }
+
     if (zip.length === 5) {
       res.innerText = "🔍 Checking nearby...";
       try {
@@ -417,6 +392,7 @@ async function loadStateShapes() {
         const zData = await zRes.json();
         const tLat = parseFloat(zData.places[0].latitude);
         const tLon = parseFloat(zData.places[0].longitude);
+
         let closestDist = Infinity; let closestRow = null;
         data.forEach(row => {
           let rLat = rawCoords[row.city] ? rawCoords[row.city][0] : parseFloat(row.lat);
@@ -426,6 +402,7 @@ async function loadStateShapes() {
             if (d < closestDist) { closestDist = d; closestRow = row; }
           }
         });
+
         if (closestRow && closestDist <= 8) {
           res.innerHTML = "🛑 Neighbor Found";
           list.innerHTML = `<div style="background:#fff5f5; padding:20px; border-radius:15px; text-align:center; color:#c53030; border:2px solid #feb2b2; margin-bottom:15px; font-weight:bold;">🛑 NEIGHBOR ZIP: APPROVAL REQUIRED (${closestDist.toFixed(1)} miles)</div>`;
@@ -462,6 +439,48 @@ async function loadStateShapes() {
       document.getElementById('location-list').innerHTML = "";
       renderSingleRow(match);
       if (rawCoords[cityName]) map.flyTo(rawCoords[cityName], 10);
+    }
+  }
+
+  // --- BREED LOGIC (Wiki Fetch) ---
+  async function loadBreeds() {
+    const breedCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=552993732&single=true&output=csv';
+    try {
+      const response = await fetch(breedCsvUrl);
+      const csvText = await response.text();
+      const rows = csvText.split(/\r?\n/);
+      breedDatabase = [];
+      rows.slice(1).forEach(row => {
+        const cols = row.split(',');
+        if (cols[0]) breedDatabase.push({ name: cols[0].replace(/"/g, "").trim(), type: "Complex" });
+        if (cols[1]) breedDatabase.push({ name: cols[1].replace(/"/g, "").trim(), type: "Non-Complex" });
+      });
+      const dropdown = document.getElementById('customBreedDropdown');
+      dropdown.innerHTML = breedDatabase.sort((a,b) => a.name.localeCompare(b.name))
+        .map(b => `<div class="breed-item" onclick="selectBreed('${b.name}')">${b.name}</div>`).join('');
+    } catch (err) { console.error("Breed Sync Error"); }
+  }
+
+  function selectBreed(name) {
+    document.getElementById('breedInput').value = name;
+    document.getElementById('customBreedDropdown').style.display = 'none';
+    checkBreed(name);
+  }
+
+  async function checkBreed(val) {
+    const display = document.getElementById('breedResult');
+    const imgCont = document.getElementById('breedImageContainer');
+    const imgEl = document.getElementById('breedImg');
+    const found = breedDatabase.find(b => b.name.toLowerCase() === val.toLowerCase());
+    if (found) {
+      const isComplex = found.type === "Complex";
+      display.innerHTML = `<div class="result-display ${isComplex ? 'is-complex' : 'is-simple'}">${found.name} is a ${found.type} coat</div>`;
+      try {
+        const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(found.name)}`);
+        const wData = await res.json();
+        const imgUrl = wData.originalimage ? wData.originalimage.source : (wData.thumbnail ? wData.thumbnail.source : null);
+        if (imgUrl) { imgEl.src = imgUrl; imgCont.style.display = "block"; } else { imgCont.style.display = "none"; }
+      } catch (e) { imgCont.style.display = "none"; }
     }
   }
 
