@@ -177,6 +177,7 @@
   let markers = {};
   let map;
 
+  // --- 1. DATA CONSTANTS (Kept your full lists intact) ---
   const rawCoords = {
     "Central Indiana": [39.7684, -86.1581], "Columbus-Auburn": [32.4676, -84.9877], "Columbus OH": [39.9612, -82.9988],
     "Greenville-Spartanburg // WNC & Upstate SC// The Carolinas": [34.8526, -82.3940], "Central PA/Harrisburg/Lancaster": [40.2732, -76.8867],
@@ -200,8 +201,8 @@
     "Cleveland": [41.4993, -81.6944], "Omaha": [41.2565, -95.9345], "Vermont": [44.5588, -72.5778],
     "Augusta": [33.4735, -82.0105], "Kansas City": [39.0997, -94.5786], "Hartford/New Haven": [41.5367, -72.8059],
     "Central Texas (Waco)": [31.5493, -97.1467]
-};
-  
+  };
+
   const csvUrls = [
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1188497872&single=true&output=csv',
@@ -273,14 +274,14 @@
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1216528010&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=874715943&single=true&output=csv'
-];
-  
-// --- 2. MAP & STATE INITIALIZATION ---
+  ];
+
+  // --- 2. MAP & ACTIONS ---
   function initMap() {
     if (map) return;
     map = L.map('map').setView([39.82, -98.57], 4);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
-    loadStateShapes();
+    loadStateShapes(); 
   }
 
   async function loadStateShapes() {
@@ -290,32 +291,18 @@
       L.geoJson(geoData, {
         style: { color: "transparent", fillOpacity: 0.0, weight: 2 },
         onEachFeature: function(feature, layer) {
-          // Hover Effects
-          layer.on('mouseover', function() { this.setStyle({ fillOpacity: 0.1, color: "#2576d0" }); });
-          layer.on('mouseout', function() { this.setStyle({ fillOpacity: 0.0, color: "transparent" }); });
-          
-          // Click Effect
           layer.on('click', function(e) {
             const stateName = feature.properties.name;
-            filterByState(stateName);
+            const matches = data.filter(d => d.state.toLowerCase() === stateName.toLowerCase() || stateName.toLowerCase().includes(d.state.toLowerCase()));
+            document.getElementById('result').innerHTML = `📍 Hubs in ${stateName}`;
+            document.getElementById('location-list').innerHTML = "";
+            matches.forEach(m => renderSingleRow(m));
             map.fitBounds(layer.getBounds());
             L.DomEvent.stopPropagation(e);
           });
         }
       }).addTo(map);
     } catch (e) { console.error("Map layer failed"); }
-  }
-
-  function filterByState(fullName) {
-    const list = document.getElementById('location-list');
-    const res = document.getElementById('result');
-    list.innerHTML = "";
-    const matches = data.filter(d => 
-      d.state.toLowerCase() === fullName.toLowerCase() || 
-      fullName.toLowerCase().includes(d.state.toLowerCase())
-    );
-    res.innerHTML = matches.length > 0 ? `📍 Hubs in ${fullName}` : `❌ No hubs found in ${fullName}`;
-    matches.forEach(m => renderSingleRow(m));
   }
 
   // --- 3. DATA SYNC (With Safety Catch) ---
@@ -326,20 +313,15 @@
       for (let i = 0; i < csvUrls.length; i += batchSize) {
         const batch = csvUrls.slice(i, i + batchSize);
         const results = await Promise.allSettled(batch.map(url => fetch(url).then(r => r.text())));
-
-        results.forEach(result => {
-          if (result.status === 'fulfilled' && result.value) {
-            const rows = result.value.split('\n').slice(1);
+        results.forEach(res => {
+          if (res.status === 'fulfilled' && res.value) {
+            const rows = res.value.split('\n').slice(1);
             rows.forEach(row => {
               const m = row.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
               if (m && m.length >= 5) {
                 data.push({ 
-                  city: m[4]?.trim() || "", 
-                  zip: m[1]?.trim() || "", 
-                  phone: m[2]?.trim() || "No phone", 
-                  link: m[3]?.replace(/"/g, '').trim() || "#", 
-                  state: m[5]?.trim() || "", 
-                  lat: m[6], lng: m[7] 
+                  city: m[4]?.trim() || "", zip: m[1]?.trim() || "", phone: m[2]?.trim() || "No phone", 
+                  link: m[3]?.replace(/"/g, '').trim() || "#", state: m[5]?.trim() || "", lat: m[6], lng: m[7] 
                 });
               }
             });
@@ -347,16 +329,9 @@
         });
         btn.textContent = `Syncing (${Math.min(i+batchSize, csvUrls.length)}/${csvUrls.length})`;
       }
-      // Success: Unlock UI
-      btn.disabled = false;
-      btn.textContent = "Search ZIP";
-      plotHubs();
-      buildCustomDropdown();
-    } catch (err) { 
-      console.error("Sync Error");
-      btn.disabled = false;
-      btn.textContent = "Search ZIP (Partial)"; 
-    }
+      btn.disabled = false; btn.textContent = "Search ZIP";
+      plotHubs(); buildCustomDropdown();
+    } catch (e) { btn.disabled = false; btn.textContent = "Search ZIP"; }
   }
 
   function plotHubs() {
@@ -370,7 +345,7 @@
     });
   }
 
-  // --- 4. NAVIGATION & LOOKUP ---
+  // --- 4. NAVIGATION ---
   async function lookup() {
     const zip = document.getElementById('zipInput').value.trim();
     const res = document.getElementById('result');
@@ -384,7 +359,6 @@
       if (rawCoords[match.city]) map.flyTo(rawCoords[match.city], 14);
       return;
     }
-
     if (zip.length === 5) {
       res.innerText = "🔍 Checking nearby...";
       try {
@@ -392,7 +366,6 @@
         const zData = await zRes.json();
         const tLat = parseFloat(zData.places[0].latitude);
         const tLon = parseFloat(zData.places[0].longitude);
-
         let closestDist = Infinity; let closestRow = null;
         data.forEach(row => {
           let rLat = rawCoords[row.city] ? rawCoords[row.city][0] : parseFloat(row.lat);
@@ -402,7 +375,6 @@
             if (d < closestDist) { closestDist = d; closestRow = row; }
           }
         });
-
         if (closestRow && closestDist <= 8) {
           res.innerHTML = "🛑 Neighbor Found";
           list.innerHTML = `<div style="background:#fff5f5; padding:20px; border-radius:15px; text-align:center; color:#c53030; border:2px solid #feb2b2; margin-bottom:15px; font-weight:bold;">🛑 NEIGHBOR ZIP: APPROVAL REQUIRED (${closestDist.toFixed(1)} miles)</div>`;
@@ -410,6 +382,18 @@
           if (rawCoords[closestRow.city]) map.flyTo(rawCoords[closestRow.city], 12);
         } else { res.innerText = "❌ No service found."; }
       } catch (e) { res.innerText = "❌ Invalid ZIP."; }
+    }
+  }
+
+  function selectCity(city) {
+    document.getElementById('hubSearchInput').value = city;
+    document.getElementById('customDropdown').style.display = 'none';
+    const match = data.find(d => d.city.trim() === city);
+    if (match) {
+      document.getElementById('result').innerHTML = "📍 Hub Selected: " + city;
+      document.getElementById('location-list').innerHTML = "";
+      renderSingleRow(match);
+      if (rawCoords[city]) map.flyTo(rawCoords[city], 10);
     }
   }
 
@@ -430,25 +414,12 @@
     dropdown.innerHTML = cities.map(city => `<div class="dropdown-item" onclick="selectCity('${city}')">${city}</div>`).join('');
   }
 
-  function selectCity(cityName) {
-    document.getElementById('hubSearchInput').value = cityName;
-    document.getElementById('customDropdown').style.display = 'none';
-    const match = data.find(d => d.city.trim() === cityName);
-    if (match) {
-      document.getElementById('result').innerHTML = "📍 Hub Selected: " + cityName;
-      document.getElementById('location-list').innerHTML = "";
-      renderSingleRow(match);
-      if (rawCoords[cityName]) map.flyTo(rawCoords[cityName], 10);
-    }
-  }
-
-  // --- BREED LOGIC (Wiki Fetch) ---
+  // --- 5. BREED LOGIC (With Wikipedia Image) ---
   async function loadBreeds() {
     const breedCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=552993732&single=true&output=csv';
     try {
       const response = await fetch(breedCsvUrl);
-      const csvText = await response.text();
-      const rows = csvText.split(/\r?\n/);
+      const rows = (await response.text()).split(/\r?\n/);
       breedDatabase = [];
       rows.slice(1).forEach(row => {
         const cols = row.split(',');
@@ -456,16 +427,11 @@
         if (cols[1]) breedDatabase.push({ name: cols[1].replace(/"/g, "").trim(), type: "Non-Complex" });
       });
       const dropdown = document.getElementById('customBreedDropdown');
-      dropdown.innerHTML = breedDatabase.sort((a,b) => a.name.localeCompare(b.name))
-        .map(b => `<div class="breed-item" onclick="selectBreed('${b.name}')">${b.name}</div>`).join('');
-    } catch (err) { console.error("Breed Sync Error"); }
+      dropdown.innerHTML = breedDatabase.sort((a,b) => a.name.localeCompare(b.name)).map(b => `<div class="breed-item" onclick="selectBreed('${b.name}')">${b.name}</div>`).join('');
+    } catch (e) {}
   }
 
-  function selectBreed(name) {
-    document.getElementById('breedInput').value = name;
-    document.getElementById('customBreedDropdown').style.display = 'none';
-    checkBreed(name);
-  }
+  function selectBreed(n) { document.getElementById('breedInput').value = n; document.getElementById('customBreedDropdown').style.display = 'none'; checkBreed(n); }
 
   async function checkBreed(val) {
     const display = document.getElementById('breedResult');
@@ -473,8 +439,7 @@
     const imgEl = document.getElementById('breedImg');
     const found = breedDatabase.find(b => b.name.toLowerCase() === val.toLowerCase());
     if (found) {
-      const isComplex = found.type === "Complex";
-      display.innerHTML = `<div class="result-display ${isComplex ? 'is-complex' : 'is-simple'}">${found.name} is a ${found.type} coat</div>`;
+      display.innerHTML = `<div class="result-display ${found.type === 'Complex' ? 'is-complex' : 'is-simple'}">${found.name} is a ${found.type} coat</div>`;
       try {
         const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(found.name)}`);
         const wData = await res.json();
