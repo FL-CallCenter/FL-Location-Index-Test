@@ -277,13 +277,21 @@
   ];
 
   // --- 2. MAP & ACTIONS ---
-  function initMap() {
+function initMap() {
     if (map) return;
-    map = L.map('map').setView([39.82, -98.57], 4);
+    map = L.map('map', {
+        center: [39.82, -98.57],
+        zoom: 4,
+        zoomSnap: 0.5,
+        wheelDebounceTime: 150
+    });
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
-    loadStateShapes(); 
+    
+    // LAYER 1: State Shapes go on the BOTTOM
+    loadStateShapes();
   }
 
+  // 2. Fixed State Clicking (Doesn't block pins)
   async function loadStateShapes() {
     try {
       const res = await fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json');
@@ -293,12 +301,18 @@
         onEachFeature: function(feature, layer) {
           layer.on('click', function(e) {
             const stateName = feature.properties.name;
-            const matches = data.filter(d => d.state.toLowerCase() === stateName.toLowerCase() || stateName.toLowerCase().includes(d.state.toLowerCase()));
-            document.getElementById('result').innerHTML = `📍 Hubs in ${stateName}`;
-            document.getElementById('location-list').innerHTML = "";
-            matches.forEach(m => renderSingleRow(m));
-            map.fitBounds(layer.getBounds());
-            L.DomEvent.stopPropagation(e);
+            const matches = data.filter(d => 
+                d.state && (d.state.toLowerCase() === stateName.toLowerCase() || 
+                stateName.toLowerCase().includes(d.state.toLowerCase()))
+            );
+            
+            // Only trigger if we aren't clicking a pin
+            if (!e.originalEvent._markerClick) {
+                document.getElementById('result').innerHTML = `📍 Hubs in ${stateName}`;
+                document.getElementById('location-list').innerHTML = "";
+                matches.forEach(m => renderSingleRow(m));
+                map.fitBounds(layer.getBounds());
+            }
           });
         }
       }).addTo(map);
@@ -334,13 +348,28 @@
     } catch (e) { btn.disabled = false; btn.textContent = "Search ZIP"; }
   }
 
-  function plotHubs() {
+function plotHubs() {
     for (let k in markers) { map.removeLayer(markers[k]); }
     data.forEach(d => {
-      const city = d.city.trim();
+      const city = d.city?.trim();
       if (city && rawCoords[city]) {
-        const icon = L.divIcon({ className: '', html: '<div class="pulsing-marker"></div>', iconSize: [12, 12], iconAnchor: [6, 6] });
-        markers[city] = L.marker(rawCoords[city], { icon }).addTo(map).bindPopup(`<strong>${city}</strong><br>${d.phone}`);
+        const icon = L.divIcon({ 
+            className: '', 
+            html: '<div class="pulsing-marker"></div>', 
+            iconSize: [12, 12], 
+            iconAnchor: [6, 6] 
+        });
+        
+        const marker = L.marker(rawCoords[city], { icon: icon }).addTo(map)
+          .bindPopup(`<strong>FurryLand ${city}</strong><br>📞 ${d.phone}`);
+
+        // This prevents the "State Click" from firing when you click a pin
+        marker.on('click', (e) => {
+            e.originalEvent._markerClick = true;
+            selectCity(city); 
+        });
+        
+        markers[city] = marker;
       }
     });
   }
