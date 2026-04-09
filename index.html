@@ -286,28 +286,78 @@
   const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-  // --- REPAIRED: LIVE CLOCK HELPER ---
-  function updateLiveClock(stateAbbr) {
+// --- FINAL: FULL NAME & ABBREVIATION CLOCK ---
+  function updateLiveClock(stateInput, cityName = "") {
     const timezones = {
-      'CA': 'America/Los_Angeles', 'OR': 'America/Los_Angeles', 'WA': 'America/Los_Angeles', 
-      'NV': 'America/Los_Angeles', 'AK': 'America/Anchorage', 'HI': 'Pacific/Honolulu',
-      'AZ': 'America/Phoenix', 'CO': 'America/Denver', 'UT': 'America/Denver', 
-      'NM': 'America/Denver', 'ID': 'America/Boise', 'MT': 'America/Denver', 'WY': 'America/Denver',
-      'TX': 'America/Chicago', 'OK': 'America/Chicago', 'AR': 'America/Chicago', 
-      'LA': 'America/Chicago', 'MO': 'America/Chicago', 'KS': 'America/Chicago', 
-      'NE': 'America/Chicago', 'WI': 'America/Chicago', 'IL': 'America/Chicago', 
-      'TN': 'America/Chicago', 'AL': 'America/Chicago', 'MS': 'America/Chicago', 
-      'MN': 'America/Chicago', 'IA': 'America/Chicago', 'ND': 'America/Chicago', 'SD': 'America/Chicago',
-      'FL': 'America/New_York', 'GA': 'America/New_York', 'SC': 'America/New_York', 
-      'NC': 'America/New_York', 'VA': 'America/New_York', 'PA': 'America/New_York', 
-      'NJ': 'America/New_York', 'CT': 'America/New_York', 'MA': 'America/New_York', 
-      'OH': 'America/New_York', 'MI': 'America/New_York', 'IN': 'America/Indianapolis', 
-      'VT': 'America/New_York', 'KY': 'America/Kentucky/Louisville', 'ME': 'America/New_York', 
-      'NH': 'America/New_York', 'RI': 'America/New_York', 'NY': 'America/New_York', 
-      'DE': 'America/New_York', 'MD': 'America/New_York', 'WV': 'America/New_York', 'DC': 'America/New_York'
+      // PACIFIC
+      'CA': 'America/Los_Angeles', 'CALIFORNIA': 'America/Los_Angeles',
+      'OR': 'America/Los_Angeles', 'OREGON': 'America/Los_Angeles',
+      'WA': 'America/Los_Angeles', 'WASHINGTON': 'America/Los_Angeles',
+      'NV': 'America/Los_Angeles', 'NEVADA': 'America/Los_Angeles',
+      'AK': 'America/Anchorage', 'ALASKA': 'America/Anchorage',
+      'HI': 'Pacific/Honolulu', 'HAWAII': 'Pacific/Honolulu',
+
+      // MOUNTAIN
+      'AZ': 'America/Phoenix', 'ARIZONA': 'America/Phoenix',
+      'CO': 'America/Denver', 'COLORADO': 'America/Denver',
+      'UT': 'America/Denver', 'UTAH': 'America/Denver',
+      'NM': 'America/Denver', 'NEW MEXICO': 'America/Denver',
+      'ID': 'America/Boise', 'IDAHO': 'America/Boise',
+      'MT': 'America/Denver', 'MONTANA': 'America/Denver',
+      'WY': 'America/Denver', 'WYOMING': 'America/Denver',
+
+      // CENTRAL
+      'TX': 'America/Chicago', 'TEXAS': 'America/Chicago',
+      'OK': 'America/Chicago', 'OKLAHOMA': 'America/Chicago',
+      'AR': 'America/Chicago', 'ARKANSAS': 'America/Chicago',
+      'LA': 'America/Chicago', 'LOUISIANA': 'America/Chicago',
+      'MO': 'America/Chicago', 'MISSOURI': 'America/Chicago',
+      'KS': 'America/Chicago', 'KANSAS': 'America/Chicago',
+      'NE': 'America/Chicago', 'NEBRASKA': 'America/Chicago',
+      'WI': 'America/Chicago', 'WISCONSIN': 'America/Chicago',
+      'IL': 'America/Chicago', 'ILLINOIS': 'America/Chicago',
+      'TN': 'America/Chicago', 'TENNESSEE': 'America/Chicago',
+      'AL': 'America/Chicago', 'ALABAMA': 'America/Chicago',
+      'MS': 'America/Chicago', 'MISSISSIPPI': 'America/Chicago',
+      'MN': 'America/Chicago', 'MINNESOTA': 'America/Chicago',
+      'IA': 'America/Chicago', 'IOWA': 'America/Chicago',
+      'ND': 'America/Chicago', 'NORTH DAKOTA': 'America/Chicago',
+      'SD': 'America/Chicago', 'SOUTH DAKOTA': 'America/Chicago',
+
+      // EASTERN
+      'FL': 'America/New_York', 'FLORIDA': 'America/New_York',
+      'GA': 'America/New_York', 'GEORGIA': 'America/New_York',
+      'SC': 'America/New_York', 'SOUTH CAROLINA': 'America/New_York',
+      'NC': 'America/New_York', 'NORTH CAROLINA': 'America/New_York',
+      'VA': 'America/New_York', 'VIRGINIA': 'America/New_York',
+      'PA': 'America/New_York', 'PENNSYLVANIA': 'America/New_York',
+      'NJ': 'America/New_York', 'NEW JERSEY': 'America/New_York',
+      'CT': 'America/New_York', 'CONNECTICUT': 'America/New_York',
+      'MA': 'America/New_York', 'MASSACHUSETTS': 'America/New_York',
+      'OH': 'America/New_York', 'OHIO': 'America/New_York',
+      'MI': 'America/New_York', 'MICHIGAN': 'America/New_York',
+      'IN': 'America/Indianapolis', 'INDIANA': 'America/Indianapolis',
+      'VT': 'America/New_York', 'VERMONT': 'America/New_York',
+      'KY': 'America/Kentucky/Louisville', 'KENTUCKY': 'America/Kentucky/Louisville',
+      'ME': 'America/New_York', 'MAINE': 'America/New_York',
+      'NH': 'America/New_York', 'NEW HAMPSHIRE': 'America/New_York',
+      'RI': 'America/New_York', 'RHODE ISLAND': 'America/New_York',
+      'NY': 'America/New_York', 'NEW YORK': 'America/New_York',
+      'DE': 'America/New_York', 'DELAWARE': 'America/New_York',
+      'MD': 'America/New_York', 'MARYLAND': 'America/New_York',
+      'WV': 'America/New_York', 'WEST VIRGINIA': 'America/New_York',
+      'DC': 'America/New_York', 'DISTRICT OF COLUMBIA': 'America/New_York'
     };
 
-    const state = stateAbbr ? stateAbbr.trim().toUpperCase() : "PA";
+    // Clean the state name so it matches our list perfectly
+    let state = stateInput ? stateInput.trim().toUpperCase() : "";
+    
+    // Manual city fallback if Column F is somehow empty for a specific row
+    if (!state || state === "") {
+        if (cityName.includes("Portland")) state = "OREGON";
+        if (cityName.includes("Austin")) state = "TEXAS";
+    }
+
     const tz = timezones[state] || 'America/New_York';
     const now = new Date();
 
@@ -319,7 +369,6 @@
         hour12: true 
     });
     
-    // Determine Timezone label (PST, EST, etc)
     const tzLabel = new Intl.DateTimeFormat('en-US', {
         timeZone: tz,
         timeZoneName: 'short'
@@ -328,7 +377,7 @@
     const clockEl = document.getElementById('live-hub-clock');
     if (clockEl) clockEl.innerText = `${timeString} ${tzLabel}`;
   }
-
+  
   // --- BREED LOGIC ---
   async function loadBreeds() {
     const breedCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=552993732&single=true&output=csv';
