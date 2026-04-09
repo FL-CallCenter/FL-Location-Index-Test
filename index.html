@@ -115,7 +115,7 @@
     #location-list { width: 95%; max-width: 1200px; background: rgba(255, 255, 255, 0.95); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); overflow: hidden; margin-top: 10px; }
 
     .directory-table { width: 100%; border-collapse: collapse; text-align: left; }
-    .directory-table th { background: #f8f9fa; color: #666; padding: 15px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #eee; }
+    .directory-table th { background: #f8f9fa; color: #666; padding: 15px; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #eee; }
     .directory-table td { padding: 15px; border-bottom: 1px solid #f2f2f2; font-size: 14px; vertical-align: middle; }
 
     .city-name { font-weight: 700; color: var(--fl-orange); font-size: 15px; }
@@ -181,8 +181,9 @@
   let data = [];
   let breedDatabase = [];
   let markers = {};
-  let clockInterval = null; // Store timer to clear it later
+  let clockInterval = null;
 
+  // --- PASTE YOUR DATA BELOW ---
   const rawCoords = {
     "Central Indiana": [39.7684, -86.1581], "Columbus-Auburn": [32.4676, -84.9877], "Columbus OH": [39.9612, -82.9988],
     "Greenville-Spartanburg // WNC & Upstate SC// The Carolinas": [34.8526, -82.3940], "Central PA/Harrisburg/Lancaster": [40.2732, -76.8867],
@@ -206,8 +207,8 @@
     "Cleveland": [41.4993, -81.6944], "Omaha": [41.2565, -95.9345], "Vermont": [44.5588, -72.5778],
     "Augusta": [33.4735, -82.0105], "Kansas City": [39.0997, -94.5786], "Hartford/New Haven": [41.5367, -72.8059],
     "Central Texas (Waco)": [31.5493, -97.1467]
-};
-  
+  };
+
   const csvUrls = [
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1188497872&single=true&output=csv',
@@ -280,11 +281,13 @@
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=874715943&single=true&output=csv'
   ];
+  ];
+  // --- END DATA SECTION ---
 
-const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
+  const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-// --- FIXED: LIVE CLOCK HELPER ---
+  // --- REPAIRED: LIVE CLOCK HELPER ---
   function updateLiveClock(stateAbbr) {
     const timezones = {
       'CA': 'America/Los_Angeles', 'OR': 'America/Los_Angeles', 'WA': 'America/Los_Angeles', 
@@ -305,17 +308,11 @@ const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
       'DE': 'America/New_York', 'MD': 'America/New_York', 'WV': 'America/New_York', 'DC': 'America/New_York'
     };
 
-    // Clean up the input state string
     const state = stateAbbr ? stateAbbr.trim().toUpperCase() : "PA";
     const tz = timezones[state] || 'America/New_York';
-    
-    // Determine the timezone abbreviation (e.g., PST, EST)
-    const tzName = new Intl.DateTimeFormat('en-US', {
-        timeZone: tz,
-        timeZoneName: 'short'
-    }).formatToParts(new Date()).find(p => p.type === 'timeZoneName').value;
+    const now = new Date();
 
-    const timeString = new Date().toLocaleTimeString('en-US', { 
+    const timeString = now.toLocaleTimeString('en-US', { 
         timeZone: tz, 
         hour: '2-digit', 
         minute: '2-digit', 
@@ -323,46 +320,14 @@ const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
         hour12: true 
     });
     
+    // Determine Timezone label (PST, EST, etc)
+    const tzLabel = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz,
+        timeZoneName: 'short'
+    }).formatToParts(now).find(p => p.type === 'timeZoneName').value;
+
     const clockEl = document.getElementById('live-hub-clock');
-    if (clockEl) clockEl.innerText = `${timeString} ${tzName}`;
-  }
-
-  // --- FIXED: RENDER ROW ---
-  function renderSingleRow(m, isNeighbor = false) {
-    const list = document.getElementById('location-list');
-    const badge = isNeighbor ? `<span style="background:#718096; color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:12px; font-weight:800;">INQUIRY ONLY</span>` : "";
-    
-    if(clockInterval) clearInterval(clockInterval);
-    // Passing m.state here is the key - this tells the clock which zone to use
-    clockInterval = setInterval(() => updateLiveClock(m.state), 1000);
-    
-    let alertBox = "";
-    if (m.closureNote && m.closureNote.length > 2) {
-      const noteUpper = m.closureNote.toUpperCase();
-      if (noteUpper.includes("BEFORE") || noteUpper.includes("AFTER")) {
-        alertBox = `<div style="background:#fff5f5; padding:20px; border-radius:15px; text-align:center; color:#c53030; border:2px solid #feb2b2; margin-bottom:15px; font-weight:bold;">🛑 MAJOR ROAD CLOSURE (BLACKOUT ZONE)<br><span style="font-weight:normal; font-size:13px;">${m.closureNote}</span></div>`;
-      } else {
-        alertBox = `<div style="background:#ebf8ff; padding:15px; border-radius:12px; text-align:center; color:#2b6cb0; border:2px solid #bee3f8; margin-bottom:15px; font-weight:bold; font-size:13px;">📢 TRAFFIC ADVISORY<br><span style="font-weight:normal; font-size:13px;">${m.closureNote}</span></div>`;
-      }
-    }
-
-    list.innerHTML = `
-      ${alertBox}
-      <div style="background: rgba(37, 118, 208, 0.1); padding: 12px; border-radius: 12px; margin-bottom: 12px; text-align: center; border: 2px solid var(--fl-blue);">
-        <span style="color: var(--fl-blue); font-weight: 900; font-size: 16px; letter-spacing: 1px;">🕒 CURRENT HUB TIME: <span id="live-hub-clock">--:--:-- --</span></span>
-      </div>
-      <table class="directory-table">
-        <thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead>
-        <tbody>
-          <tr>
-            <td><span class="city-name">${m.city}</span>${badge}</td>
-            <td>${m.phone} <button class="copy-btn" onclick="navigator.clipboard.writeText('${m.phone}');alert('Copied!')">📋</button></td>
-            <td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td>
-          </tr>
-        </tbody>
-      </table>`;
-      
-      updateLiveClock(m.state);
+    if (clockEl) clockEl.innerText = `${timeString} ${tzLabel}`;
   }
 
   // --- BREED LOGIC ---
@@ -536,10 +501,7 @@ const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
     const list = document.getElementById('location-list');
     const badge = isNeighbor ? `<span style="background:#718096; color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:12px; font-weight:800;">INQUIRY ONLY</span>` : "";
     
-    // Clear old timer if any
     if(clockInterval) clearInterval(clockInterval);
-    
-    // Start new timer for live clock
     clockInterval = setInterval(() => updateLiveClock(m.state), 1000);
     
     let alertBox = "";
@@ -554,8 +516,8 @@ const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
 
     list.innerHTML = `
       ${alertBox}
-      <div style="background: rgba(37, 118, 208, 0.1); padding: 10px; border-radius: 10px; margin-bottom: 10px; text-align: center; border: 1px solid rgba(37, 118, 208, 0.2);">
-        <span style="color: var(--fl-blue); font-weight: 800; font-size: 13px;">🕒 CURRENT HUB TIME: <span id="live-hub-clock">--:--:-- --</span></span>
+      <div style="background: rgba(37, 118, 208, 0.1); padding: 12px; border-radius: 12px; margin-bottom: 12px; text-align: center; border: 2px solid var(--fl-blue);">
+        <span style="color: var(--fl-blue); font-weight: 900; font-size: 16px; letter-spacing: 1px;">🕒 HUB LOCAL TIME: <span id="live-hub-clock">--:--:-- --</span></span>
       </div>
       <table class="directory-table">
         <thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead>
@@ -567,8 +529,6 @@ const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
           </tr>
         </tbody>
       </table>`;
-      
-      // Initialize immediately
       updateLiveClock(m.state);
   }
 
