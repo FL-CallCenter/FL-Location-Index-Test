@@ -206,8 +206,8 @@
     "Cleveland": [41.4993, -81.6944], "Omaha": [41.2565, -95.9345], "Vermont": [44.5588, -72.5778],
     "Augusta": [33.4735, -82.0105], "Kansas City": [39.0997, -94.5786], "Hartford/New Haven": [41.5367, -72.8059],
     "Central Texas (Waco)": [31.5493, -97.1467]
-  };
-
+};
+  
   const csvUrls = [
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1188497872&single=true&output=csv',
@@ -281,45 +281,30 @@
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=874715943&single=true&output=csv'
   ];
 
-  const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
+const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-  // --- NEW: LIVE CLOCK HELPER ---
   function updateLiveClock(stateAbbr) {
     const timezones = {
-const timezones = {
-      // PACIFIC
       'CA': 'America/Los_Angeles', 'OR': 'America/Los_Angeles', 'WA': 'America/Los_Angeles', 
       'NV': 'America/Los_Angeles', 'AK': 'America/Anchorage', 'HI': 'Pacific/Honolulu',
-
-      // MOUNTAIN
       'AZ': 'America/Phoenix', 'CO': 'America/Denver', 'UT': 'America/Denver', 
-      'NM': 'America/Denver', 'ID': 'America/Boise', 'MT': 'America/Denver', 
-      'WY': 'America/Denver',
-
-      // CENTRAL
+      'NM': 'America/Denver', 'ID': 'America/Boise', 'MT': 'America/Denver', 'WY': 'America/Denver',
       'TX': 'America/Chicago', 'OK': 'America/Chicago', 'AR': 'America/Chicago', 
       'LA': 'America/Chicago', 'MO': 'America/Chicago', 'KS': 'America/Chicago', 
       'NE': 'America/Chicago', 'WI': 'America/Chicago', 'IL': 'America/Chicago', 
       'TN': 'America/Chicago', 'AL': 'America/Chicago', 'MS': 'America/Chicago', 
-      'MN': 'America/Chicago', 'IA': 'America/Chicago', 'ND': 'America/Chicago', 
-      'SD': 'America/Chicago',
-
-      // EASTERN
+      'MN': 'America/Chicago', 'IA': 'America/Chicago', 'ND': 'America/Chicago', 'SD': 'America/Chicago',
       'FL': 'America/New_York', 'GA': 'America/New_York', 'SC': 'America/New_York', 
       'NC': 'America/New_York', 'VA': 'America/New_York', 'PA': 'America/New_York', 
       'NJ': 'America/New_York', 'CT': 'America/New_York', 'MA': 'America/New_York', 
       'OH': 'America/New_York', 'MI': 'America/New_York', 'IN': 'America/Indianapolis', 
       'VT': 'America/New_York', 'KY': 'America/Kentucky/Louisville', 'ME': 'America/New_York', 
       'NH': 'America/New_York', 'RI': 'America/New_York', 'NY': 'America/New_York', 
-      'DE': 'America/New_York', 'MD': 'America/New_York', 'WV': 'America/New_York', 
-      'DC': 'America/New_York'
+      'DE': 'America/New_York', 'MD': 'America/New_York', 'WV': 'America/New_York', 'DC': 'America/New_York'
     };
     const tz = timezones[stateAbbr?.toUpperCase()] || 'America/New_York';
-    
-    // Create the display string
     const timeString = new Date().toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-    
     const clockEl = document.getElementById('live-hub-clock');
     if (clockEl) clockEl.innerText = timeString;
   }
