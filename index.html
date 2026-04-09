@@ -284,6 +284,7 @@
 const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
+// --- FIXED: LIVE CLOCK HELPER ---
   function updateLiveClock(stateAbbr) {
     const timezones = {
       'CA': 'America/Los_Angeles', 'OR': 'America/Los_Angeles', 'WA': 'America/Los_Angeles', 
@@ -303,10 +304,65 @@ const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
       'NH': 'America/New_York', 'RI': 'America/New_York', 'NY': 'America/New_York', 
       'DE': 'America/New_York', 'MD': 'America/New_York', 'WV': 'America/New_York', 'DC': 'America/New_York'
     };
-    const tz = timezones[stateAbbr?.toUpperCase()] || 'America/New_York';
-    const timeString = new Date().toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+
+    // Clean up the input state string
+    const state = stateAbbr ? stateAbbr.trim().toUpperCase() : "PA";
+    const tz = timezones[state] || 'America/New_York';
+    
+    // Determine the timezone abbreviation (e.g., PST, EST)
+    const tzName = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz,
+        timeZoneName: 'short'
+    }).formatToParts(new Date()).find(p => p.type === 'timeZoneName').value;
+
+    const timeString = new Date().toLocaleTimeString('en-US', { 
+        timeZone: tz, 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit', 
+        hour12: true 
+    });
+    
     const clockEl = document.getElementById('live-hub-clock');
-    if (clockEl) clockEl.innerText = timeString;
+    if (clockEl) clockEl.innerText = `${timeString} ${tzName}`;
+  }
+
+  // --- FIXED: RENDER ROW ---
+  function renderSingleRow(m, isNeighbor = false) {
+    const list = document.getElementById('location-list');
+    const badge = isNeighbor ? `<span style="background:#718096; color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:12px; font-weight:800;">INQUIRY ONLY</span>` : "";
+    
+    if(clockInterval) clearInterval(clockInterval);
+    // Passing m.state here is the key - this tells the clock which zone to use
+    clockInterval = setInterval(() => updateLiveClock(m.state), 1000);
+    
+    let alertBox = "";
+    if (m.closureNote && m.closureNote.length > 2) {
+      const noteUpper = m.closureNote.toUpperCase();
+      if (noteUpper.includes("BEFORE") || noteUpper.includes("AFTER")) {
+        alertBox = `<div style="background:#fff5f5; padding:20px; border-radius:15px; text-align:center; color:#c53030; border:2px solid #feb2b2; margin-bottom:15px; font-weight:bold;">🛑 MAJOR ROAD CLOSURE (BLACKOUT ZONE)<br><span style="font-weight:normal; font-size:13px;">${m.closureNote}</span></div>`;
+      } else {
+        alertBox = `<div style="background:#ebf8ff; padding:15px; border-radius:12px; text-align:center; color:#2b6cb0; border:2px solid #bee3f8; margin-bottom:15px; font-weight:bold; font-size:13px;">📢 TRAFFIC ADVISORY<br><span style="font-weight:normal; font-size:13px;">${m.closureNote}</span></div>`;
+      }
+    }
+
+    list.innerHTML = `
+      ${alertBox}
+      <div style="background: rgba(37, 118, 208, 0.1); padding: 12px; border-radius: 12px; margin-bottom: 12px; text-align: center; border: 2px solid var(--fl-blue);">
+        <span style="color: var(--fl-blue); font-weight: 900; font-size: 16px; letter-spacing: 1px;">🕒 CURRENT HUB TIME: <span id="live-hub-clock">--:--:-- --</span></span>
+      </div>
+      <table class="directory-table">
+        <thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="city-name">${m.city}</span>${badge}</td>
+            <td>${m.phone} <button class="copy-btn" onclick="navigator.clipboard.writeText('${m.phone}');alert('Copied!')">📋</button></td>
+            <td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td>
+          </tr>
+        </tbody>
+      </table>`;
+      
+      updateLiveClock(m.state);
   }
 
   // --- BREED LOGIC ---
