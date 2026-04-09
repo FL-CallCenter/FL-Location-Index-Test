@@ -182,8 +182,7 @@
   let breedDatabase = [];
   let markers = {};
 
-  // PASTE YOUR rawCoords OBJECT HERE
-  const rawCoords = {};
+  const rawCoords = {
     "Central Indiana": [39.7684, -86.1581], "Columbus-Auburn": [32.4676, -84.9877], "Columbus OH": [39.9612, -82.9988],
     "Greenville-Spartanburg // WNC & Upstate SC// The Carolinas": [34.8526, -82.3940], "Central PA/Harrisburg/Lancaster": [40.2732, -76.8867],
     "NWA (Fayetteville)": [36.0822, -94.1719], "Raleigh-Durham": [35.8900, -78.8500], "Tyler-Longview": [32.3513, -95.3011],
@@ -206,7 +205,7 @@
     "Cleveland": [41.4993, -81.6944], "Omaha": [41.2565, -95.9345], "Vermont": [44.5588, -72.5778],
     "Augusta": [33.4735, -82.0105], "Kansas City": [39.0997, -94.5786], "Hartford/New Haven": [41.5367, -72.8059],
     "Central Texas (Waco)": [31.5493, -97.1467]
- };
+  };
 
   const csvUrls = [
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=0&single=true&output=csv',
@@ -280,7 +279,7 @@
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=1348062773&single=true&output=csv',
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=874715943&single=true&output=csv'
   ];
-  
+
   const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
@@ -300,7 +299,6 @@
     return new Date().toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: true });
   }
 
-  // --- BREED LOGIC ---
   async function loadBreeds() {
     const breedCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=552993732&single=true&output=csv';
     try {
@@ -479,8 +477,6 @@
       } else {
         alertBox = `<div style="background:#ebf8ff; padding:15px; border-radius:12px; text-align:center; color:#2b6cb0; border:2px solid #bee3f8; margin-bottom:15px; font-weight:bold; font-size:13px;">📢 TRAFFIC ADVISORY<br><span style="font-weight:normal; font-size:13px;">${m.closureNote}</span></div>`;
       }
-    } else if (!isNeighbor) {
-      alertBox = `<div style="background:#ebf8ff; padding:15px; border-radius:12px; text-align:center; color:#2b6cb0; border:2px solid #bee3f8; margin-bottom:15px; font-weight:bold; font-size:13px;">📢 TRAFFIC ADVISORY: Advise client that local traffic may affect arrival times.</div>`;
     }
 
     list.innerHTML = `
