@@ -551,14 +551,12 @@ function renderSingleRow(m, isNeighbor = false) {
     const list = document.getElementById('location-list');
     const neighborBadge = isNeighbor ? `<span style="background:#718096; color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:12px; font-weight:800;">INQUIRY ONLY</span>` : "";
     
-    // Grab timezone via GPS
     const tz = getHubTimezone(m);
     if(clockInterval) clearInterval(clockInterval);
     clockInterval = setInterval(() => updateLiveClock(tz), 1000);
     
     let alertsHTML = "";
 
-    // Regular Advisory and Closure Notes
     if (m.closureNote && m.closureNote.length > 2) {
       const noteUpper = m.closureNote.toUpperCase();
       if (noteUpper.includes("BEFORE") || noteUpper.includes("AFTER")) {
@@ -571,16 +569,16 @@ function renderSingleRow(m, isNeighbor = false) {
     list.innerHTML = `
       ${alertsHTML}
       
-      <div style="display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
+      <div style="display: flex; margin-bottom: 15px; width: 100%;">
         
-        <div style="flex: 1; min-width: 200px; background: rgba(37, 118, 208, 0.1); padding: 12px; border-radius: 12px; text-align: center; border: 2px solid var(--fl-blue);">
-          <span style="color: var(--fl-blue); font-weight: 900; font-size: 14px; letter-spacing: 1px;">
+        <div style="flex: 1; background: rgba(37, 118, 208, 0.08); padding: 12px 5px; border-radius: 12px 0 0 12px; text-align: center; border: 2px solid var(--fl-blue); border-right-width: 1px;">
+          <span style="color: var(--fl-blue); font-weight: 900; font-size: 13px; letter-spacing: 1px;">
             🕒 LOCAL TIME: <span id="live-hub-clock">--:--:-- --</span>
           </span>
         </div>
         
-        <div style="flex: 1; min-width: 200px; background: rgba(240, 123, 35, 0.1); padding: 12px; border-radius: 12px; text-align: center; border: 2px solid var(--fl-orange);">
-          <span style="color: var(--fl-orange); font-weight: 900; font-size: 14px; letter-spacing: 1px;">
+        <div style="flex: 1; background: rgba(240, 123, 35, 0.08); padding: 12px 5px; border-radius: 0 12px 12px 0; text-align: center; border: 2px solid var(--fl-orange); border-left-width: 1px;">
+          <span style="color: var(--fl-orange); font-weight: 900; font-size: 13px; letter-spacing: 1px;">
             🚗 MAX DRIVE TIME: ${escapeHTML(m.driveTime)} MINS
           </span>
         </div>
