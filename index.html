@@ -569,32 +569,41 @@ function renderSingleRow(m, isNeighbor = false) {
     list.innerHTML = `
       ${alertsHTML}
       
-      <div style="display: flex; margin-bottom: 15px; width: 100%;">
-        
-        <div style="flex: 1; background: rgba(37, 118, 208, 0.08); padding: 12px 5px; border-radius: 12px 0 0 12px; text-align: center; border: 2px solid var(--fl-blue); border-right-width: 1px;">
-          <span style="color: var(--fl-blue); font-weight: 900; font-size: 13px; letter-spacing: 1px;">
-            🕒 LOCAL TIME: <span id="live-hub-clock">--:--:-- --</span>
-          </span>
-        </div>
-        
-        <div style="flex: 1; background: rgba(240, 123, 35, 0.08); padding: 12px 5px; border-radius: 0 12px 12px 0; text-align: center; border: 2px solid var(--fl-orange); border-left-width: 1px;">
-          <span style="color: var(--fl-orange); font-weight: 900; font-size: 13px; letter-spacing: 1px;">
-            🚗 MAX DRIVE TIME: ${escapeHTML(m.driveTime)} MINS
-          </span>
-        </div>
-        
-      </div>
+      <div style="background: white; border-radius: 12px; overflow: hidden; border: 1px solid #ddd; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+          
+          <div style="display: flex; width: 100%; border-bottom: 1px solid #ddd; background: #eef2f6;">
+            
+            <div style="flex: 1; padding: 15px; text-align: center; border-right: 1px solid #ddd;">
+              <span style="color: var(--fl-blue); font-weight: 800; font-size: 14px; text-transform: uppercase;">
+                <span style="margin-right: 5px;">🕒</span> LOCAL TIME: <span id="live-hub-clock">--:--:-- --</span>
+              </span>
+            </div>
+            
+            <div style="flex: 1; padding: 15px; text-align: center;">
+              <span style="color: var(--fl-orange); font-weight: 800; font-size: 14px; text-transform: uppercase;">
+                <span style="margin-right: 5px;">🚗</span> MAX DRIVE TIME: ${escapeHTML(m.driveTime)} MINS
+              </span>
+            </div>
+            
+          </div>
 
-      <table class="directory-table">
-        <thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead>
-        <tbody>
-          <tr>
-            <td><span class="city-name">${escapeHTML(m.city)}</span>${neighborBadge}</td>
-            <td>${escapeHTML(m.phone)} <button class="copy-btn" onclick="copyToClipboard('${escapeJS(m.phone)}')">📋</button></td>
-            <td><a href="${escapeHTML(m.link)}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td>
-          </tr>
-        </tbody>
-      </table>`;
+          <table class="directory-table" style="margin-top: 0; border: none;">
+            <thead>
+              <tr style="background: white;">
+                <th style="border-bottom: 2px solid #eee; color: #888;">Hub Location</th>
+                <th style="border-bottom: 2px solid #eee; color: #888;">Phone Number</th>
+                <th style="border-bottom: 2px solid #eee; color: #888;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding: 20px 15px;"><span class="city-name" style="font-size: 16px;">${escapeHTML(m.city)}</span>${neighborBadge}</td>
+                <td style="padding: 20px 15px; font-weight: 500;">${escapeHTML(m.phone)} <button class="copy-btn" style="margin-left: 10px;" onclick="copyToClipboard('${escapeJS(m.phone)}')">📋</button></td>
+                <td style="padding: 20px 15px;"><a href="${escapeHTML(m.link)}" target="_blank" class="action-link" style="padding: 10px 20px;">📅 OPEN MOEGO</a></td>
+              </tr>
+            </tbody>
+          </table>
+      </div>`;
       
       updateLiveClock(tz);
   }
