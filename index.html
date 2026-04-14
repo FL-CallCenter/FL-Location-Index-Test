@@ -351,43 +351,25 @@
 
   // --- GPS TO TIMEZONE LOGIC ---
   function getHubTimezone(m) {
-    // 1. Try to get coordinates from the spreadsheet data
     let lat = m.lat ? parseFloat(m.lat) : null;
     let lng = m.lng ? parseFloat(m.lng) : null;
-    
-    // 2. If spreadsheet coords are missing, grab them from your rawCoords list
     if ((!lat || !lng) && rawCoords[m.city]) {
         lat = rawCoords[m.city][0];
         lng = rawCoords[m.city][1];
     }
-
-    // 3. Mathematical Conversion! 
-    // If we have lat/lng and the plugin loaded successfully, calculate it mathematically.
     if (lat && lng && typeof tzlookup === 'function') {
-        try {
-            return tzlookup(lat, lng); 
-        } catch(e) {
-            console.error("TZ Lookup failed for coordinates:", lat, lng);
-        }
+        try { return tzlookup(lat, lng); } catch(e) { console.error("TZ Lookup failed", lat, lng); }
     }
-    
-    // Default fallback if a hub has literally zero map data anywhere
     return 'America/New_York'; 
   }
 
   function updateLiveClock(tz) {
     const now = new Date();
     const timeString = now.toLocaleTimeString('en-US', { 
-        timeZone: tz, 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit', 
-        hour12: true 
+        timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true 
     });
-    
     const tzLabel = new Intl.DateTimeFormat('en-US', {
-        timeZone: tz,
-        timeZoneName: 'short'
+        timeZone: tz, timeZoneName: 'short'
     }).formatToParts(now).find(p => p.type === 'timeZoneName').value;
 
     const clockEl = document.getElementById('live-hub-clock');
@@ -457,10 +439,15 @@
                     const rows = parseCSV(result.value); 
                     rows.slice(1).forEach(m => {
                         if (m.length >= 5) {
+                            // Grab Column J (Index 9) for Drive Time. Default to 30 if blank.
+                            let dt = m[9] ? m[9].replace(/"/g, '').trim() : "";
+                            if (!dt) dt = "30";
+
                             data.push({ 
                                 name: m[0] || "", zip: m[1] || "", phone: m[2] || "No phone", 
                                 link: m[3] || "#", city: m[4] || "", state: m[5] || "", 
-                                lat: m[6] || null, lng: m[7] || null, closureNote: m[8] || ""
+                                lat: m[6] || null, lng: m[7] || null, closureNote: m[8] || "",
+                                driveTime: dt 
                             });
                         }
                     });
@@ -562,37 +549,29 @@
 
   function renderSingleRow(m, isNeighbor = false) {
     const list = document.getElementById('location-list');
-    const badge = isNeighbor ? `<span style="background:#718096; color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:12px; font-weight:800;">INQUIRY ONLY</span>` : "";
+    const neighborBadge = isNeighbor ? `<span style="background:#718096; color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:12px; font-weight:800;">INQUIRY ONLY</span>` : "";
     
-    // Calculate the perfect timezone right here
+    // The uniform Drive Time Badge
+    const driveTimeBadge = `<span style="background:var(--fl-orange); color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:10px; font-weight:800;">🚗 ${escapeHTML(m.driveTime)} MIN DRIVES</span>`;
+    
     const tz = getHubTimezone(m);
-    
     if(clockInterval) clearInterval(clockInterval);
     clockInterval = setInterval(() => updateLiveClock(tz), 1000);
     
-    let alertBox = "";
+    let alertsHTML = "";
 
-    const cityUpper = m.city ? m.city.toUpperCase() : "";
-    if (cityUpper.includes("NEW JERSEY") || cityUpper.includes("JERSEY")) {
-        alertBox = `
-          <div style="background:#ebf8ff; padding:15px; border-radius:12px; text-align:center; color:#2b6cb0; border:2px solid #bee3f8; margin-bottom:15px; font-weight:bold;">
-            🚗 NEW JERSEY DRIVE TIME POLICY<br>
-            <span style="font-weight:normal; font-size:13px;">Please keep all drive times 25 MINUTES OR UNDER for this location.</span>
-          </div>
-        `;
-    }
-
+    // Regular Advisory and Closure Notes
     if (m.closureNote && m.closureNote.length > 2) {
       const noteUpper = m.closureNote.toUpperCase();
       if (noteUpper.includes("BEFORE") || noteUpper.includes("AFTER")) {
-        alertBox = `<div style="background:#fff5f5; padding:20px; border-radius:15px; text-align:center; color:#c53030; border:2px solid #feb2b2; margin-bottom:15px; font-weight:bold;">🛑 MAJOR ROAD CLOSURE (BLACKOUT ZONE)<br><span style="font-weight:normal; font-size:13px;">${escapeHTML(m.closureNote)}</span></div>`;
+        alertsHTML += `<div style="background:#fff5f5; padding:20px; border-radius:15px; text-align:center; color:#c53030; border:2px solid #feb2b2; margin-bottom:15px; font-weight:bold;">🛑 MAJOR ROAD CLOSURE (BLACKOUT ZONE)<br><span style="font-weight:normal; font-size:13px;">${escapeHTML(m.closureNote)}</span></div>`;
       } else {
-        alertBox = `<div style="background:#ebf8ff; padding:15px; border-radius:12px; text-align:center; color:#2b6cb0; border:2px solid #bee3f8; margin-bottom:15px; font-weight:bold; font-size:13px;">📢 TRAFFIC ADVISORY<br><span style="font-weight:normal; font-size:13px;">${escapeHTML(m.closureNote)}</span></div>`;
+        alertsHTML += `<div style="background:#ebf8ff; padding:15px; border-radius:12px; text-align:center; color:#2b6cb0; border:2px solid #bee3f8; margin-bottom:15px; font-weight:bold; font-size:13px;">📢 TRAFFIC ADVISORY<br><span style="font-weight:normal; font-size:13px;">${escapeHTML(m.closureNote)}</span></div>`;
       }
     }
 
     list.innerHTML = `
-      ${alertBox}
+      ${alertsHTML}
       <div style="background: rgba(37, 118, 208, 0.1); padding: 12px; border-radius: 12px; margin-bottom: 12px; text-align: center; border: 2px solid var(--fl-blue);">
         <span style="color: var(--fl-blue); font-weight: 900; font-size: 16px; letter-spacing: 1px;">🕒 HUB LOCAL TIME: <span id="live-hub-clock">--:--:-- --</span></span>
       </div>
@@ -600,7 +579,7 @@
         <thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead>
         <tbody>
           <tr>
-            <td><span class="city-name">${escapeHTML(m.city)}</span>${badge}</td>
+            <td><span class="city-name">${escapeHTML(m.city)}</span>${neighborBadge}${driveTimeBadge}</td>
             <td>${escapeHTML(m.phone)} <button class="copy-btn" onclick="copyToClipboard('${escapeJS(m.phone)}')">📋</button></td>
             <td><a href="${escapeHTML(m.link)}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td>
           </tr>
