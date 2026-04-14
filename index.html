@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FURRYLAND Command Center</title>
   
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -40,6 +40,22 @@
           radial-gradient(circle at 85% 85%, rgba(240, 123, 35, 0.08) 0%, transparent 50%);
         pointer-events: none;
         z-index: -1;
+    }
+
+    /* Warning Banner for failed sheet loads */
+    #warning-banner {
+        display: none;
+        background-color: #ff9800;
+        color: #fff;
+        font-weight: bold;
+        padding: 12px;
+        border-radius: 8px;
+        width: 95%;
+        max-width: 550px;
+        text-align: center;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        z-index: 1010;
     }
 
     .result-display {
@@ -115,7 +131,7 @@
     #location-list { width: 95%; max-width: 1200px; background: rgba(255, 255, 255, 0.95); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); overflow: hidden; margin-top: 10px; }
 
     .directory-table { width: 100%; border-collapse: collapse; text-align: left; }
-    .directory-table th { background: #f8f9fa; color: #666; padding: 15px; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #eee; }
+    .directory-table th { background: #f8f9fa; color: #666; padding: 15px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #eee; }
     .directory-table td { padding: 15px; border-bottom: 1px solid #f2f2f2; font-size: 14px; vertical-align: middle; }
 
     .city-name { font-weight: 700; color: var(--fl-orange); font-size: 15px; }
@@ -133,6 +149,8 @@
 </style>
 </head>
 <body>
+
+<div id="warning-banner">⚠️ Warning: Some hub data failed to load. The directory may be incomplete. Please try refreshing.</div>
 
 <div class="tabs">
   <button id="tab-loc" class="tab-btn active" onclick="switchTab('locator')">ZIP Locator</button>
@@ -286,116 +304,131 @@
   const map = L.map('map', { center: [39.82, -98.57], zoom: 4 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-// --- FINAL: FULL NAME & ABBREVIATION CLOCK ---
-  function updateLiveClock(stateInput, cityName = "") {
-    const timezones = {
-      // PACIFIC
-      'CA': 'America/Los_Angeles', 'CALIFORNIA': 'America/Los_Angeles',
-      'OR': 'America/Los_Angeles', 'OREGON': 'America/Los_Angeles',
-      'WA': 'America/Los_Angeles', 'WASHINGTON': 'America/Los_Angeles',
-      'NV': 'America/Los_Angeles', 'NEVADA': 'America/Los_Angeles',
-      'AK': 'America/Anchorage', 'ALASKA': 'America/Anchorage',
-      'HI': 'Pacific/Honolulu', 'HAWAII': 'Pacific/Honolulu',
+  // --- FIXED P1: SECURITY HELPERS ---
+  function escapeHTML(str) {
+    if (!str) return "";
+    return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+  function escapeJS(str) {
+    if (!str) return "";
+    return String(str).replace(/'/g, "\\'").replace(/"/g, "\\\"");
+  }
 
-      // MOUNTAIN
-      'AZ': 'America/Phoenix', 'ARIZONA': 'America/Phoenix',
-      'CO': 'America/Denver', 'COLORADO': 'America/Denver',
-      'UT': 'America/Denver', 'UTAH': 'America/Denver',
-      'NM': 'America/Denver', 'NEW MEXICO': 'America/Denver',
-      'ID': 'America/Boise', 'IDAHO': 'America/Boise',
-      'MT': 'America/Denver', 'MONTANA': 'America/Denver',
-      'WY': 'America/Denver', 'WYOMING': 'America/Denver',
+  // --- FIXED P1: REAL CSV PARSER ---
+  function parseCSV(str) {
+    const arr = [];
+    let quote = false;
+    let row = [];
+    let col = '';
+    for (let c = 0; c < str.length; c++) {
+        let cc = str[c], nc = str[c+1];
+        if (cc === '"' && quote && nc === '"') { col += cc; c++; continue; }
+        if (cc === '"') { quote = !quote; continue; }
+        if (cc === ',' && !quote) { row.push(col.trim()); col = ''; continue; }
+        if (cc === '\n' && !quote) {
+            if (col.endsWith('\r')) col = col.slice(0, -1);
+            row.push(col.trim()); arr.push(row); row = []; col = ''; continue;
+        }
+        col += cc;
+    }
+    if (col.endsWith('\r')) col = col.slice(0, -1);
+    row.push(col.trim());
+    arr.push(row);
+    return arr;
+  }
 
-      // CENTRAL
-      'TX': 'America/Chicago', 'TEXAS': 'America/Chicago',
-      'OK': 'America/Chicago', 'OKLAHOMA': 'America/Chicago',
-      'AR': 'America/Chicago', 'ARKANSAS': 'America/Chicago',
-      'LA': 'America/Chicago', 'LOUISIANA': 'America/Chicago',
-      'MO': 'America/Chicago', 'MISSOURI': 'America/Chicago',
-      'KS': 'America/Chicago', 'KANSAS': 'America/Chicago',
-      'NE': 'America/Chicago', 'NEBRASKA': 'America/Chicago',
-      'WI': 'America/Chicago', 'WISCONSIN': 'America/Chicago',
-      'IL': 'America/Chicago', 'ILLINOIS': 'America/Chicago',
-      'TN': 'America/Chicago', 'TENNESSEE': 'America/Chicago',
-      'AL': 'America/Chicago', 'ALABAMA': 'America/Chicago',
-      'MS': 'America/Chicago', 'MISSISSIPPI': 'America/Chicago',
-      'MN': 'America/Chicago', 'MINNESOTA': 'America/Chicago',
-      'IA': 'America/Chicago', 'IOWA': 'America/Chicago',
-      'ND': 'America/Chicago', 'NORTH DAKOTA': 'America/Chicago',
-      'SD': 'America/Chicago', 'SOUTH DAKOTA': 'America/Chicago',
+  // --- FIXED P3: CLIPBOARD FALLBACK ---
+  function copyToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => alert('Copied!')).catch(() => alert('Failed to copy.'));
+    } else {
+        let textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try { document.execCommand('copy'); alert('Copied!'); } catch (err) { alert('Failed to copy.'); }
+        document.body.removeChild(textArea);
+    }
+  }
 
-      // EASTERN
-      'FL': 'America/New_York', 'FLORIDA': 'America/New_York',
-      'GA': 'America/New_York', 'GEORGIA': 'America/New_York',
-      'SC': 'America/New_York', 'SOUTH CAROLINA': 'America/New_York',
-      'NC': 'America/New_York', 'NORTH CAROLINA': 'America/New_York',
-      'VA': 'America/New_York', 'VIRGINIA': 'America/New_York',
-      'PA': 'America/New_York', 'PENNSYLVANIA': 'America/New_York',
-      'NJ': 'America/New_York', 'NEW JERSEY': 'America/New_York',
-      'CT': 'America/New_York', 'CONNECTICUT': 'America/New_York',
-      'MA': 'America/New_York', 'MASSACHUSETTS': 'America/New_York',
-      'OH': 'America/New_York', 'OHIO': 'America/New_York',
-      'MI': 'America/New_York', 'MICHIGAN': 'America/New_York',
-      'IN': 'America/Indianapolis', 'INDIANA': 'America/Indianapolis',
-      'VT': 'America/New_York', 'VERMONT': 'America/New_York',
-      'KY': 'America/Kentucky/Louisville', 'KENTUCKY': 'America/Kentucky/Louisville',
-      'ME': 'America/New_York', 'MAINE': 'America/New_York',
-      'NH': 'America/New_York', 'NEW HAMPSHIRE': 'America/New_York',
-      'RI': 'America/New_York', 'RHODE ISLAND': 'America/New_York',
-      'NY': 'America/New_York', 'NEW YORK': 'America/New_York',
-      'DE': 'America/New_York', 'DELAWARE': 'America/New_York',
-      'MD': 'America/New_York', 'MARYLAND': 'America/New_York',
-      'WV': 'America/New_York', 'WEST VIRGINIA': 'America/New_York',
-      'DC': 'America/New_York', 'DISTRICT OF COLUMBIA': 'America/New_York'
+  // --- FIXED P2: PRECISION TIMEZONES ---
+  function updateLiveClock(stateAbbr, cityName = "") {
+    // 1. Direct Hub Mapping (Overrides State Level inaccuracies)
+    const hubTimezones = {
+        "CENTRAL INDIANA": "America/Indianapolis", "COLUMBUS-AUBURN": "America/New_York", "COLUMBUS OH": "America/New_York",
+        "GREENVILLE-SPARTANBURG": "America/New_York", "CENTRAL PA": "America/New_York", "NWA (FAYETTEVILLE)": "America/Chicago",
+        "RALEIGH-DURHAM": "America/New_York", "TYLER-LONGVIEW": "America/Chicago", "PALM BEACH COUNTY": "America/New_York",
+        "GREEN BAY-APPLETON": "America/Chicago", "HARTFORD": "America/New_York", "TRI-CITIES": "America/New_York",
+        "SHERMAN/ADA": "America/Chicago", "NOVA NORTHERN VIRGINIA": "America/New_York", "ALBUQUERQUE": "America/Denver",
+        "ATLANTA": "America/New_York", "AUSTIN": "America/Chicago", "BATON ROUGE": "America/Chicago", "BEAUMONT": "America/Chicago",
+        "BOISE": "America/Boise", "BOSTON": "America/New_York", "CENTRAL NEW JERSEY": "America/New_York", "CENTRAL FLORIDA (ORLANDO)": "America/New_York",
+        "CHARLESTON": "America/New_York", "CHARLOTTE": "America/New_York", "CHATTANOOGA": "America/New_York", "CINCINNATI": "America/New_York",
+        "COLORADO SPRINGS": "America/Denver", "CORPUS CHRISTI": "America/Chicago", "DENVER": "America/Denver", "DETROIT": "America/New_York",
+        "DFW - DALLAS FORT WORTH": "America/Chicago", "FAIRFIELD": "America/New_York", "FORT MYERS": "America/New_York", "GREENSBORO": "America/New_York",
+        "HOUSTON": "America/Chicago", "HUNTSVILLE": "America/Chicago", "KNOXVILLE": "America/New_York", "LAS VEGAS": "America/Los_Angeles",
+        "LEXINGTON": "America/New_York", "LITTLE ROCK": "America/Chicago", "LOUISVILLE": "America/Kentucky/Louisville", "LUBBOCK": "America/Chicago",
+        "MADISON": "America/Chicago", "MILWAUKEE": "America/Chicago", "NASHVILLE": "America/Chicago", "OKLAHOMA CITY": "America/Chicago",
+        "PHOENIX": "America/Phoenix", "PITTSBURGH": "America/New_York", "PORTLAND": "America/Los_Angeles", "RENO": "America/Los_Angeles",
+        "SALT LAKE CITY": "America/Denver", "SAN ANTONIO": "America/Chicago", "SAVANNAH": "America/New_York", "WEST MICHIGAN": "America/New_York",
+        "WILMINGTON": "America/New_York", "CLEVELAND": "America/New_York", "OMAHA": "America/Chicago", "VERMONT": "America/New_York",
+        "AUGUSTA": "America/New_York", "KANSAS CITY": "America/Chicago", "HARTFORD/NEW HAVEN": "America/New_York", "CENTRAL TEXAS (WACO)": "America/Chicago"
     };
 
-    // Clean the state name so it matches our list perfectly
-    let state = stateInput ? stateInput.trim().toUpperCase() : "";
+    // 2. Fallback State Mapping
+    const stateTimezones = {
+      'CA': 'America/Los_Angeles', 'CALIFORNIA': 'America/Los_Angeles', 'OR': 'America/Los_Angeles', 'OREGON': 'America/Los_Angeles',
+      'WA': 'America/Los_Angeles', 'WASHINGTON': 'America/Los_Angeles', 'NV': 'America/Los_Angeles', 'NEVADA': 'America/Los_Angeles',
+      'AZ': 'America/Phoenix', 'ARIZONA': 'America/Phoenix', 'CO': 'America/Denver', 'COLORADO': 'America/Denver',
+      'UT': 'America/Denver', 'UTAH': 'America/Denver', 'NM': 'America/Denver', 'NEW MEXICO': 'America/Denver',
+      'ID': 'America/Boise', 'IDAHO': 'America/Boise', 'MT': 'America/Denver', 'MONTANA': 'America/Denver',
+      'TX': 'America/Chicago', 'TEXAS': 'America/Chicago', 'OK': 'America/Chicago', 'OKLAHOMA': 'America/Chicago',
+      'AR': 'America/Chicago', 'ARKANSAS': 'America/Chicago', 'LA': 'America/Chicago', 'LOUISIANA': 'America/Chicago',
+      'MO': 'America/Chicago', 'MISSOURI': 'America/Chicago', 'KS': 'America/Chicago', 'KANSAS': 'America/Chicago',
+      'NE': 'America/Chicago', 'NEBRASKA': 'America/Chicago', 'WI': 'America/Chicago', 'WISCONSIN': 'America/Chicago',
+      'IL': 'America/Chicago', 'ILLINOIS': 'America/Chicago', 'TN': 'America/Chicago', 'TENNESSEE': 'America/Chicago',
+      'AL': 'America/Chicago', 'ALABAMA': 'America/Chicago', 'MS': 'America/Chicago', 'MISSISSIPPI': 'America/Chicago',
+      'MN': 'America/Chicago', 'MINNESOTA': 'America/Chicago', 'IA': 'America/Chicago', 'IOWA': 'America/Chicago',
+      'FL': 'America/New_York', 'FLORIDA': 'America/New_York', 'GA': 'America/New_York', 'GEORGIA': 'America/New_York',
+      'SC': 'America/New_York', 'SOUTH CAROLINA': 'America/New_York', 'NC': 'America/New_York', 'NORTH CAROLINA': 'America/New_York',
+      'VA': 'America/New_York', 'VIRGINIA': 'America/New_York', 'PA': 'America/New_York', 'PENNSYLVANIA': 'America/New_York',
+      'NJ': 'America/New_York', 'NEW JERSEY': 'America/New_York', 'CT': 'America/New_York', 'CONNECTICUT': 'America/New_York',
+      'MA': 'America/New_York', 'MASSACHUSETTS': 'America/New_York', 'OH': 'America/New_York', 'OHIO': 'America/New_York',
+      'MI': 'America/New_York', 'MICHIGAN': 'America/New_York', 'IN': 'America/Indianapolis', 'INDIANA': 'America/Indianapolis',
+      'VT': 'America/New_York', 'VERMONT': 'America/New_York', 'KY': 'America/Kentucky/Louisville', 'KENTUCKY': 'America/Kentucky/Louisville',
+      'ME': 'America/New_York', 'MAINE': 'America/New_York', 'NH': 'America/New_York', 'NEW HAMPSHIRE': 'America/New_York',
+      'RI': 'America/New_York', 'RHODE ISLAND': 'America/New_York', 'NY': 'America/New_York', 'NEW YORK': 'America/New_York',
+      'DE': 'America/New_York', 'DELAWARE': 'America/New_York', 'MD': 'America/New_York', 'MARYLAND': 'America/New_York'
+    };
+
+    let state = stateAbbr ? stateAbbr.trim().toUpperCase() : "";
+    let city = cityName ? cityName.trim().toUpperCase() : "";
     
-    // Manual city fallback if Column F is somehow empty for a specific row
-    if (!state || state === "") {
-        if (cityName.includes("Portland")) state = "OREGON";
-        if (cityName.includes("Austin")) state = "TEXAS";
+    // Check specific hub first, then state fallback, then default NY
+    let tz = 'America/New_York';
+    for (let key in hubTimezones) {
+        if (city.includes(key)) { tz = hubTimezones[key]; break; }
     }
+    if (tz === 'America/New_York' && stateTimezones[state]) tz = stateTimezones[state];
 
-    const tz = timezones[state] || 'America/New_York';
     const now = new Date();
-
-    const timeString = now.toLocaleTimeString('en-US', { 
-        timeZone: tz, 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit', 
-        hour12: true 
-    });
-    
-    const tzLabel = new Intl.DateTimeFormat('en-US', {
-        timeZone: tz,
-        timeZoneName: 'short'
-    }).formatToParts(now).find(p => p.type === 'timeZoneName').value;
+    const timeString = now.toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    const tzLabel = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' }).formatToParts(now).find(p => p.type === 'timeZoneName').value;
 
     const clockEl = document.getElementById('live-hub-clock');
     if (clockEl) clockEl.innerText = `${timeString} ${tzLabel}`;
   }
-  
+
   // --- BREED LOGIC ---
   async function loadBreeds() {
     const breedCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQXBytNjjgpyhBn5mFaMFAwTW5SMRoQIBKN9nDRawG2tuGG7RMwZ7DCorF2RWVRTccoYAKzKmSqAhGf/pub?gid=552993732&single=true&output=csv';
     try {
         const response = await fetch(breedCsvUrl);
         const csvText = await response.text();
-        const rows = csvText.split(/\r?\n/); 
+        const rows = parseCSV(csvText); // USING REAL PARSER
         breedDatabase = []; 
-        rows.slice(1).forEach(row => {
-            const cols = row.split(',');
-            if (cols[0]) {
-                let nameA = cols[0].replace(/"/g, "").trim();
-                if (nameA) breedDatabase.push({ name: nameA, type: "Complex" });
-            }
-            if (cols[1]) {
-                let nameB = cols[1].replace(/"/g, "").trim();
-                if (nameB) breedDatabase.push({ name: nameB, type: "Non-Complex" });
-            }
+        rows.slice(1).forEach(cols => {
+            if (cols[0]) breedDatabase.push({ name: cols[0], type: "Complex" });
+            if (cols[1]) breedDatabase.push({ name: cols[1], type: "Non-Complex" });
         });
         buildBreedDropdown();
     } catch (err) { console.error("❌ Breed Load Failed:", err); }
@@ -404,7 +437,7 @@
   function buildBreedDropdown() {
     const dropdown = document.getElementById('customBreedDropdown');
     const sortedBreeds = breedDatabase.sort((a, b) => a.name.localeCompare(b.name));
-    dropdown.innerHTML = sortedBreeds.map(b => `<div class="breed-item" onclick="selectBreed('${b.name}')">${b.name}</div>`).join('');
+    dropdown.innerHTML = sortedBreeds.map(b => `<div class="breed-item" onclick="selectBreed('${escapeJS(b.name)}')">${escapeHTML(b.name)}</div>`).join('');
   }
 
   function showBreedDropdown() { document.getElementById('customBreedDropdown').style.display = 'block'; }
@@ -424,43 +457,48 @@
     const found = breedDatabase.find(b => b.name.toLowerCase() === val.toLowerCase());
     if (found) {
         const isComplex = found.type === "Complex";
-        display.innerHTML = `<div class="result-display ${isComplex ? 'is-complex' : 'is-simple'}">${found.name} is a ${found.type} coat</div>`;
+        display.innerHTML = `<div class="result-display ${isComplex ? 'is-complex' : 'is-simple'}">${escapeHTML(found.name)} is a ${found.type} coat</div>`;
     } else {
         display.innerHTML = `<p style="color:#999; font-style: italic;">Results will appear here...</p>`;
     }
   }
 
+  // --- TURBO LOCATOR LOGIC ---
   async function loadData() {
     try {
         const batchSize = 10; 
+        let failedTabs = 0; // Track failed sheets
+        
         for (let i = 0; i < csvUrls.length; i += batchSize) {
             const batch = csvUrls.slice(i, i + batchSize);
-            const results = await Promise.allSettled(batch.map(url => fetch(url).then(r => r.text())));
+            const results = await Promise.allSettled(batch.map(url => fetch(url).then(r => {
+                if(!r.ok) throw new Error("Fetch failed"); 
+                return r.text()
+            })));
+            
             results.forEach(result => {
                 if (result.status === 'fulfilled') {
-                    const csv = result.value;
-                    const rows = csv.split('\n');
-                    rows.slice(1).forEach(row => {
-                        const m = row.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
-                        if (m && m.length >= 5) {
+                    const rows = parseCSV(result.value); // USING REAL PARSER
+                    rows.slice(1).forEach(m => {
+                        if (m.length >= 5) {
                             data.push({ 
-                                name: m[0].replace(/"/g, '').trim(), 
-                                zip: m[1].trim(), 
-                                phone: m[2]?.trim() || "No phone", 
-                                link: m[3]?.replace(/"/g, '').trim() || "#", 
-                                city: m[4]?.trim() || "",
-                                state: m[5]?.trim() || "", 
-                                lat: m[6]?.trim() || null, 
-                                lng: m[7]?.replace(/\r/g, '').trim() || null,
-                                closureNote: m[8] ? m[8].replace(/"/g, '').trim() : ""
+                                name: m[0] || "", zip: m[1] || "", phone: m[2] || "No phone", 
+                                link: m[3] || "#", city: m[4] || "", state: m[5] || "", 
+                                lat: m[6] || null, lng: m[7] || null, closureNote: m[8] || ""
                             });
                         }
                     });
+                } else {
+                    failedTabs++;
                 }
             });
             let progress = Math.min(i + batchSize, csvUrls.length);
             document.getElementById('searchBtn').textContent = `Syncing (${progress}/${csvUrls.length})`;
         }
+        
+        // Warning Banner Activation
+        if (failedTabs > 0) document.getElementById('warning-banner').style.display = 'block';
+
         document.getElementById('searchBtn').disabled = false;
         document.getElementById('searchBtn').textContent = "Search ZIP";
         plotHubs(); 
@@ -474,6 +512,7 @@
     const list = document.getElementById('location-list');
     const head = document.getElementById('list-header');
     list.innerHTML = ""; res.innerHTML = "";
+    
     const match = data.find(d => d.zip === zip);
     if (match) {
         res.innerText = "📍 Match Found: " + match.city;
@@ -485,6 +524,7 @@
         if (flyLat && flyLng) map.flyTo([flyLat, flyLng], 14);
         return;
     }
+    
     if (zip.length === 5) {
         res.innerText = "🔍 Checking nearby...";
         try {
@@ -506,7 +546,7 @@
                 res.innerHTML = `<span style="color: #ff8080;">🛑 Neighbor Found: ${closestDist.toFixed(1)} miles away</span>`;
                 head.classList.remove('hidden'); head.innerText = "NEIGHBOR ALERT";
                 list.innerHTML = `<div style="background:#fff5f5; padding:25px; border-radius:15px; text-align:center; color:#c53030; margin-bottom:20px; border:2px solid #feb2b2; line-height:1.8;">
-                    <strong>🛑 NEIGHBOR ZIP: APPROVAL REQUIRED</strong><br>ZIP ${zip} is ${closestDist.toFixed(1)} miles from FurryLand ${closestRow.city}.
+                    <strong>🛑 NEIGHBOR ZIP: APPROVAL REQUIRED</strong><br>ZIP ${escapeHTML(zip)} is ${closestDist.toFixed(1)} miles from FurryLand ${escapeHTML(closestRow.city)}.
                 </div>`;
                 renderSingleRow(closestRow, true);
                 let hubCoords = rawCoords[closestRow.city];
@@ -534,7 +574,7 @@
       const city = d.city.trim();
       if (city && rawCoords[city] && !markers[city]) {
         const icon = L.divIcon({ className: '', html: '<div class="pulsing-marker"></div>', iconSize: [10, 10], iconAnchor: [5, 5] });
-        markers[city] = L.marker(rawCoords[city], { icon: icon }).addTo(map).bindPopup(`<strong>FurryLand ${city}</strong><br>📞 ${d.phone}`);
+        markers[city] = L.marker(rawCoords[city], { icon: icon }).addTo(map).bindPopup(`<strong>FurryLand ${escapeHTML(city)}</strong><br>📞 ${escapeHTML(d.phone)}`);
       }
     });
   }
@@ -550,15 +590,28 @@
     const badge = isNeighbor ? `<span style="background:#718096; color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:12px; font-weight:800;">INQUIRY ONLY</span>` : "";
     
     if(clockInterval) clearInterval(clockInterval);
-    clockInterval = setInterval(() => updateLiveClock(m.state), 1000);
+    clockInterval = setInterval(() => updateLiveClock(m.state, m.city), 1000);
     
     let alertBox = "";
+
+    // NJ Drive Time Override
+    const cityUpper = m.city ? m.city.toUpperCase() : "";
+    if (cityUpper.includes("NEW JERSEY") || cityUpper.includes("JERSEY")) {
+        alertBox = `
+          <div style="background:#ebf8ff; padding:15px; border-radius:12px; text-align:center; color:#2b6cb0; border:2px solid #bee3f8; margin-bottom:15px; font-weight:bold;">
+            🚗 NEW JERSEY DRIVE TIME POLICY<br>
+            <span style="font-weight:normal; font-size:13px;">Please keep all drive times 25 MINUTES OR UNDER for this location.</span>
+          </div>
+        `;
+    }
+
+    // Spreadsheet Note Override
     if (m.closureNote && m.closureNote.length > 2) {
       const noteUpper = m.closureNote.toUpperCase();
       if (noteUpper.includes("BEFORE") || noteUpper.includes("AFTER")) {
-        alertBox = `<div style="background:#fff5f5; padding:20px; border-radius:15px; text-align:center; color:#c53030; border:2px solid #feb2b2; margin-bottom:15px; font-weight:bold;">🛑 MAJOR ROAD CLOSURE (BLACKOUT ZONE)<br><span style="font-weight:normal; font-size:13px;">${m.closureNote}</span></div>`;
+        alertBox = `<div style="background:#fff5f5; padding:20px; border-radius:15px; text-align:center; color:#c53030; border:2px solid #feb2b2; margin-bottom:15px; font-weight:bold;">🛑 MAJOR ROAD CLOSURE (BLACKOUT ZONE)<br><span style="font-weight:normal; font-size:13px;">${escapeHTML(m.closureNote)}</span></div>`;
       } else {
-        alertBox = `<div style="background:#ebf8ff; padding:15px; border-radius:12px; text-align:center; color:#2b6cb0; border:2px solid #bee3f8; margin-bottom:15px; font-weight:bold; font-size:13px;">📢 TRAFFIC ADVISORY<br><span style="font-weight:normal; font-size:13px;">${m.closureNote}</span></div>`;
+        alertBox = `<div style="background:#ebf8ff; padding:15px; border-radius:12px; text-align:center; color:#2b6cb0; border:2px solid #bee3f8; margin-bottom:15px; font-weight:bold; font-size:13px;">📢 TRAFFIC ADVISORY<br><span style="font-weight:normal; font-size:13px;">${escapeHTML(m.closureNote)}</span></div>`;
       }
     }
 
@@ -571,19 +624,20 @@
         <thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead>
         <tbody>
           <tr>
-            <td><span class="city-name">${m.city}</span>${badge}</td>
-            <td>${m.phone} <button class="copy-btn" onclick="navigator.clipboard.writeText('${m.phone}');alert('Copied!')">📋</button></td>
-            <td><a href="${m.link}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td>
+            <td><span class="city-name">${escapeHTML(m.city)}</span>${badge}</td>
+            <td>${escapeHTML(m.phone)} <button class="copy-btn" onclick="copyToClipboard('${escapeJS(m.phone)}')">📋</button></td>
+            <td><a href="${escapeHTML(m.link)}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td>
           </tr>
         </tbody>
       </table>`;
-      updateLiveClock(m.state);
+      
+      updateLiveClock(m.state, m.city);
   }
 
   function buildCustomDropdown() {
     const dropdown = document.getElementById('customDropdown');
     const cities = [...new Set(data.map(d => d.city.trim()))].sort();
-    dropdown.innerHTML = cities.map(city => `<div class="dropdown-item" onclick="selectCity('${city}')">${city}</div>`).join('');
+    dropdown.innerHTML = cities.map(city => `<div class="dropdown-item" onclick="selectCity('${escapeJS(city)}')">${escapeHTML(city)}</div>`).join('');
   }
 
   function selectCity(city) {
