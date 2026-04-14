@@ -547,13 +547,11 @@
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
   }
 
-  function renderSingleRow(m, isNeighbor = false) {
+function renderSingleRow(m, isNeighbor = false) {
     const list = document.getElementById('location-list');
     const neighborBadge = isNeighbor ? `<span style="background:#718096; color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:12px; font-weight:800;">INQUIRY ONLY</span>` : "";
     
-    // The uniform Drive Time Badge
-    const driveTimeBadge = `<span style="background:var(--fl-orange); color:white; padding:3px 10px; border-radius:6px; font-size:11px; margin-left:10px; font-weight:800;">🚗 ${escapeHTML(m.driveTime)} MIN DRIVES</span>`;
-    
+    // Grab timezone via GPS
     const tz = getHubTimezone(m);
     if(clockInterval) clearInterval(clockInterval);
     clockInterval = setInterval(() => updateLiveClock(tz), 1000);
@@ -572,14 +570,28 @@
 
     list.innerHTML = `
       ${alertsHTML}
-      <div style="background: rgba(37, 118, 208, 0.1); padding: 12px; border-radius: 12px; margin-bottom: 12px; text-align: center; border: 2px solid var(--fl-blue);">
-        <span style="color: var(--fl-blue); font-weight: 900; font-size: 16px; letter-spacing: 1px;">🕒 HUB LOCAL TIME: <span id="live-hub-clock">--:--:-- --</span></span>
+      
+      <div style="display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
+        
+        <div style="flex: 1; min-width: 200px; background: rgba(37, 118, 208, 0.1); padding: 12px; border-radius: 12px; text-align: center; border: 2px solid var(--fl-blue);">
+          <span style="color: var(--fl-blue); font-weight: 900; font-size: 14px; letter-spacing: 1px;">
+            🕒 LOCAL TIME: <span id="live-hub-clock">--:--:-- --</span>
+          </span>
+        </div>
+        
+        <div style="flex: 1; min-width: 200px; background: rgba(240, 123, 35, 0.1); padding: 12px; border-radius: 12px; text-align: center; border: 2px solid var(--fl-orange);">
+          <span style="color: var(--fl-orange); font-weight: 900; font-size: 14px; letter-spacing: 1px;">
+            🚗 MAX DRIVE TIME: ${escapeHTML(m.driveTime)} MINS
+          </span>
+        </div>
+        
       </div>
+
       <table class="directory-table">
         <thead><tr><th>Hub Location</th><th>Phone Number</th><th>Action</th></tr></thead>
         <tbody>
           <tr>
-            <td><span class="city-name">${escapeHTML(m.city)}</span>${neighborBadge}${driveTimeBadge}</td>
+            <td><span class="city-name">${escapeHTML(m.city)}</span>${neighborBadge}</td>
             <td>${escapeHTML(m.phone)} <button class="copy-btn" onclick="copyToClipboard('${escapeJS(m.phone)}')">📋</button></td>
             <td><a href="${escapeHTML(m.link)}" target="_blank" class="action-link">📅 OPEN MOEGO</a></td>
           </tr>
