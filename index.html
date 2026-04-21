@@ -349,19 +349,25 @@
     }
   }
 
-  // --- LOCATION DATA LOAD (NEW DATA PATH) ---
+// --- LOCATION DATA LOAD (NEW DATA PATH) ---
   async function loadData() {
     try {
         const searchBtn = document.getElementById('searchBtn');
         searchBtn.textContent = "Loading Hubs...";
         
-        // THE FIX: We wrap your SharePoint link in a CORS Proxy so Microsoft doesn't block it
+        // THE FIX: Using AllOrigins proxy which handles Microsoft redirects much better
         const sharepointLink = 'https://phoenixfranchisebrands-my.sharepoint.com/:x:/g/personal/austin_fioritti_furryland_us/IQAPmSdcYSINRLrQTWub2E-AAWlzlKJq9yWo3XPukt4ie-4?download=1';
-        const response = await fetch('https://corsproxy.io/?' + encodeURIComponent(sharepointLink));
+        const response = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(sharepointLink));
         
         if (!response.ok) throw new Error("Location file not found");
         
         const csvText = await response.text();
+        
+        // SAFETY CHECK: Make sure Microsoft didn't hand us an HTML/JS page
+        if (csvText.includes('<!DOCTYPE html>') || csvText.includes('function(')) {
+            throw new Error("Microsoft blocked the request and served a web page instead of data.");
+        }
+
         const rows = parseCSV(csvText);
         
         data = []; 
@@ -394,6 +400,7 @@
     } catch (err) { 
         console.error("Sync Error:", err); 
         document.getElementById('warning-banner').style.display = 'block';
+        document.getElementById('searchBtn').textContent = "Data Error";
     }
   }
 
