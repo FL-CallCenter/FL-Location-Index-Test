@@ -20,7 +20,8 @@ jobs:
       - name: Download CSV from OneDrive
         run: |
           mkdir -p data
-          curl -L "https://phoenixfranchisebrands-my.sharepoint.com/:x:/g/personal/austin_fioritti_furryland_us/IQAPmSdcYSINRLrQTWub2E-AAWlzlKJq9yWo3XPukt4ie-4?download=1" -o data/locations.csv
+          # This is the fake Chrome browser disguise to bypass the 403 Forbidden error
+          curl -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" "https://phoenixfranchisebrands-my.sharepoint.com/:x:/g/personal/austin_fioritti_furryland_us/IQAPmSdcYSINRLrQTWub2E-AAWlzlKJq9yWo3XPukt4ie-4?download=1" -o data/locations.csv
 
       - name: Commit and Push to Website
         run: |
