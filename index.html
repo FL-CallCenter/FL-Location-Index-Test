@@ -356,8 +356,7 @@
         searchBtn.textContent = "Loading Hubs...";
         
         // THE FIX: Using AllOrigins proxy which handles Microsoft redirects much better
-        const sharepointLink = 'https://phoenixfranchisebrands-my.sharepoint.com/:x:/g/personal/austin_fioritti_furryland_us/IQAPmSdcYSINRLrQTWub2E-AAWlzlKJq9yWo3XPukt4ie-4?download=1';
-        const response = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(sharepointLink));
+        const response = await fetch('data/locations.csv');
         
         if (!response.ok) throw new Error("Location file not found");
         
