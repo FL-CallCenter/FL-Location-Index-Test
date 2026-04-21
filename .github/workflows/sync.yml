@@ -15,7 +15,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # FIX: Forces the robot to read your site's full history so it doesn't get confused
+          fetch-depth: 0
 
       - name: Download CSV from OneDrive
         run: |
@@ -27,10 +27,12 @@ jobs:
           git config --global user.name "Microsoft Sync Bot"
           git config --global user.email "actions@github.com"
           
-          # FIX: Download any recent code changes YOU made first
-          git pull origin main
-          
-          # Save the new CSV and push to the live website
+          # Step 1: Tell the robot to prep the new CSV
           git add data/locations.csv
-          git commit -m "Auto-synced latest locations" || echo "No changes to commit"
+          git diff --staged --quiet || git commit -m "Auto-synced latest locations"
+          
+          # Step 2: Look both ways and safely merge any code edits YOU just made
+          git pull --rebase origin main
+          
+          # Step 3: Push it all to the live site
           git push
