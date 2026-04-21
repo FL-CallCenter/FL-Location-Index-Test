@@ -5,7 +5,6 @@ on:
     - cron: '*/30 * * * *'
   workflow_dispatch:
 
-# This forces GitHub to unlock the door for the robot
 permissions:
   contents: write 
 
@@ -16,7 +15,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          ref: main # Forces it to use your main branch
+          fetch-depth: 0 # FIX: Forces the robot to read your site's full history so it doesn't get confused
 
       - name: Download CSV from OneDrive
         run: |
@@ -28,9 +27,10 @@ jobs:
           git config --global user.name "Microsoft Sync Bot"
           git config --global user.email "actions@github.com"
           
-          # This tells the robot to sync your recent code edits FIRST
-          git pull origin main --rebase
+          # FIX: Download any recent code changes YOU made first
+          git pull origin main
           
+          # Save the new CSV and push to the live website
           git add data/locations.csv
-          # This safely checks if the file actually changed before trying to push
-          git diff --staged --quiet || (git commit -m "Auto-synced latest locations" && git push)
+          git commit -m "Auto-synced latest locations" || echo "No changes to commit"
+          git push
